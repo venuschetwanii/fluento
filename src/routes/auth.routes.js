@@ -1,5 +1,5 @@
 const Router = require("express").Router;
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const UserModel = require("../models/user.model");
 const {
   signAccess,
