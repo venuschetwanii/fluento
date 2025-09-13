@@ -235,6 +235,10 @@ router.get("/:examId", async (req, res) => {
 
     // 5. Assemble the complete exam structure
     const examStructure = exam.toObject();
+    const userRole = req.user?.role;
+    const isAdminOrTeacher = ["admin", "teacher", "moderator"].includes(
+      userRole
+    );
 
     examStructure.sections = sections.map((section) => {
       const sectionObj = section.toObject();
@@ -245,9 +249,29 @@ router.get("/:examId", async (req, res) => {
         .map((part) => {
           const partObj = part.toObject();
           // Correctly filter groups based on the IDs in the part's questionGroups array
-          partObj.questionGroups = groups.filter((group) =>
-            part.questionGroups.some((groupId) => groupId.equals(group._id))
-          );
+          partObj.questionGroups = groups
+            .filter((group) =>
+              part.questionGroups.some((groupId) => groupId.equals(group._id))
+            )
+            .map((group) => {
+              const groupObj = group.toObject();
+
+              // Hide correct answers for students
+              if (!isAdminOrTeacher) {
+                groupObj.questions = (groupObj.questions || []).map(
+                  (question) => {
+                    const {
+                      correctAnswer,
+                      explanation,
+                      ...questionWithoutAnswers
+                    } = question;
+                    return questionWithoutAnswers;
+                  }
+                );
+              }
+
+              return groupObj;
+            });
           return partObj;
         });
       return sectionObj;
