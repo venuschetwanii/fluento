@@ -171,8 +171,18 @@ router.post(
 // **READ** all Exams (list view)
 router.get("/", async (req, res) => {
   try {
-    const { page = 1, limit = 20, q, type, status } = req.query;
-    const query = {};
+    const {
+      page = 1,
+      limit = 20,
+      q,
+      type,
+      status,
+      includeDeleted = false,
+    } = req.query;
+    const query = { deletedAt: null }; // Exclude soft-deleted by default
+    if (includeDeleted === "true" && req.user?.role !== "student") {
+      delete query.deletedAt; // Show all including deleted for non-students
+    }
     if (q) query.title = { $regex: String(q), $options: "i" };
     if (type) query.type = type;
     // Students only see published by default
@@ -184,7 +194,7 @@ router.get("/", async (req, res) => {
     const skip = (Number(page) - 1) * Number(limit);
     const [items, total] = await Promise.all([
       Exam.find(query)
-        .select("title type duration totalQuestions status")
+        .select("title type duration totalQuestions status deletedAt")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(Number(limit)),
@@ -201,8 +211,8 @@ router.get("/:examId", async (req, res) => {
   try {
     const { examId } = req.params;
 
-    // 1. Find the Exam document
-    const exam = await Exam.findById(examId);
+    // 1. Find the Exam document (exclude soft-deleted)
+    const exam = await Exam.findOne({ _id: examId, deletedAt: null });
     if (!exam) {
       return res.status(404).json({ error: "Exam not found" });
     }
@@ -275,7 +285,7 @@ router.put(
   }
 );
 
-// **DELETE** an Exam and its related documents
+// **SOFT DELETE** an Exam
 router.delete(
   "/:examId",
   requireRole("teacher", "moderator", "admin"),
@@ -283,37 +293,148 @@ router.delete(
     try {
       const { examId } = req.params;
 
-      // 1. Find the exam to get its sections
-      const examToDelete = await Exam.findById(examId);
-      if (!examToDelete) {
+      const exam = await Exam.findOne({ _id: examId, deletedAt: null });
+      if (!exam) {
         return res.status(404).json({ error: "Exam not found" });
       }
 
-      // 2. Find and delete all sections, parts, and groups related to this exam
-      const sections = await Section.find({
-        _id: { $in: examToDelete.sections },
-      });
-      const sectionIds = sections.map((s) => s._id);
-
-      const parts = await Part.find({ sectionId: { $in: sectionIds } });
-      const partIds = parts.map((p) => p._id);
-
-      // Deleting in the correct order to avoid orphaned documents
-      await QuestionGroup.deleteMany({ partId: { $in: partIds } });
-      await Part.deleteMany({ sectionId: { $in: sectionIds } });
-      await Section.deleteMany({ _id: { $in: sectionIds } });
-
-      // 3. Delete the exam itself
-      await Exam.findByIdAndDelete(examId);
+      // Soft delete: set deletedAt timestamp
+      exam.deletedAt = new Date();
+      await exam.save();
 
       res.status(200).json({
-        message: "Exam and all associated data deleted successfully.",
+        message: "Exam soft deleted successfully.",
+        deletedAt: exam.deletedAt,
       });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
   }
 );
+
+// **RESTORE** a soft-deleted Exam
+router.post(
+  "/:examId/restore",
+  requireRole("teacher", "moderator", "admin"),
+  async (req, res) => {
+    try {
+      const { examId } = req.params;
+
+      const exam = await Exam.findOne({
+        _id: examId,
+        deletedAt: { $ne: null },
+      });
+      if (!exam) {
+        return res.status(404).json({ error: "Soft-deleted exam not found" });
+      }
+
+      exam.deletedAt = null;
+      await exam.save();
+
+      res.status(200).json({
+        message: "Exam restored successfully.",
+        exam: { _id: exam._id, title: exam.title, status: exam.status },
+      });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+);
+
+// **HARD DELETE** an Exam (permanent removal)
+router.delete("/:examId/hard", requireRole("admin"), async (req, res) => {
+  try {
+    const { examId } = req.params;
+
+    // 1. Find the exam to get its sections
+    const examToDelete = await Exam.findById(examId);
+    if (!examToDelete) {
+      return res.status(404).json({ error: "Exam not found" });
+    }
+
+    // 2. Check if sections are used in other exams
+    const sections = await Section.find({
+      _id: { $in: examToDelete.sections },
+    });
+    const sectionIds = sections.map((s) => s._id);
+
+    // Check if any sections are referenced by other exams
+    const otherExamsUsingSections = await Exam.find({
+      _id: { $ne: examId },
+      sections: { $in: sectionIds },
+    }).select("_id title");
+
+    if (otherExamsUsingSections.length > 0) {
+      return res.status(409).json({
+        error: "Cannot delete exam: sections are being used by other exams",
+        conflictingExams: otherExamsUsingSections.map((exam) => ({
+          _id: exam._id,
+          title: exam.title,
+        })),
+        conflictingSections: sectionIds,
+      });
+    }
+
+    // 3. Check if parts are used in other sections
+    const parts = await Part.find({ sectionId: { $in: sectionIds } });
+    const partIds = parts.map((p) => p._id);
+
+    const otherSectionsUsingParts = await Section.find({
+      _id: { $nin: sectionIds },
+      parts: { $in: partIds },
+    }).select("_id id sectionType title");
+
+    if (otherSectionsUsingParts.length > 0) {
+      return res.status(409).json({
+        error: "Cannot delete exam: parts are being used by other sections",
+        conflictingSections: otherSectionsUsingParts.map((section) => ({
+          _id: section._id,
+          id: section.id,
+          sectionType: section.sectionType,
+          title: section.title,
+        })),
+        conflictingParts: partIds,
+      });
+    }
+
+    // 4. Check if question groups are used in other parts
+    const otherPartsUsingGroups = await Part.find({
+      _id: { $nin: partIds },
+      questionGroups: { $in: parts.flatMap((p) => p.questionGroups) },
+    }).select("_id id type");
+
+    if (otherPartsUsingGroups.length > 0) {
+      return res.status(409).json({
+        error:
+          "Cannot delete exam: question groups are being used by other parts",
+        conflictingParts: otherPartsUsingGroups.map((part) => ({
+          _id: part._id,
+          id: part.id,
+          type: part.type,
+        })),
+      });
+    }
+
+    // 5. Safe to delete - remove in correct order to avoid orphaned documents
+    await QuestionGroup.deleteMany({ partId: { $in: partIds } });
+    await Part.deleteMany({ sectionId: { $in: sectionIds } });
+    await Section.deleteMany({ _id: { $in: sectionIds } });
+
+    // 6. Delete the exam itself
+    await Exam.findByIdAndDelete(examId);
+
+    res.status(200).json({
+      message: "Exam and all associated data permanently deleted.",
+      deletedExam: {
+        _id: examToDelete._id,
+        title: examToDelete.title,
+        type: examToDelete.type,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Sections management on an exam (Option B parity for sections)
 router.post(

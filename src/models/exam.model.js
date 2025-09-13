@@ -15,6 +15,7 @@ const ExamSchema = new Schema(
       index: true,
     },
     sections: [{ type: mongoose.Schema.Types.ObjectId, ref: "Section" }],
+    deletedAt: { type: Date, default: null, index: true },
   },
   { timestamps: true }
 );
