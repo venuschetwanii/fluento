@@ -11,6 +11,54 @@ const router = Router();
 // Require authentication for all attempt endpoints
 router.use(auth);
 
+// Resume or create an in-progress attempt for an exam
+router.post("/resume", async (req, res) => {
+  try {
+    const { examId } = req.body;
+    if (!examId) return res.status(400).json({ error: "examId is required" });
+
+    // Validate exam exists
+    const exam = await Exam.findById(examId);
+    if (!exam) return res.status(404).json({ error: "Exam not found" });
+
+    // Reuse existing in-progress attempt if present
+    let attempt = await AttemptModel.findOne({
+      userId: req.user.id,
+      examId,
+      status: "in_progress",
+    });
+
+    if (!attempt) {
+      // Create new attempt
+      attempt = new AttemptModel({
+        userId: req.user.id,
+        examId,
+        status: "in_progress",
+        startedAt: new Date(),
+      });
+      // initialize per-section status
+      try {
+        if (exam && Array.isArray(exam.sections)) {
+          attempt.sectionsStatus = (exam.sections || []).map((sid) => ({
+            sectionId: sid._id || sid,
+            status: "in_progress",
+          }));
+        }
+      } catch {}
+      // set expiresAt based on exam duration (assumed minutes)
+      if (typeof exam.duration === "number" && exam.duration > 0) {
+        const ms = exam.duration * 60 * 1000;
+        attempt.expiresAt = new Date(attempt.startedAt.getTime() + ms);
+      }
+      await attempt.save();
+    }
+
+    return res.json(attempt);
+  } catch (e) {
+    return res.status(400).json({ error: e.message });
+  }
+});
+
 // Create a new attempt for an exam
 router.post("/", async (req, res) => {
   try {
@@ -28,8 +76,9 @@ router.post("/", async (req, res) => {
         .json({ error: "An in-progress attempt already exists for this exam" });
     }
     // Validate exam exists
+    let exam;
     try {
-      const exam = await Exam.findById(examId);
+      exam = await Exam.findById(examId);
       if (!exam) return res.status(404).json({ error: "Exam not found" });
     } catch (err) {
       if (err.name === "CastError") {
@@ -53,6 +102,12 @@ router.post("/", async (req, res) => {
         }));
       }
     } catch {}
+
+    // set expiresAt based on exam duration (assumed minutes)
+    if (typeof exam.duration === "number" && exam.duration > 0) {
+      const ms = exam.duration * 60 * 1000;
+      attempt.expiresAt = new Date(attempt.startedAt.getTime() + ms);
+    }
     await attempt.save();
     res.status(201).json(attempt);
   } catch (e) {
@@ -73,6 +128,13 @@ router.post("/:id/response", async (req, res) => {
     if (!attempt) return res.status(404).json({ error: "Not found" });
     if (String(attempt.userId) !== String(req.user.id))
       return res.status(403).json({ error: "Forbidden" });
+    if (attempt.expiresAt && new Date(attempt.expiresAt) < new Date()) {
+      if (attempt.status === "in_progress") {
+        attempt.status = "expired";
+        await attempt.save();
+      }
+      return res.status(400).json({ error: "Attempt expired" });
+    }
     if (attempt.status !== "in_progress")
       return res.status(400).json({ error: "Attempt is not in progress" });
 
@@ -133,10 +195,67 @@ router.post("/:id/submit", async (req, res) => {
     if (!attempt) return res.status(404).json({ error: "Not found" });
     if (String(attempt.userId) !== String(req.user.id))
       return res.status(403).json({ error: "Forbidden" });
+    if (attempt.expiresAt && new Date(attempt.expiresAt) < new Date()) {
+      if (attempt.status === "in_progress") {
+        attempt.status = "expired";
+        await attempt.save();
+      }
+      return res.status(400).json({ error: "Attempt expired" });
+    }
     attempt.status = "submitted";
     attempt.submittedAt = new Date();
     await attempt.save();
     res.json(attempt);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Get data needed to resume an attempt (ownership enforced)
+router.get("/:id/resume", async (req, res) => {
+  try {
+    const attempt = await AttemptModel.findById(req.params.id);
+    if (!attempt) return res.status(404).json({ error: "Not found" });
+    if (String(attempt.userId) !== String(req.user.id))
+      return res.status(403).json({ error: "Forbidden" });
+
+    // Optionally compute remaining time if expiresAt is set
+    let remainingMs;
+    if (attempt.expiresAt) {
+      remainingMs = Math.max(0, new Date(attempt.expiresAt) - Date.now());
+    }
+
+    return res.json({
+      attempt,
+      remainingMs,
+    });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Save a client-side snapshot/state for an in-progress attempt
+router.post("/:id/snapshot", async (req, res) => {
+  try {
+    const attempt = await AttemptModel.findById(req.params.id);
+    if (!attempt) return res.status(404).json({ error: "Not found" });
+    if (String(attempt.userId) !== String(req.user.id))
+      return res.status(403).json({ error: "Forbidden" });
+    if (attempt.expiresAt && new Date(attempt.expiresAt) < new Date()) {
+      if (attempt.status === "in_progress") {
+        attempt.status = "expired";
+        await attempt.save();
+      }
+      return res.status(400).json({ error: "Attempt expired" });
+    }
+    if (attempt.status !== "in_progress")
+      return res
+        .status(400)
+        .json({ error: "Only in-progress attempts can save snapshot" });
+
+    attempt.snapshot = req.body?.snapshot ?? req.body;
+    await attempt.save();
+    return res.json({ message: "Snapshot saved" });
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
@@ -150,6 +269,13 @@ router.post("/:id/sections/:sectionId/submit", async (req, res) => {
     if (!attempt) return res.status(404).json({ error: "Not found" });
     if (String(attempt.userId) !== String(req.user.id))
       return res.status(403).json({ error: "Forbidden" });
+    if (attempt.expiresAt && new Date(attempt.expiresAt) < new Date()) {
+      if (attempt.status === "in_progress") {
+        attempt.status = "expired";
+        await attempt.save();
+      }
+      return res.status(400).json({ error: "Attempt expired" });
+    }
     if (!Array.isArray(attempt.sectionsStatus)) attempt.sectionsStatus = [];
     const idx = attempt.sectionsStatus.findIndex(
       (s) => String(s.sectionId) === String(sectionId)
@@ -165,6 +291,16 @@ router.post("/:id/sections/:sectionId/submit", async (req, res) => {
         submittedAt: now,
       });
     }
+    // Compute and persist section scoring snapshot on submission
+    const sectionScore = await attempt.computeSectionScoring(sectionId);
+    const targetIdx = attempt.sectionsStatus.findIndex(
+      (s) => String(s.sectionId) === String(sectionId)
+    );
+    if (targetIdx >= 0) {
+      attempt.sectionsStatus[targetIdx].score = sectionScore.score || 0;
+      attempt.sectionsStatus[targetIdx].maxScore = sectionScore.maxScore || 0;
+      attempt.sectionsStatus[targetIdx].accuracy = sectionScore.accuracy || 0;
+    }
     await attempt.save();
     res.json({
       message: "Section submitted",
@@ -172,6 +308,37 @@ router.post("/:id/sections/:sectionId/submit", async (req, res) => {
     });
   } catch (e) {
     res.status(400).json({ error: e.message });
+  }
+});
+
+// Grade a specific section within an attempt
+router.post("/:id/sections/:sectionId/grade", async (req, res) => {
+  try {
+    const { id, sectionId } = req.params;
+    const attempt = await AttemptModel.findById(id);
+    if (!attempt) return res.status(404).json({ error: "Not found" });
+    if (String(attempt.userId) !== String(req.user.id))
+      return res.status(403).json({ error: "Forbidden" });
+
+    // Section must be submitted or attempt submitted/graded
+    const s = (attempt.sectionsStatus || []).find(
+      (x) => String(x.sectionId) === String(sectionId)
+    );
+    const isSectionSubmitted = s?.status === "submitted";
+    const isAttemptFinalized =
+      attempt.status === "submitted" || attempt.status === "graded";
+    if (!isSectionSubmitted && !isAttemptFinalized) {
+      return res
+        .status(400)
+        .json({ error: "Section must be submitted before grading" });
+    }
+
+    const sectionScore = await attempt.computeSectionScoring(sectionId);
+    // Persist updated overall scoring cache
+    await attempt.save();
+    return res.json(sectionScore);
+  } catch (e) {
+    return res.status(400).json({ error: e.message });
   }
 });
 
@@ -296,7 +463,7 @@ router.post("/:id/grade", async (req, res) => {
     const questionMap = new Map();
     for (const g of groups) {
       for (const q of g.questions || []) {
-        questionMap.set(String(q.questionId), { q, group: g });
+        questionMap.set(String(q._id), { q, group: g });
       }
     }
 
@@ -346,7 +513,7 @@ router.post("/:id/grade/manual", async (req, res) => {
     // Only owner non-student (teacher/admin) or the owner themself if policy allows; here we restrict students
     if (req.user.role === "student")
       return res.status(403).json({ error: "Forbidden" });
-    const { updates } = req.body; // [{ questionId, earned, max, isCorrect, feedback }]
+    const { updates } = req.body; // [{ questionId (_id), earned, max, isCorrect, feedback }]
     if (!Array.isArray(updates) || updates.length === 0)
       return res.status(400).json({ error: "updates array is required" });
 
@@ -434,8 +601,12 @@ router.get("/:id/review", async (req, res) => {
   try {
     const attempt = await AttemptModel.findById(req.params.id);
     if (!attempt) return res.status(404).json({ error: "Not found" });
-    if (String(attempt.userId) !== String(req.user.id))
+    if (
+      req.user.role == "student" &&
+      String(attempt.userId) !== String(req.user.id)
+    ) {
       return res.status(403).json({ error: "Forbidden" });
+    }
 
     const exam = await Exam.findById(attempt.examId);
     if (!exam) return res.status(404).json({ error: "Exam not found" });
@@ -445,6 +616,7 @@ router.get("/:id/review", async (req, res) => {
     for (const r of attempt.responses) {
       responseByQuestionId.set(String(r.questionId), r);
     }
+
     // Load nested docs
     const sections = await Section.find({ _id: { $in: exam.sections } });
     const parts = await Part.find({
@@ -475,6 +647,7 @@ router.get("/:id/review", async (req, res) => {
               groupObj.questions = (groupObj.questions || []).map((q) => {
                 const key2 = String(q._id);
                 const resp = responseByQuestionId.get(key2);
+
                 const isCorrect = resp
                   ? compareAnswers(
                       q.questionType,
@@ -554,7 +727,7 @@ function compareAnswers(type, given, correct) {
     if (correct == null) return false;
     switch (normalizeQuestionType(type)) {
       case "single":
-        return String(given) === String(correct);
+        return String(given).toLowerCase() === String(correct).toLowerCase();
       case "multi": {
         const a = Array.isArray(given) ? [...given].map(String).sort() : [];
         const b = Array.isArray(correct) ? [...correct].map(String).sort() : [];

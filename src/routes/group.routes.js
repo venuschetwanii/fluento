@@ -35,14 +35,9 @@ router.post(
       const group = await QuestionGroup.findById(groupId);
       if (!group) return res.status(404).json({ error: "Group not found" });
 
-      const existingIds = new Set(
-        (group.questions || []).map((q) => String(q.questionId))
-      );
+      // Push provided questions; _id will be generated for each
       for (const q of questions) {
-        if (q && q.questionId && !existingIds.has(String(q.questionId))) {
-          group.questions.push(q);
-          existingIds.add(String(q.questionId));
-        }
+        if (q) group.questions.push(q);
       }
       await group.save();
       res.json(group);
@@ -73,7 +68,7 @@ router.put(
   }
 );
 
-// Update a single question by questionId (partial update)
+// Update a single question by question _id (partial update)
 router.patch(
   "/:groupId/questions/:questionId",
   requireRole("teacher", "moderator", "admin"),
@@ -84,18 +79,14 @@ router.patch(
       const group = await QuestionGroup.findById(groupId);
       if (!group) return res.status(404).json({ error: "Group not found" });
       const idx = (group.questions || []).findIndex(
-        (q) => String(q.questionId) === String(questionId)
+        (q) => String(q._id) === String(questionId)
       );
       if (idx === -1)
         return res.status(404).json({ error: "Question not found" });
       const current = group.questions[idx].toObject
         ? group.questions[idx].toObject()
         : group.questions[idx];
-      group.questions[idx] = {
-        ...current,
-        ...updates,
-        questionId: current.questionId,
-      };
+      group.questions[idx] = { ...current, ...updates };
       await group.save();
       res.json(group.questions[idx]);
     } catch (e) {
@@ -104,7 +95,7 @@ router.patch(
   }
 );
 
-// Delete a question from a group by questionId
+// Delete a question from a group by question _id
 router.delete(
   "/:groupId/questions/:questionId",
   requireRole("teacher", "moderator", "admin"),
@@ -115,7 +106,7 @@ router.delete(
       if (!group) return res.status(404).json({ error: "Group not found" });
       const before = group.questions.length;
       group.questions = (group.questions || []).filter(
-        (q) => String(q.questionId) !== String(questionId)
+        (q) => String(q._id) !== String(questionId)
       );
       if (group.questions.length === before)
         return res.status(404).json({ error: "Question not found" });

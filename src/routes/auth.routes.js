@@ -1,11 +1,7 @@
 const Router = require("express").Router;
 const bcrypt = require("bcryptjs");
 const UserModel = require("../models/user.model");
-const {
-  signAccess,
-  signRefresh,
-  verifyRefresh,
-} = require("../services/token.service");
+const { signAccess } = require("../services/token.service");
 const router = Router();
 router.post("/register", async (req, res) => {
   try {
@@ -27,27 +23,13 @@ router.post("/login", async (req, res) => {
     if (!match) return res.status(401).json({ error: "Invalid credentials" });
     const payload = { id: user._id, role: user.role };
     const accessToken = signAccess(payload);
-    const refreshToken = signRefresh(payload);
     res.json({
       accessToken: `Bearer ${accessToken}`,
-      refreshToken: `Bearer ${refreshToken}`,
       user,
     });
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
 });
-router.post("/refresh", async (req, res) => {
-  const { refreshToken } = req.body;
-  try {
-    const decoded = verifyRefresh(refreshToken);
-    const accessToken = signAccess({ id: decoded.id, role: decoded.role });
-    res.json({
-      accessToken: `Bearer ${accessToken}`,
-      refreshToken: `Bearer ${refreshToken}`,
-    });
-  } catch {
-    res.status(401).json({ error: "Invalid refresh token" });
-  }
-});
+// Refresh token route removed: using only 7-day access tokens
 module.exports = router;

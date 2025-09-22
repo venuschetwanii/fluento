@@ -58,7 +58,6 @@ router.post(
             }
           }
           const createdPart = await Part.create({
-            id: payload.id,
             type: payload.type,
             directionText: payload.directionText,
             audioUrl: payload.audioUrl,
@@ -115,7 +114,6 @@ router.put(
             }
           }
           const createdPart = await Part.create({
-            id: payload.id,
             type: payload.type,
             directionText: payload.directionText,
             audioUrl: payload.audioUrl,

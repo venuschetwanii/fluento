@@ -3,7 +3,6 @@ const { Schema } = mongoose;
 
 // Question Schema (embedded in groups)
 const QuestionSchema = new Schema({
-  questionId: { type: String, required: true },
   question: { type: String, required: true },
   questionType: { type: String, required: true },
   options: [{ type: String }],
@@ -13,7 +12,6 @@ const QuestionSchema = new Schema({
   scoringCriteria: [{ type: String }],
   taskType: { type: String },
   textItems: [{ type: String }],
-  correctOrder: [{ type: Number }],
   audioUrl: { type: String },
   // Answer and grading metadata
   correctAnswer: Schema.Types.Mixed,
@@ -24,7 +22,6 @@ const QuestionSchema = new Schema({
 // Question Group Schema
 const QuestionGroupSchema = new Schema(
   {
-    id: { type: Number, required: true },
     groupNumber: { type: Number },
     groupName: { type: String },
     questionType: { type: String, required: true },

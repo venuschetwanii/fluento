@@ -3,7 +3,6 @@ const mongoose = require("mongoose");
 
 const PartSchema = new Schema(
   {
-    id: Number,
     type: String,
     directionText: String,
     audioUrl: String,
