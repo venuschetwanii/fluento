@@ -8,6 +8,59 @@ const auth = require("../middlewares/auth.middleware");
 
 const router = Router();
 
+// Open endpoints (no auth): published and non-deleted exams
+router.get("/open", async (req, res) => {
+  try {
+    const { type, page = 1, limit = 20 } = req.query;
+    const query = { status: "published", deletedAt: null };
+    if (type) query.type = { $regex: String(type), $options: "i" };
+
+    const skip = (Number(page) - 1) * Number(limit);
+    const [items, total] = await Promise.all([
+      Exam.find(query)
+        .select("title type duration totalQuestions status createdAt")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(Number(limit)),
+      Exam.countDocuments(query),
+    ]);
+    res.json({ items, total, page: Number(page), limit: Number(limit) });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get("/open/:examId", async (req, res) => {
+  try {
+    const { examId } = req.params;
+    const exam = await Exam.findOne({
+      _id: examId,
+      status: "published",
+      deletedAt: null,
+    }).select("title type duration totalQuestions status sections");
+    if (!exam) return res.status(404).json({ error: "Exam not found" });
+
+    // Load only section documents (no parts/groups)
+    const sections = await Section.find({ _id: { $in: exam.sections } }).select(
+      "sectionType title duration totalQuestions"
+    );
+
+    return res.json({
+      _id: exam._id,
+      title: exam.title,
+      type: exam.type,
+      duration: exam.duration,
+      totalQuestions: exam.totalQuestions,
+      sections,
+    });
+  } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(400).json({ error: "Invalid Exam ID" });
+    }
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Protect all exam routes with JWT auth
 router.use(auth);
 
@@ -99,7 +152,6 @@ router.post(
                   } else {
                     const g = gItem || {};
                     const createdGroup = await QuestionGroup.create({
-                      id: g.id,
                       groupNumber: g.groupNumber,
                       groupName: g.groupName,
                       questionType: g.questionType,
@@ -119,7 +171,6 @@ router.post(
               }
 
               const createdPart = await Part.create({
-                id: partPayload.id,
                 type: partPayload.type,
                 directionText: partPayload.directionText,
                 audioUrl: partPayload.audioUrl,
@@ -131,7 +182,6 @@ router.post(
           }
 
           const createdSection = await Section.create({
-            id: sectionPayload.id,
             examType: sectionPayload.examType,
             sectionType: sectionPayload.sectionType,
             title: sectionPayload.title,
@@ -184,7 +234,7 @@ router.get("/", async (req, res) => {
       delete query.deletedAt; // Show all including deleted for non-students
     }
     if (q) query.title = { $regex: String(q), $options: "i" };
-    if (type) query.type = type;
+    if (type) query.type = { $regex: String(type), $options: "i" };
     // Students only see published by default
     if (req.user?.role === "student") {
       query.status = "published";
@@ -406,14 +456,13 @@ router.delete("/:examId/hard", requireRole("admin"), async (req, res) => {
     const otherSectionsUsingParts = await Section.find({
       _id: { $nin: sectionIds },
       parts: { $in: partIds },
-    }).select("_id id sectionType title");
+    }).select("_id sectionType title");
 
     if (otherSectionsUsingParts.length > 0) {
       return res.status(409).json({
         error: "Cannot delete exam: parts are being used by other sections",
         conflictingSections: otherSectionsUsingParts.map((section) => ({
           _id: section._id,
-          id: section.id,
           sectionType: section.sectionType,
           title: section.title,
         })),
@@ -425,7 +474,7 @@ router.delete("/:examId/hard", requireRole("admin"), async (req, res) => {
     const otherPartsUsingGroups = await Part.find({
       _id: { $nin: partIds },
       questionGroups: { $in: parts.flatMap((p) => p.questionGroups) },
-    }).select("_id id type");
+    }).select("_id type");
 
     if (otherPartsUsingGroups.length > 0) {
       return res.status(409).json({
@@ -433,7 +482,6 @@ router.delete("/:examId/hard", requireRole("admin"), async (req, res) => {
           "Cannot delete exam: question groups are being used by other parts",
         conflictingParts: otherPartsUsingGroups.map((part) => ({
           _id: part._id,
-          id: part.id,
           type: part.type,
         })),
       });
@@ -495,7 +543,6 @@ router.post(
             }
           }
           const createdSection = await Section.create({
-            id: payload.id,
             examType: payload.examType,
             sectionType: payload.sectionType,
             title: payload.title,
@@ -570,7 +617,7 @@ router.get("/:examId/answer-key", async (req, res) => {
                 _id: g._id,
                 questionType: g.questionType,
                 questions: (g.questions || []).map((q) => ({
-                  questionId: q.questionId,
+                  _id: q._id,
                   questionType: q.questionType,
                   correctAnswer: q.correctAnswer,
                   weight: q.weight,
@@ -627,7 +674,6 @@ router.put(
             }
           }
           const createdSection = await Section.create({
-            id: payload.id,
             examType: payload.examType,
             sectionType: payload.sectionType,
             title: payload.title,

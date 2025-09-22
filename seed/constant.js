@@ -1003,7 +1003,6 @@ export const questionDataLookup = {
       "Many experts would never have guessed that most people might have vastly more powerful computers in their pockets within 70 years.",
       "That scepticism was understandable considering that computers at the time were adding machines that were the size of a house and powered by vacuum tubes.",
     ],
-    correctOrder: [0, 1, 3, 2], // The correct order of the text items
   },
 
   // Drag and Drop Fill in the Blanks question

@@ -3,7 +3,6 @@ const mongoose = require("mongoose");
 
 const SectionSchema = new Schema(
   {
-    id: { type: Number, required: true },
     examType: String,
     sectionType: { type: String, required: true },
     title: { type: String },

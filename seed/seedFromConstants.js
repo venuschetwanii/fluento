@@ -128,7 +128,6 @@ const seedDatabase = async () => {
                       scoringCriteria: qData.scoringCriteria || undefined,
                       taskType: qData.taskType || undefined,
                       textItems: qData.textItems || undefined,
-                      correctOrder: qData.correctOrder || undefined,
                       audioUrl: qData.audioUrl || undefined,
                     };
                   }
