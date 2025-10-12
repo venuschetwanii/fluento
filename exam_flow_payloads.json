@@ -1,0 +1,288 @@
+{
+  "exam_flow_payloads": {
+    "description": "Complete exam flow API payloads - start, submit, and grade",
+    "base_url": "http://localhost:4000",
+    "authentication": "Bearer token required in Authorization header",
+
+    "current_exam_flow": {
+      "description": "Current exam flow implementation",
+
+      "start_full_exam": {
+        "endpoint": "POST /attempts/resume",
+        "description": "Start or resume full exam attempt",
+        "headers": {
+          "Authorization": "Bearer your_jwt_token_here",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "examId": "68ea2625285f4daf28311d5b"
+        },
+        "example_response": {
+          "_id": "68ea2625285f4daf28311d5c",
+          "userId": "68ea2625285f4daf28311d5b",
+          "examId": "68ea2625285f4daf28311d5b",
+          "status": "in_progress",
+          "startedAt": "2025-01-12T10:00:00.000Z",
+          "expiresAt": "2025-01-12T12:00:00.000Z",
+          "sectionsStatus": [
+            {
+              "sectionId": "68ea2625285f4daf28311d5d",
+              "status": "in_progress"
+            },
+            {
+              "sectionId": "68ea2625285f4daf28311d5e",
+              "status": "in_progress"
+            }
+          ]
+        }
+      },
+
+      "submit_section": {
+        "endpoint": "POST /attempts/:id/sections/:sectionId/submit",
+        "description": "Submit individual section",
+        "headers": {
+          "Authorization": "Bearer your_jwt_token_here"
+        },
+        "example_url": "/attempts/68ea2625285f4daf28311d5c/sections/68ea2625285f4daf28311d5d/submit",
+        "example_response": {
+          "message": "Section submitted",
+          "sectionsStatus": [
+            {
+              "sectionId": "68ea2625285f4daf28311d5d",
+              "status": "submitted",
+              "submittedAt": "2025-01-12T10:30:00.000Z",
+              "score": 8.5,
+              "maxScore": 10,
+              "accuracy": 0.85
+            },
+            {
+              "sectionId": "68ea2625285f4daf28311d5e",
+              "status": "in_progress"
+            }
+          ]
+        }
+      },
+
+      "submit_full_exam": {
+        "endpoint": "POST /attempts/:id/submit",
+        "description": "Submit entire exam (all remaining sections)",
+        "headers": {
+          "Authorization": "Bearer your_jwt_token_here"
+        },
+        "example_url": "/attempts/68ea2625285f4daf28311d5c/submit",
+        "example_response": {
+          "_id": "68ea2625285f4daf28311d5c",
+          "status": "submitted",
+          "submittedAt": "2025-01-12T11:45:00.000Z",
+          "sectionsStatus": [
+            {
+              "sectionId": "68ea2625285f4daf28311d5d",
+              "status": "submitted",
+              "submittedAt": "2025-01-12T10:30:00.000Z",
+              "score": 8.5,
+              "maxScore": 10,
+              "accuracy": 0.85
+            },
+            {
+              "sectionId": "68ea2625285f4daf28311d5e",
+              "status": "submitted",
+              "submittedAt": "2025-01-12T11:45:00.000Z",
+              "score": 7.2,
+              "maxScore": 10,
+              "accuracy": 0.72
+            }
+          ],
+          "scoring": {
+            "score": 15.7,
+            "maxScore": 20,
+            "accuracy": 0.785,
+            "sectionScores": [
+              {
+                "sectionId": "68ea2625285f4daf28311d5d",
+                "score": 8.5,
+                "maxScore": 10,
+                "accuracy": 0.85
+              },
+              {
+                "sectionId": "68ea2625285f4daf28311d5e",
+                "score": 7.2,
+                "maxScore": 10,
+                "accuracy": 0.72
+              }
+            ]
+          }
+        }
+      },
+
+      "grade_section": {
+        "endpoint": "POST /attempts/:id/sections/:sectionId/grade",
+        "description": "Grade individual section (recompute scoring)",
+        "headers": {
+          "Authorization": "Bearer your_jwt_token_here"
+        },
+        "example_url": "/attempts/68ea2625285f4daf28311d5c/sections/68ea2625285f4daf28311d5d/grade",
+        "example_response": {
+          "sectionId": "68ea2625285f4daf28311d5d",
+          "score": 8.5,
+          "maxScore": 10,
+          "accuracy": 0.85
+        }
+      },
+
+      "grade_full_exam": {
+        "endpoint": "POST /attempts/:id/grade",
+        "description": "Grade entire exam (recompute all scoring)",
+        "headers": {
+          "Authorization": "Bearer your_jwt_token_here"
+        },
+        "example_url": "/attempts/68ea2625285f4daf28311d5c/grade",
+        "example_response": {
+          "score": 15.7,
+          "maxScore": 20,
+          "accuracy": 0.785,
+          "perQuestion": [
+            {
+              "questionId": "68ea2625285f4daf28311d5f",
+              "sectionId": "68ea2625285f4daf28311d5d",
+              "earned": 1,
+              "max": 1,
+              "isCorrect": true
+            }
+          ],
+          "sectionScores": [
+            {
+              "sectionId": "68ea2625285f4daf28311d5d",
+              "score": 8.5,
+              "maxScore": 10,
+              "accuracy": 0.85
+            }
+          ],
+          "scaled": {
+            "IELTS": 7.0,
+            "TOEFL": 24,
+            "GRE": 4.7
+          }
+        }
+      }
+    },
+
+    "proposed_section_start_flow": {
+      "description": "Proposed enhancement for section-specific exam start",
+
+      "start_section_exam": {
+        "endpoint": "POST /attempts/sections/start",
+        "description": "Start exam for specific section only",
+        "headers": {
+          "Authorization": "Bearer your_jwt_token_here",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "examId": "68ea2625285f4daf28311d5b",
+          "sectionId": "68ea2625285f4daf28311d5d"
+        },
+        "example_response": {
+          "_id": "68ea2625285f4daf28311d5c",
+          "userId": "68ea2625285f4daf28311d5b",
+          "examId": "68ea2625285f4daf28311d5b",
+          "status": "in_progress",
+          "startedAt": "2025-01-12T10:00:00.000Z",
+          "expiresAt": "2025-01-12T10:30:00.000Z",
+          "sectionsStatus": [
+            {
+              "sectionId": "68ea2625285f4daf28311d5d",
+              "status": "in_progress"
+            }
+          ],
+          "activeSectionId": "68ea2625285f4daf28311d5d"
+        }
+      }
+    },
+
+    "scoring_algorithm_details": {
+      "description": "How scoring works for both section and full exam",
+
+      "scoring_process": {
+        "section_scoring": {
+          "method": "attempt.computeSectionScoring(sectionId)",
+          "process": [
+            "1. Load exam structure and questions",
+            "2. Find all responses for the section",
+            "3. Compare answers using compareAnswers() function",
+            "4. Calculate score, maxScore, and accuracy",
+            "5. Apply exam-specific scaling (IELTS, TOEFL, GRE)",
+            "6. Return section-specific results"
+          ]
+        },
+        "full_exam_scoring": {
+          "method": "attempt.computeScoring()",
+          "process": [
+            "1. Load complete exam structure",
+            "2. Process all responses across all sections",
+            "3. Calculate per-question scores",
+            "4. Aggregate section totals",
+            "5. Calculate overall exam score",
+            "6. Apply scaling and band scores",
+            "7. Return comprehensive scoring object"
+          ]
+        },
+        "scoring_consistency": {
+          "note": "Both section and full exam scoring use the same underlying algorithm",
+          "differences": [
+            "Section scoring: Processes only one section's responses",
+            "Full exam scoring: Processes all sections' responses",
+            "Same answer comparison logic",
+            "Same scaling algorithms",
+            "Same accuracy calculations"
+          ]
+        }
+      },
+
+      "supported_exam_types": {
+        "IELTS": {
+          "scaling": "0-9 band scale",
+          "calculation": "Math.round(clamp(9 * accuracy, 0, 9) * 2) / 2"
+        },
+        "TOEFL": {
+          "scaling": "0-30 points per section",
+          "calculation": "Math.round(clamp(30 * accuracy, 0, 30))"
+        },
+        "GRE": {
+          "scaling": "0-6 points",
+          "calculation": "Math.round(clamp(6 * accuracy, 0, 6) * 2) / 2"
+        }
+      }
+    },
+
+    "usage_examples": {
+      "complete_exam_flow": {
+        "step_1_start": "curl -X POST http://localhost:4000/attempts/resume -H 'Authorization: Bearer TOKEN' -H 'Content-Type: application/json' -d '{\"examId\":\"68ea2625285f4daf28311d5b\"}'",
+        "step_2_submit_section": "curl -X POST http://localhost:4000/attempts/ATTEMPT_ID/sections/SECTION_ID/submit -H 'Authorization: Bearer TOKEN'",
+        "step_3_submit_exam": "curl -X POST http://localhost:4000/attempts/ATTEMPT_ID/submit -H 'Authorization: Bearer TOKEN'",
+        "step_4_grade": "curl -X POST http://localhost:4000/attempts/ATTEMPT_ID/grade -H 'Authorization: Bearer TOKEN'"
+      },
+
+      "section_only_flow": {
+        "step_1_submit_section": "curl -X POST http://localhost:4000/attempts/ATTEMPT_ID/sections/SECTION_ID/submit -H 'Authorization: Bearer TOKEN'",
+        "step_2_grade_section": "curl -X POST http://localhost:4000/attempts/ATTEMPT_ID/sections/SECTION_ID/grade -H 'Authorization: Bearer TOKEN'"
+      }
+    },
+
+    "status_flow": {
+      "attempt_statuses": [
+        "in_progress",
+        "submitted",
+        "graded",
+        "expired",
+        "cancelled"
+      ],
+      "section_statuses": ["in_progress", "submitted", "graded"],
+      "status_transitions": {
+        "in_progress": ["submitted", "expired", "cancelled"],
+        "submitted": ["graded"],
+        "graded": [],
+        "expired": [],
+        "cancelled": []
+      }
+    }
+  }
+}

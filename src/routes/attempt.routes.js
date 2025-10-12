@@ -39,6 +39,7 @@ router.post("/resume", async (req, res) => {
       attempt = new AttemptModel({
         userId: req.user.id,
         examId,
+        attemptType: "full_exam",
         status: "in_progress",
         startedAt: new Date(),
       });
@@ -56,6 +57,95 @@ router.post("/resume", async (req, res) => {
         const ms = exam.duration * 60 * 1000;
         attempt.expiresAt = new Date(attempt.startedAt.getTime() + ms);
       }
+      await attempt.save();
+    }
+
+    // Auto-expire if past due
+    if (
+      attempt.expiresAt &&
+      new Date(attempt.expiresAt) < new Date() &&
+      attempt.status === "in_progress"
+    ) {
+      attempt.status = "expired";
+      await attempt.save();
+    }
+
+    return res.json(attempt);
+  } catch (e) {
+    return res.status(400).json({ error: e.message });
+  }
+});
+
+// Start exam for a specific section only
+router.post("/sections/start", async (req, res) => {
+  try {
+    const { examId, sectionId } = req.body;
+    if (!examId) return res.status(400).json({ error: "examId is required" });
+    if (!sectionId)
+      return res.status(400).json({ error: "sectionId is required" });
+
+    // Validate exam exists
+    const exam = await Exam.findById(examId);
+    if (!exam) return res.status(404).json({ error: "Exam not found" });
+
+    // Validate section exists and belongs to exam
+    if (
+      !exam.sections ||
+      !exam.sections.some((s) => String(s._id || s) === String(sectionId))
+    ) {
+      return res.status(404).json({ error: "Section not found in this exam" });
+    }
+
+    // Check for existing section-only attempt for this section
+    let attempt = await AttemptModel.findOne({
+      userId: req.user.id,
+      examId,
+      attemptType: "section_only",
+      activeSectionId: sectionId,
+      status: "in_progress",
+    });
+
+    if (!attempt) {
+      // Get section details for duration calculation
+      const Section = require("../models/section.model");
+      const section = await Section.findById(sectionId);
+
+      // Create new section-only attempt
+      attempt = new AttemptModel({
+        userId: req.user.id,
+        examId,
+        attemptType: "section_only",
+        activeSectionId: sectionId,
+        status: "in_progress",
+        startedAt: new Date(),
+      });
+
+      // Initialize section status for only the active section
+      attempt.sectionsStatus = [
+        {
+          sectionId: sectionId,
+          status: "in_progress",
+        },
+      ];
+
+      // Set expiresAt based on section duration (if available) or exam duration
+      let durationMs;
+      if (
+        section &&
+        typeof section.duration === "number" &&
+        section.duration > 0
+      ) {
+        durationMs = section.duration * 60 * 1000; // section duration in minutes
+      } else if (typeof exam.duration === "number" && exam.duration > 0) {
+        // If no section duration, use exam duration divided by number of sections
+        const sectionCount = exam.sections ? exam.sections.length : 1;
+        durationMs = (exam.duration / sectionCount) * 60 * 1000;
+      }
+
+      if (durationMs) {
+        attempt.expiresAt = new Date(attempt.startedAt.getTime() + durationMs);
+      }
+
       await attempt.save();
     }
 
@@ -105,6 +195,7 @@ router.post("/", async (req, res) => {
     const attempt = new AttemptModel({
       userId: req.user.id,
       examId,
+      attemptType: "full_exam",
       status: "in_progress",
       startedAt: new Date(),
     });
@@ -361,10 +452,19 @@ router.post("/:id/sections/:sectionId/submit", async (req, res) => {
       attempt.sectionsStatus[targetIdx].maxScore = sectionScore.maxScore || 0;
       attempt.sectionsStatus[targetIdx].accuracy = sectionScore.accuracy || 0;
     }
+
+    // For section-only attempts, mark the entire attempt as submitted when section is submitted
+    if (attempt.attemptType === "section_only") {
+      attempt.status = "submitted";
+      attempt.submittedAt = now;
+    }
+
     await attempt.save();
     res.json({
       message: "Section submitted",
       sectionsStatus: attempt.sectionsStatus,
+      attemptType: attempt.attemptType,
+      attemptStatus: attempt.status,
     });
   } catch (e) {
     res.status(400).json({ error: e.message });
@@ -485,10 +585,11 @@ router.get("/:id/timeline", async (req, res) => {
 // Get attempts for current user (optionally filter by examId or status)
 router.get("/", async (req, res) => {
   try {
-    const { examId, status, page = 1, limit = 20 } = req.query;
+    const { examId, status, attemptType, page = 1, limit = 20 } = req.query;
     const query = { userId: req.user.id };
     if (examId) query.examId = examId;
     if (status) query.status = status;
+    if (attemptType) query.attemptType = attemptType;
     const skip = (Number(page) - 1) * Number(limit);
     const [items, total] = await Promise.all([
       AttemptModel.find(query)
@@ -498,6 +599,80 @@ router.get("/", async (req, res) => {
       AttemptModel.countDocuments(query),
     ]);
     res.json({ items, total, page: Number(page), limit: Number(limit) });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Get attempts by type (section-only or full exam)
+router.get("/by-type/:attemptType", async (req, res) => {
+  try {
+    const { attemptType } = req.params;
+    const { examId, status, page = 1, limit = 20 } = req.query;
+
+    if (!["full_exam", "section_only"].includes(attemptType)) {
+      return res.status(400).json({
+        error: "Invalid attemptType. Must be 'full_exam' or 'section_only'",
+      });
+    }
+
+    const query = {
+      userId: req.user.id,
+      attemptType: attemptType,
+    };
+    if (examId) query.examId = examId;
+    if (status) query.status = status;
+
+    const skip = (Number(page) - 1) * Number(limit);
+    const [items, total] = await Promise.all([
+      AttemptModel.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(Number(limit)),
+      AttemptModel.countDocuments(query),
+    ]);
+
+    res.json({
+      items,
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      attemptType: attemptType,
+    });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Get section-only attempts for a specific section
+router.get("/sections/:sectionId", async (req, res) => {
+  try {
+    const { sectionId } = req.params;
+    const { status, page = 1, limit = 20 } = req.query;
+
+    const query = {
+      userId: req.user.id,
+      attemptType: "section_only",
+      activeSectionId: sectionId,
+    };
+    if (status) query.status = status;
+
+    const skip = (Number(page) - 1) * Number(limit);
+    const [items, total] = await Promise.all([
+      AttemptModel.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(Number(limit)),
+      AttemptModel.countDocuments(query),
+    ]);
+
+    res.json({
+      items,
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      sectionId: sectionId,
+    });
   } catch (e) {
     res.status(400).json({ error: e.message });
   }

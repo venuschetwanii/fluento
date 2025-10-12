@@ -1,0 +1,291 @@
+{
+  "s3_upload_payloads": {
+    "description": "Payloads for S3 direct upload API endpoints",
+    "base_url": "http://localhost:4000/uploads",
+    "authentication": "Bearer token required in Authorization header",
+
+    "video_upload_payloads": {
+      "description": "Payloads for uploading video files to S3",
+
+      "direct_video_upload": {
+        "endpoint": "POST /direct",
+        "content_type": "multipart/form-data",
+        "description": "Upload video file directly to S3",
+        "headers": {
+          "Authorization": "Bearer your_jwt_token_here",
+          "Content-Type": "multipart/form-data"
+        },
+        "body": {
+          "file": "[Video file - binary data]",
+          "folder": "videos/courses",
+          "acl": "public-read"
+        },
+        "supported_formats": [
+          "video/mp4",
+          "video/avi",
+          "video/mov",
+          "video/wmv",
+          "video/flv",
+          "video/webm",
+          "video/mkv"
+        ],
+        "max_file_size": "50MB",
+        "example_response": {
+          "key": "videos/courses/1705123456789-sample-video.mp4",
+          "publicUrl": "https://your-bucket.s3.your-region.amazonaws.com/videos/courses/1705123456789-sample-video.mp4",
+          "contentType": "video/mp4",
+          "size": 25165824
+        }
+      },
+
+      "course_video_upload": {
+        "endpoint": "POST /direct",
+        "content_type": "multipart/form-data",
+        "description": "Upload course video with specific folder structure",
+        "headers": {
+          "Authorization": "Bearer your_jwt_token_here"
+        },
+        "body": {
+          "file": "[Video file - binary data]",
+          "folder": "courses/ielts/videos",
+          "acl": "public-read"
+        },
+        "example_response": {
+          "key": "courses/ielts/videos/1705123456789-ielts-listening-practice.mp4",
+          "publicUrl": "https://your-bucket.s3.your-region.amazonaws.com/courses/ielts/videos/1705123456789-ielts-listening-practice.mp4",
+          "contentType": "video/mp4",
+          "size": 45678912
+        }
+      },
+
+      "exam_video_upload": {
+        "endpoint": "POST /direct",
+        "content_type": "multipart/form-data",
+        "description": "Upload exam instruction or sample video",
+        "headers": {
+          "Authorization": "Bearer your_jwt_token_here"
+        },
+        "body": {
+          "file": "[Video file - binary data]",
+          "folder": "exams/toefl/instructions",
+          "acl": "public-read"
+        },
+        "example_response": {
+          "key": "exams/toefl/instructions/1705123456789-speaking-task-instructions.mp4",
+          "publicUrl": "https://your-bucket.s3.your-region.amazonaws.com/exams/toefl/instructions/1705123456789-speaking-task-instructions.mp4",
+          "contentType": "video/mp4",
+          "size": 12345678
+        }
+      }
+    },
+
+    "pdf_upload_payloads": {
+      "description": "Payloads for uploading PDF files to S3",
+
+      "direct_pdf_upload": {
+        "endpoint": "POST /direct",
+        "content_type": "multipart/form-data",
+        "description": "Upload PDF file directly to S3",
+        "headers": {
+          "Authorization": "Bearer your_jwt_token_here"
+        },
+        "body": {
+          "file": "[PDF file - binary data]",
+          "folder": "documents",
+          "acl": "public-read"
+        },
+        "supported_formats": ["application/pdf"],
+        "max_file_size": "50MB",
+        "example_response": {
+          "key": "documents/1705123456789-sample-document.pdf",
+          "publicUrl": "https://your-bucket.s3.your-region.amazonaws.com/documents/1705123456789-sample-document.pdf",
+          "contentType": "application/pdf",
+          "size": 2048576
+        }
+      },
+
+      "course_material_upload": {
+        "endpoint": "POST /direct",
+        "content_type": "multipart/form-data",
+        "description": "Upload course materials (study guides, practice tests)",
+        "headers": {
+          "Authorization": "Bearer your_jwt_token_here"
+        },
+        "body": {
+          "file": "[PDF file - binary data]",
+          "folder": "courses/gre/materials",
+          "acl": "public-read"
+        },
+        "example_response": {
+          "key": "courses/gre/materials/1705123456789-gre-verbal-reasoning-guide.pdf",
+          "publicUrl": "https://your-bucket.s3.your-region.amazonaws.com/courses/gre/materials/1705123456789-gre-verbal-reasoning-guide.pdf",
+          "contentType": "application/pdf",
+          "size": 5242880
+        }
+      },
+
+      "exam_instructions_upload": {
+        "endpoint": "POST /direct",
+        "content_type": "multipart/form-data",
+        "description": "Upload exam instructions and guidelines",
+        "headers": {
+          "Authorization": "Bearer your_jwt_token_here"
+        },
+        "body": {
+          "file": "[PDF file - binary data]",
+          "folder": "exams/ielts/instructions",
+          "acl": "public-read"
+        },
+        "example_response": {
+          "key": "exams/ielts/instructions/1705123456789-ielts-exam-guidelines.pdf",
+          "publicUrl": "https://your-bucket.s3.your-region.amazonaws.com/exams/ielts/instructions/1705123456789-ielts-exam-guidelines.pdf",
+          "contentType": "application/pdf",
+          "size": 1048576
+        }
+      },
+
+      "practice_test_upload": {
+        "endpoint": "POST /direct",
+        "content_type": "multipart/form-data",
+        "description": "Upload practice test PDFs",
+        "headers": {
+          "Authorization": "Bearer your_jwt_token_here"
+        },
+        "body": {
+          "file": "[PDF file - binary data]",
+          "folder": "practice-tests/toefl",
+          "acl": "public-read"
+        },
+        "example_response": {
+          "key": "practice-tests/toefl/1705123456789-toefl-practice-test-1.pdf",
+          "publicUrl": "https://your-bucket.s3.your-region.amazonaws.com/practice-tests/toefl/1705123456789-toefl-practice-test-1.pdf",
+          "contentType": "application/pdf",
+          "size": 3145728
+        }
+      }
+    },
+
+    "transcription_payloads": {
+      "description": "Payloads for video/audio transcription using AWS Transcribe",
+
+      "start_transcription": {
+        "endpoint": "POST /transcribe",
+        "content_type": "application/json",
+        "description": "Start transcription job for uploaded video/audio file",
+        "headers": {
+          "Authorization": "Bearer your_jwt_token_here",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "key": "videos/courses/1705123456789-sample-video.mp4",
+          "mediaFormat": "mp4",
+          "languageCode": "en-US"
+        },
+        "supported_formats": ["mp3", "mp4", "wav", "flac"],
+        "supported_languages": [
+          "en-US",
+          "en-GB",
+          "es-US",
+          "fr-FR",
+          "de-DE",
+          "it-IT",
+          "pt-BR",
+          "ja-JP",
+          "ko-KR",
+          "zh-CN"
+        ],
+        "example_response": {
+          "jobName": "transcribe-1705123456789-abc123",
+          "status": "IN_PROGRESS"
+        }
+      },
+
+      "check_transcription_status": {
+        "endpoint": "GET /transcribe/:jobName",
+        "description": "Check status of transcription job",
+        "headers": {
+          "Authorization": "Bearer your_jwt_token_here"
+        },
+        "example_url": "/transcribe/transcribe-1705123456789-abc123",
+        "example_response": {
+          "status": "COMPLETED",
+          "transcriptFileUri": "https://your-bucket.s3.your-region.amazonaws.com/transcripts/transcribe-1705123456789-abc123.json"
+        }
+      }
+    },
+
+    "presigned_url_payloads": {
+      "description": "Payloads for generating presigned URLs to access S3 objects",
+
+      "get_presigned_url": {
+        "endpoint": "GET /url",
+        "description": "Generate presigned URL for private S3 objects",
+        "headers": {
+          "Authorization": "Bearer your_jwt_token_here"
+        },
+        "query_parameters": {
+          "key": "videos/courses/1705123456789-sample-video.mp4",
+          "expiresIn": "3600",
+          "responseContentDisposition": "attachment; filename=\"sample-video.mp4\""
+        },
+        "example_url": "/url?key=videos/courses/1705123456789-sample-video.mp4&expiresIn=3600",
+        "example_response": {
+          "url": "https://your-bucket.s3.your-region.amazonaws.com/videos/courses/1705123456789-sample-video.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=..."
+        }
+      }
+    },
+
+    "error_responses": {
+      "file_required": {
+        "status": 400,
+        "error": "file is required"
+      },
+      "unsupported_content_type": {
+        "status": 400,
+        "error": "Unsupported contentType"
+      },
+      "s3_not_configured": {
+        "status": 500,
+        "error": "S3 not configured (AWS_S3_BUCKET, AWS_S3_REGION)"
+      },
+      "key_required": {
+        "status": 400,
+        "error": "key is required"
+      },
+      "media_format_required": {
+        "status": 400,
+        "error": "mediaFormat is required or inferable from key"
+      },
+      "job_name_required": {
+        "status": 400,
+        "error": "jobName is required"
+      }
+    },
+
+    "usage_examples": {
+      "curl_video_upload": "curl -X POST http://localhost:4000/api/uploads/direct -H 'Authorization: Bearer YOUR_TOKEN' -F 'file=@video.mp4' -F 'folder=videos/courses'",
+      "curl_pdf_upload": "curl -X POST http://localhost:4000/api/uploads/direct -H 'Authorization: Bearer YOUR_TOKEN' -F 'file=@document.pdf' -F 'folder=documents'",
+      "curl_start_transcription": "curl -X POST http://localhost:4000/api/uploads/transcribe -H 'Authorization: Bearer YOUR_TOKEN' -H 'Content-Type: application/json' -d '{\"key\":\"videos/courses/1705123456789-sample-video.mp4\",\"mediaFormat\":\"mp4\"}'",
+      "curl_get_presigned_url": "curl -X GET 'http://localhost:4000/api/uploads/url?key=videos/courses/1705123456789-sample-video.mp4&expiresIn=3600' -H 'Authorization: Bearer YOUR_TOKEN'"
+    },
+
+    "folder_structure_recommendations": {
+      "videos": {
+        "courses": "videos/courses/{exam_type}/{course_id}/",
+        "exams": "videos/exams/{exam_type}/{exam_id}/",
+        "instructions": "videos/instructions/{exam_type}/",
+        "samples": "videos/samples/{exam_type}/"
+      },
+      "documents": {
+        "materials": "documents/materials/{exam_type}/{course_id}/",
+        "practice_tests": "documents/practice-tests/{exam_type}/",
+        "instructions": "documents/instructions/{exam_type}/",
+        "transcripts": "documents/transcripts/{exam_type}/"
+      },
+      "audio": {
+        "recordings": "audio/recordings/{exam_type}/{attempt_id}/",
+        "samples": "audio/samples/{exam_type}/"
+      }
+    }
+  }
+}

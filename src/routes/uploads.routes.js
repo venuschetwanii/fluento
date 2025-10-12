@@ -89,6 +89,7 @@ router.post("/direct", upload.single("file"), async (req, res) => {
       "image/",
       "video/",
       "audio/",
+      "application/pdf",
       "application/octet-stream",
     ];
     const contentType = file.mimetype || "application/octet-stream";

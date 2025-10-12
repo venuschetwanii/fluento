@@ -1,0 +1,266 @@
+{
+  "section_specific_exam_api": {
+    "description": "Complete API documentation for section-specific exam functionality",
+    "base_url": "http://localhost:4000",
+    "authentication": "Bearer token required in Authorization header",
+
+    "new_endpoints": {
+      "start_section_exam": {
+        "endpoint": "POST /attempts/sections/start",
+        "description": "Start exam for a specific section only",
+        "headers": {
+          "Authorization": "Bearer your_jwt_token_here",
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "examId": "68ea2625285f4daf28311d5b",
+          "sectionId": "68ea2625285f4daf28311d5d"
+        },
+        "example_response": {
+          "_id": "68ea2625285f4daf28311d5c",
+          "userId": "68ea2625285f4daf28311d5b",
+          "examId": "68ea2625285f4daf28311d5b",
+          "attemptType": "section_only",
+          "activeSectionId": "68ea2625285f4daf28311d5d",
+          "status": "in_progress",
+          "startedAt": "2025-01-12T10:00:00.000Z",
+          "expiresAt": "2025-01-12T10:30:00.000Z",
+          "sectionsStatus": [
+            {
+              "sectionId": "68ea2625285f4daf28311d5d",
+              "status": "in_progress"
+            }
+          ]
+        }
+      },
+
+      "get_attempts_by_type": {
+        "endpoint": "GET /attempts/by-type/:attemptType",
+        "description": "Get attempts filtered by type (full_exam or section_only)",
+        "headers": {
+          "Authorization": "Bearer your_jwt_token_here"
+        },
+        "path_parameters": {
+          "attemptType": "full_exam | section_only"
+        },
+        "query_parameters": {
+          "examId": "Optional - filter by exam ID",
+          "status": "Optional - filter by status",
+          "page": "Optional - page number (default: 1)",
+          "limit": "Optional - items per page (default: 20)"
+        },
+        "example_urls": [
+          "/attempts/by-type/full_exam",
+          "/attempts/by-type/section_only",
+          "/attempts/by-type/full_exam?examId=68ea2625285f4daf28311d5b&status=submitted",
+          "/attempts/by-type/section_only?page=2&limit=10"
+        ],
+        "example_response": {
+          "items": [
+            {
+              "_id": "68ea2625285f4daf28311d5c",
+              "userId": "68ea2625285f4daf28311d5b",
+              "examId": "68ea2625285f4daf28311d5b",
+              "attemptType": "section_only",
+              "activeSectionId": "68ea2625285f4daf28311d5d",
+              "status": "submitted",
+              "startedAt": "2025-01-12T10:00:00.000Z",
+              "submittedAt": "2025-01-12T10:25:00.000Z"
+            }
+          ],
+          "total": 1,
+          "page": 1,
+          "limit": 20,
+          "attemptType": "section_only"
+        }
+      },
+
+      "get_section_attempts": {
+        "endpoint": "GET /attempts/sections/:sectionId",
+        "description": "Get all section-only attempts for a specific section",
+        "headers": {
+          "Authorization": "Bearer your_jwt_token_here"
+        },
+        "path_parameters": {
+          "sectionId": "Section ID to get attempts for"
+        },
+        "query_parameters": {
+          "status": "Optional - filter by status",
+          "page": "Optional - page number (default: 1)",
+          "limit": "Optional - items per page (default: 20)"
+        },
+        "example_url": "/attempts/sections/68ea2625285f4daf28311d5d",
+        "example_response": {
+          "items": [
+            {
+              "_id": "68ea2625285f4daf28311d5c",
+              "userId": "68ea2625285f4daf28311d5b",
+              "examId": "68ea2625285f4daf28311d5b",
+              "attemptType": "section_only",
+              "activeSectionId": "68ea2625285f4daf28311d5d",
+              "status": "submitted",
+              "startedAt": "2025-01-12T10:00:00.000Z",
+              "submittedAt": "2025-01-12T10:25:00.000Z",
+              "sectionsStatus": [
+                {
+                  "sectionId": "68ea2625285f4daf28311d5d",
+                  "status": "submitted",
+                  "submittedAt": "2025-01-12T10:25:00.000Z",
+                  "score": 8.5,
+                  "maxScore": 10,
+                  "accuracy": 0.85
+                }
+              ]
+            }
+          ],
+          "total": 1,
+          "page": 1,
+          "limit": 20,
+          "sectionId": "68ea2625285f4daf28311d5d"
+        }
+      }
+    },
+
+    "updated_endpoints": {
+      "get_all_attempts": {
+        "endpoint": "GET /attempts",
+        "description": "Get all attempts with optional filtering (now includes attemptType filter)",
+        "headers": {
+          "Authorization": "Bearer your_jwt_token_here"
+        },
+        "query_parameters": {
+          "examId": "Optional - filter by exam ID",
+          "status": "Optional - filter by status",
+          "attemptType": "Optional - filter by attempt type (full_exam | section_only)",
+          "page": "Optional - page number (default: 1)",
+          "limit": "Optional - items per page (default: 20)"
+        },
+        "example_urls": [
+          "/attempts",
+          "/attempts?attemptType=full_exam",
+          "/attempts?attemptType=section_only&status=submitted",
+          "/attempts?examId=68ea2625285f4daf28311d5b&attemptType=full_exam"
+        ]
+      },
+
+      "submit_section": {
+        "endpoint": "POST /attempts/:id/sections/:sectionId/submit",
+        "description": "Submit a section (updated to handle section-only attempts)",
+        "headers": {
+          "Authorization": "Bearer your_jwt_token_here"
+        },
+        "behavior_changes": {
+          "section_only_attempts": "When submitting a section in a section-only attempt, the entire attempt is marked as submitted",
+          "full_exam_attempts": "When submitting a section in a full exam attempt, only the section is marked as submitted"
+        },
+        "example_response": {
+          "message": "Section submitted",
+          "sectionsStatus": [
+            {
+              "sectionId": "68ea2625285f4daf28311d5d",
+              "status": "submitted",
+              "submittedAt": "2025-01-12T10:25:00.000Z",
+              "score": 8.5,
+              "maxScore": 10,
+              "accuracy": 0.85
+            }
+          ],
+          "attemptType": "section_only",
+          "attemptStatus": "submitted"
+        }
+      }
+    },
+
+    "attempt_model_changes": {
+      "new_fields": {
+        "attemptType": {
+          "type": "String",
+          "enum": ["full_exam", "section_only"],
+          "default": "full_exam",
+          "indexed": true,
+          "description": "Distinguishes between full exam attempts and section-only attempts"
+        },
+        "activeSectionId": {
+          "type": "ObjectId",
+          "ref": "Section",
+          "description": "For section-only attempts, specifies which section is being attempted"
+        }
+      },
+      "existing_fields": {
+        "sectionsStatus": "Updated to work with both attempt types",
+        "status": "Updated to handle section-only attempt completion",
+        "submittedAt": "Updated to be set when section-only attempts are completed"
+      }
+    },
+
+    "usage_examples": {
+      "start_section_exam": {
+        "curl": "curl -X POST http://localhost:4000/attempts/sections/start -H 'Authorization: Bearer TOKEN' -H 'Content-Type: application/json' -d '{\"examId\":\"68ea2625285f4daf28311d5b\",\"sectionId\":\"68ea2625285f4daf28311d5d\"}'",
+        "javascript": "const response = await fetch('http://localhost:4000/attempts/sections/start', {\n  method: 'POST',\n  headers: {\n    'Authorization': 'Bearer ' + token,\n    'Content-Type': 'application/json'\n  },\n  body: JSON.stringify({\n    examId: '68ea2625285f4daf28311d5b',\n    sectionId: '68ea2625285f4daf28311d5d'\n  })\n});\nconst attempt = await response.json();"
+      },
+
+      "get_section_attempts": {
+        "curl": "curl -X GET http://localhost:4000/attempts/by-type/section_only -H 'Authorization: Bearer TOKEN'",
+        "javascript": "const response = await fetch('http://localhost:4000/attempts/by-type/section_only', {\n  headers: { 'Authorization': 'Bearer ' + token }\n});\nconst data = await response.json();"
+      },
+
+      "get_full_exam_attempts": {
+        "curl": "curl -X GET http://localhost:4000/attempts/by-type/full_exam -H 'Authorization: Bearer TOKEN'",
+        "javascript": "const response = await fetch('http://localhost:4000/attempts/by-type/full_exam', {\n  headers: { 'Authorization': 'Bearer ' + token }\n});\nconst data = await response.json();"
+      },
+
+      "get_attempts_for_section": {
+        "curl": "curl -X GET http://localhost:4000/attempts/sections/68ea2625285f4daf28311d5d -H 'Authorization: Bearer TOKEN'",
+        "javascript": "const response = await fetch('http://localhost:4000/attempts/sections/68ea2625285f4daf28311d5d', {\n  headers: { 'Authorization': 'Bearer ' + token }\n});\nconst data = await response.json();"
+      }
+    },
+
+    "workflow_examples": {
+      "section_specific_workflow": {
+        "step_1": "Check if exam is section-specific using /exams/open/:examId",
+        "step_2": "Start section-specific attempt using /attempts/sections/start",
+        "step_3": "Submit responses using existing /attempts/:id/responses endpoint",
+        "step_4": "Submit section using /attempts/:id/sections/:sectionId/submit",
+        "step_5": "Grade section using /attempts/:id/sections/:sectionId/grade"
+      },
+
+      "full_exam_workflow": {
+        "step_1": "Start full exam using /attempts/resume or /attempts/",
+        "step_2": "Submit responses using existing /attempts/:id/responses endpoint",
+        "step_3": "Submit sections individually or entire exam using /attempts/:id/submit",
+        "step_4": "Grade exam using /attempts/:id/grade"
+      }
+    },
+
+    "error_responses": {
+      "section_not_found": {
+        "status": 404,
+        "error": "Section not found in this exam"
+      },
+      "invalid_attempt_type": {
+        "status": 400,
+        "error": "Invalid attemptType. Must be 'full_exam' or 'section_only'"
+      },
+      "section_id_required": {
+        "status": 400,
+        "error": "sectionId is required"
+      },
+      "exam_id_required": {
+        "status": 400,
+        "error": "examId is required"
+      }
+    },
+
+    "database_considerations": {
+      "indexes": {
+        "attemptType": "Indexed for efficient filtering",
+        "activeSectionId": "Indexed for section-specific queries",
+        "compound_indexes": "Consider adding compound indexes for common query patterns"
+      },
+      "migration": {
+        "existing_attempts": "All existing attempts will have attemptType: 'full_exam' by default",
+        "backward_compatibility": "Existing code will continue to work without changes"
+      }
+    }
+  }
+}

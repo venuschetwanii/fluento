@@ -1,0 +1,263 @@
+{
+  "section_specific_exam_detection": {
+    "description": "How to determine if an exam is section-specific and handle different exam structures",
+    "base_url": "http://localhost:4000",
+
+    "detection_methods": {
+      "method_1_exam_structure": {
+        "description": "Check exam.sections array to determine if exam has sections",
+        "endpoint": "GET /exams/:examId",
+        "headers": {
+          "Authorization": "Bearer your_jwt_token_here"
+        },
+        "example_url": "/exams/68ea2625285f4daf28311d5b",
+        "detection_logic": {
+          "has_sections": "exam.sections && Array.isArray(exam.sections) && exam.sections.length > 0",
+          "is_section_specific": "exam.sections.length > 1",
+          "is_single_section": "exam.sections.length === 1",
+          "is_no_sections": "!exam.sections || exam.sections.length === 0"
+        },
+        "example_response": {
+          "_id": "68ea2625285f4daf28311d5b",
+          "title": "IELTS Academic Complete Test",
+          "type": "IELTS Academic",
+          "duration": 180,
+          "totalQuestions": 40,
+          "sections": [
+            {
+              "_id": "68ea2625285f4daf28311d5d",
+              "sectionType": "Listening",
+              "title": "IELTS Listening Section",
+              "duration": 30,
+              "totalQuestions": 10
+            },
+            {
+              "_id": "68ea2625285f4daf28311d5e",
+              "sectionType": "Reading",
+              "title": "IELTS Reading Section",
+              "duration": 60,
+              "totalQuestions": 15
+            },
+            {
+              "_id": "68ea2625285f4daf28311d5f",
+              "sectionType": "Writing",
+              "title": "IELTS Writing Section",
+              "duration": 60,
+              "totalQuestions": 10
+            },
+            {
+              "_id": "68ea2625285f4daf28311d5g",
+              "sectionType": "Speaking",
+              "title": "IELTS Speaking Section",
+              "duration": 30,
+              "totalQuestions": 5
+            }
+          ]
+        }
+      },
+
+      "method_2_open_exam_endpoint": {
+        "description": "Use the open exam endpoint for public exam info (no auth required)",
+        "endpoint": "GET /exams/open/:examId",
+        "example_url": "/exams/open/68ea2625285f4daf28311d5b",
+        "detection_logic": {
+          "has_sections": "response.sections && Array.isArray(response.sections) && response.sections.length > 0",
+          "is_section_specific": "response.sections.length > 1",
+          "section_count": "response.sections.length"
+        },
+        "example_response": {
+          "_id": "68ea2625285f4daf28311d5b",
+          "title": "IELTS Academic Complete Test",
+          "type": "IELTS Academic",
+          "duration": 180,
+          "totalQuestions": 40,
+          "sections": [
+            {
+              "_id": "68ea2625285f4daf28311d5d",
+              "sectionType": "Listening",
+              "title": "IELTS Listening Section",
+              "duration": 30,
+              "totalQuestions": 10
+            },
+            {
+              "_id": "68ea2625285f4daf28311d5e",
+              "sectionType": "Reading",
+              "title": "IELTS Reading Section",
+              "duration": 60,
+              "totalQuestions": 15
+            }
+          ]
+        }
+      },
+
+      "method_3_attempt_analysis": {
+        "description": "Check attempt.sectionsStatus to see how sections are being tracked",
+        "endpoint": "GET /attempts/:id",
+        "headers": {
+          "Authorization": "Bearer your_jwt_token_here"
+        },
+        "example_url": "/attempts/68ea2625285f4daf28311d5c",
+        "detection_logic": {
+          "has_section_tracking": "attempt.sectionsStatus && Array.isArray(attempt.sectionsStatus) && attempt.sectionsStatus.length > 0",
+          "is_section_specific": "attempt.sectionsStatus.length > 1",
+          "active_sections": "attempt.sectionsStatus.filter(s => s.status === 'in_progress').length"
+        },
+        "example_response": {
+          "_id": "68ea2625285f4daf28311d5c",
+          "userId": "68ea2625285f4daf28311d5b",
+          "examId": "68ea2625285f4daf28311d5b",
+          "status": "in_progress",
+          "sectionsStatus": [
+            {
+              "sectionId": "68ea2625285f4daf28311d5d",
+              "status": "in_progress"
+            },
+            {
+              "sectionId": "68ea2625285f4daf28311d5e",
+              "status": "in_progress"
+            },
+            {
+              "sectionId": "68ea2625285f4daf28311d5f",
+              "status": "submitted",
+              "submittedAt": "2025-01-12T10:30:00.000Z",
+              "score": 8.5,
+              "maxScore": 10,
+              "accuracy": 0.85
+            }
+          ]
+        }
+      }
+    },
+
+    "exam_types_classification": {
+      "section_specific_exams": {
+        "description": "Exams that have multiple sections and can be taken section by section",
+        "examples": [
+          "IELTS Academic (Listening, Reading, Writing, Speaking)",
+          "IELTS General (Listening, Reading, Writing, Speaking)",
+          "TOEFL iBT (Reading, Listening, Speaking, Writing)",
+          "GRE (Verbal Reasoning, Quantitative Reasoning, Analytical Writing)",
+          "PTE Academic (Speaking & Writing, Reading, Listening)"
+        ],
+        "characteristics": {
+          "section_count": "> 1",
+          "section_types": "Different types (Listening, Reading, Writing, Speaking)",
+          "individual_duration": "Each section has its own duration",
+          "individual_scoring": "Each section can be scored separately",
+          "section_submission": "Can submit sections individually"
+        }
+      },
+
+      "single_section_exams": {
+        "description": "Exams that have only one section or are treated as a single unit",
+        "examples": [
+          "Practice tests with single section",
+          "Mini quizzes",
+          "Section-specific practice (e.g., just IELTS Writing practice)"
+        ],
+        "characteristics": {
+          "section_count": "= 1",
+          "section_types": "Single type",
+          "unified_duration": "Single duration for entire exam",
+          "unified_scoring": "Single score for entire exam",
+          "full_submission": "Must submit entire exam at once"
+        }
+      },
+
+      "no_sections_exams": {
+        "description": "Exams without section structure (legacy or simple exams)",
+        "examples": [
+          "Simple quizzes",
+          "Basic practice tests",
+          "Legacy exam formats"
+        ],
+        "characteristics": {
+          "section_count": "= 0 or null",
+          "section_types": "None",
+          "unified_duration": "Single duration",
+          "unified_scoring": "Single score",
+          "full_submission": "Must submit entire exam at once"
+        }
+      }
+    },
+
+    "implementation_examples": {
+      "javascript_detection": {
+        "check_exam_structure": "const isSectionSpecific = (exam) => {\n  return exam.sections && \n         Array.isArray(exam.sections) && \n         exam.sections.length > 1;\n};",
+        "check_attempt_structure": "const hasSectionTracking = (attempt) => {\n  return attempt.sectionsStatus && \n         Array.isArray(attempt.sectionsStatus) && \n         attempt.sectionsStatus.length > 0;\n};",
+        "get_section_count": "const getSectionCount = (exam) => {\n  return exam.sections ? exam.sections.length : 0;\n};",
+        "get_active_sections": "const getActiveSections = (attempt) => {\n  return attempt.sectionsStatus ? \n    attempt.sectionsStatus.filter(s => s.status === 'in_progress') : [];\n};"
+      },
+
+      "api_usage_examples": {
+        "check_before_starting": "// 1. Get exam info\nconst examResponse = await fetch('/exams/open/68ea2625285f4daf28311d5b');\nconst exam = await examResponse.json();\n\n// 2. Check if section-specific\nconst isSectionSpecific = exam.sections && exam.sections.length > 1;\n\n// 3. Handle accordingly\nif (isSectionSpecific) {\n  console.log('This is a section-specific exam with', exam.sections.length, 'sections');\n  // Show section selection UI\n} else {\n  console.log('This is a single-section exam');\n  // Show direct start button\n}",
+
+        "check_attempt_progress": "// 1. Get attempt info\nconst attemptResponse = await fetch('/attempts/68ea2625285f4daf28311d5c', {\n  headers: { 'Authorization': 'Bearer ' + token }\n});\nconst attempt = await attemptResponse.json();\n\n// 2. Check section status\nconst inProgressSections = attempt.sectionsStatus.filter(s => s.status === 'in_progress');\nconst submittedSections = attempt.sectionsStatus.filter(s => s.status === 'submitted');\n\nconsole.log('Sections in progress:', inProgressSections.length);\nconsole.log('Sections submitted:', submittedSections.length);"
+      }
+    },
+
+    "ui_flow_recommendations": {
+      "section_specific_exam_ui": {
+        "start_flow": [
+          "1. Show exam overview with all sections",
+          "2. Allow user to select which section to start",
+          "3. Show section-specific instructions",
+          "4. Start attempt for selected section only"
+        ],
+        "progress_flow": [
+          "1. Show section progress indicator",
+          "2. Allow section-by-section submission",
+          "3. Show individual section scores",
+          "4. Allow returning to incomplete sections"
+        ]
+      },
+
+      "single_section_exam_ui": {
+        "start_flow": [
+          "1. Show exam overview",
+          "2. Show unified instructions",
+          "3. Start attempt for entire exam",
+          "4. Show overall progress"
+        ],
+        "progress_flow": [
+          "1. Show overall progress bar",
+          "2. Allow full exam submission only",
+          "3. Show single score result"
+        ]
+      }
+    },
+
+    "curl_examples": {
+      "check_exam_structure": "curl -X GET http://localhost:4000/exams/open/68ea2625285f4daf28311d5b",
+      "check_attempt_structure": "curl -X GET http://localhost:4000/attempts/68ea2625285f4daf28311d5c -H 'Authorization: Bearer YOUR_TOKEN'",
+      "get_section_details": "curl -X GET http://localhost:4000/exams/68ea2625285f4daf28311d5b -H 'Authorization: Bearer YOUR_TOKEN'"
+    },
+
+    "common_patterns": {
+      "ielts_exam": {
+        "sections": 4,
+        "section_types": ["Listening", "Reading", "Writing", "Speaking"],
+        "is_section_specific": true
+      },
+      "toefl_exam": {
+        "sections": 4,
+        "section_types": ["Reading", "Listening", "Speaking", "Writing"],
+        "is_section_specific": true
+      },
+      "gre_exam": {
+        "sections": 3,
+        "section_types": [
+          "Verbal Reasoning",
+          "Quantitative Reasoning",
+          "Analytical Writing"
+        ],
+        "is_section_specific": true
+      },
+      "pte_exam": {
+        "sections": 3,
+        "section_types": ["Speaking & Writing", "Reading", "Listening"],
+        "is_section_specific": true
+      }
+    }
+  }
+}

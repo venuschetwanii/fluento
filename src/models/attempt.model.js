@@ -74,6 +74,13 @@ const AttemptSchema = new Schema(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", index: true },
     examId: { type: String, ref: "Exam", index: true },
+    attemptType: {
+      type: String,
+      enum: ["full_exam", "section_only"],
+      default: "full_exam",
+      index: true,
+    },
+    activeSectionId: { type: Schema.Types.ObjectId, ref: "Section" },
     status: {
       type: String,
       enum: ["in_progress", "submitted", "graded", "expired", "cancelled"],
