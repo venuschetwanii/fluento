@@ -712,4 +712,49 @@ router.delete(
     }
   }
 );
+
+// **UPDATE EXAM STATUS** - Dedicated endpoint for status updates
+router.patch(
+  "/:examId/status",
+  requireRole("teacher", "moderator", "admin"),
+  async (req, res) => {
+    try {
+      const { examId } = req.params;
+      const { status } = req.body;
+
+      // Validate status value
+      if (!status || !["draft", "published"].includes(status)) {
+        return res.status(400).json({
+          error: "Status is required and must be either 'draft' or 'published'",
+        });
+      }
+
+      // Find the exam (exclude soft-deleted)
+      const exam = await Exam.findOne({ _id: examId, deletedAt: null });
+      if (!exam) {
+        return res.status(404).json({ error: "Exam not found" });
+      }
+
+      // Update only the status field
+      exam.status = status;
+      await exam.save();
+
+      res.json({
+        message: "Exam status updated successfully",
+        exam: {
+          _id: exam._id,
+          title: exam.title,
+          status: exam.status,
+          updatedAt: exam.updatedAt,
+        },
+      });
+    } catch (error) {
+      if (error.name === "CastError") {
+        return res.status(400).json({ error: "Invalid Exam ID" });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  }
+);
+
 module.exports = router;

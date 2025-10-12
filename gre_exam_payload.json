@@ -1,0 +1,393 @@
+{
+  "title": "GRE General Test Practice 1",
+  "type": "GRE General",
+  "duration": 12600,
+  "totalQuestions": 40,
+  "status": "published",
+  "sections": [
+    {
+      "examType": "GRE General",
+      "sectionType": "Analytical Writing",
+      "title": "Analytical Writing Section",
+      "duration": 3600,
+      "totalQuestions": 2,
+      "instructions": [
+        "This section tests your ability to articulate complex ideas clearly and effectively.",
+        "You will have 60 minutes to complete this section.",
+        "You will be asked to write two essays: an Issue task and an Argument task."
+      ],
+      "parts": [
+        {
+          "type": "issue_task",
+          "directionText": "You will be given a statement and asked to develop and support your position on that issue.",
+          "context": "Issue analysis",
+          "questionGroups": [
+            {
+              "groupNumber": 1,
+              "groupName": "Issue Task",
+              "questionType": "issue_essay",
+              "directionText": "You have 30 minutes to plan and write your response to the issue presented below.",
+              "questions": [
+                {
+                  "question": "Write a response in which you discuss the extent to which you agree or disagree with the statement and explain your reasoning for the position you take. In developing and supporting your position, you should consider ways in which the statement might or might not hold true and explain how these considerations shape your position.\n\n'In any field of inquiry, the beginner is more likely than the expert to make important contributions.'",
+                  "questionType": "long",
+                  "minWords": 500,
+                  "maxWords": 600,
+                  "scoringCriteria": [
+                    "Content: Clear position with well-developed arguments",
+                    "Organization: Logical structure and clear transitions",
+                    "Language Use: Sophisticated vocabulary and grammar",
+                    "Development: Specific examples and reasoning"
+                  ],
+                  "correctAnswer": "Sample response: The statement that beginners are more likely than experts to make important contributions in any field of inquiry is provocative but ultimately oversimplified. While there are certainly cases where fresh perspectives from newcomers have led to breakthrough discoveries, the relationship between expertise and contribution is far more complex than this statement suggests.\n\nThere are compelling arguments in favor of the statement. Beginners often approach problems with fresh eyes, unencumbered by the conventional wisdom and established paradigms that may limit experts' thinking. For instance, in the field of physics, many revolutionary discoveries have come from young researchers who were not yet fully indoctrinated into existing theoretical frameworks. Einstein's theory of relativity, developed when he was relatively young and working outside the mainstream physics community, fundamentally changed our understanding of space and time.\n\nAdditionally, beginners may be more willing to take risks and explore unconventional approaches that established experts might dismiss as too risky or unorthodox. In the technology sector, many groundbreaking innovations have come from entrepreneurs and researchers who were new to their fields, bringing fresh perspectives that challenged existing business models and technical approaches.\n\nHowever, the statement overlooks the crucial role that deep expertise plays in making meaningful contributions. Experts possess the knowledge, skills, and understanding necessary to identify truly significant problems and develop sophisticated solutions. In fields like medicine, where patient safety is paramount, the contributions of experienced practitioners are invaluable. A beginner might have innovative ideas, but without the deep understanding of human physiology, disease processes, and treatment protocols, their contributions could be dangerous rather than helpful.\n\nFurthermore, many important contributions require the accumulation of knowledge and experience that only comes with years of study and practice. In fields such as mathematics, where problems may take decades to solve, the expertise gained through years of research is essential for making progress on complex theoretical questions.\n\nIn conclusion, while beginners can and do make important contributions, particularly when they bring fresh perspectives or challenge established paradigms, the statement is too absolute. The most significant contributions often come from individuals who combine the fresh thinking of a beginner with the deep knowledge of an expert, or from collaborative efforts that leverage both perspectives. The relationship between expertise and contribution is nuanced and context-dependent, rather than following a simple rule about who is more likely to make important discoveries.",
+                  "weight": 1,
+                  "explanation": "This response presents a balanced analysis of the issue, acknowledging both sides while developing a nuanced position with specific examples and sophisticated reasoning."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "argument_task",
+          "directionText": "You will be given an argument and asked to evaluate its logical soundness.",
+          "context": "Argument analysis",
+          "questionGroups": [
+            {
+              "groupNumber": 2,
+              "groupName": "Argument Task",
+              "questionType": "argument_essay",
+              "directionText": "You have 30 minutes to plan and write your response to the argument presented below.",
+              "questions": [
+                {
+                  "question": "Write a response in which you discuss what specific evidence is needed to evaluate the argument and explain how the evidence would weaken or strengthen the argument.\n\n'The following appeared in a memo from the president of a chain of retail stores:\n\n\"Our sales have increased by 15% over the past year, while our main competitor's sales have decreased by 5%. This clearly demonstrates that our new marketing strategy is working effectively. We should continue to invest heavily in this strategy and expand it to all our stores nationwide. Additionally, we should consider opening new stores in areas where our competitor has closed locations, as this will allow us to capture their former customers and further increase our market share.\"",
+                  "questionType": "long",
+                  "minWords": 500,
+                  "maxWords": 600,
+                  "scoringCriteria": [
+                    "Content: Clear identification of argument flaws",
+                    "Organization: Logical structure and clear transitions",
+                    "Language Use: Sophisticated vocabulary and grammar",
+                    "Analysis: Specific evidence needed to evaluate the argument"
+                  ],
+                  "correctAnswer": "Sample response: The president's argument contains several logical flaws and makes unwarranted assumptions that require additional evidence to properly evaluate. While the sales data presented seems promising, the conclusion that the marketing strategy is solely responsible for the success is premature and potentially misleading.\n\nFirst, the argument assumes a direct causal relationship between the new marketing strategy and the sales increase without considering alternative explanations. To properly evaluate this claim, we would need evidence about other factors that might have influenced sales, such as changes in the economy, seasonal variations, product quality improvements, or changes in customer demographics. For instance, if the economy improved significantly during this period, the sales increase might be due to increased consumer spending rather than the marketing strategy. Similarly, if the company introduced new products or improved existing ones, these factors could explain the sales growth.\n\nSecond, the argument fails to provide context about the competitor's situation. The 5% decrease in the competitor's sales could be due to factors unrelated to the company's marketing strategy, such as the competitor's own poor business decisions, supply chain issues, or market conditions affecting their specific product lines. To strengthen the argument, we would need evidence that the competitor's decline is directly related to the company's marketing efforts, such as customer surveys showing that customers switched from the competitor to the company due to the marketing campaign.\n\nThird, the argument makes an unwarranted assumption about the scalability of the marketing strategy. The success in current stores does not guarantee success in new markets or with different customer bases. Evidence about the strategy's effectiveness across different demographics, geographic regions, and market conditions would be needed to support the recommendation to expand nationwide.\n\nFourth, the suggestion to open stores in areas where the competitor has closed locations assumes that the competitor's former customers will automatically become the company's customers. This assumption requires evidence about customer loyalty, brand preferences, and the reasons why the competitor closed those locations. If the competitor closed stores due to poor market conditions or high operating costs, opening new stores in those same areas might not be profitable.\n\nFinally, the argument lacks information about the costs associated with the marketing strategy and the expansion plans. To properly evaluate the recommendation, we would need evidence about the return on investment, the costs of implementing the strategy in new markets, and the potential risks involved in rapid expansion.\n\nIn conclusion, while the sales data is encouraging, the argument requires substantial additional evidence to support its conclusions and recommendations. The president should gather more comprehensive data about market conditions, competitor analysis, customer behavior, and financial implications before proceeding with the proposed expansion.",
+                  "weight": 1,
+                  "explanation": "This response effectively identifies multiple logical flaws in the argument and specifies the types of evidence needed to properly evaluate each claim."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "examType": "GRE General",
+      "sectionType": "Verbal Reasoning",
+      "title": "Verbal Reasoning Section",
+      "duration": 3600,
+      "totalQuestions": 20,
+      "instructions": [
+        "This section tests your ability to analyze and evaluate written material.",
+        "You will have 60 minutes to complete this section.",
+        "Read each passage carefully and answer the questions that follow."
+      ],
+      "parts": [
+        {
+          "type": "text_completion",
+          "directionText": "For each blank, select the entry that best completes the text.",
+          "context": "Text completion",
+          "questionGroups": [
+            {
+              "groupNumber": 1,
+              "groupName": "Text Completion",
+              "questionType": "text_completion",
+              "directionText": "For each blank, select the entry that best completes the text.",
+              "questions": [
+                {
+                  "question": "The scientist's research was so _____ that it challenged fundamental assumptions in the field, leading to a complete _____ of existing theories.",
+                  "questionType": "text_completion",
+                  "options": [
+                    "A) groundbreaking ... revision",
+                    "B) controversial ... rejection",
+                    "C) innovative ... confirmation",
+                    "D) meticulous ... preservation"
+                  ],
+                  "correctAnswer": "A",
+                  "weight": 1,
+                  "explanation": "The context suggests the research was revolutionary (groundbreaking) and led to changes in existing theories (revision)."
+                },
+                {
+                  "question": "Despite the company's _____ efforts to improve workplace conditions, employee satisfaction remained _____.",
+                  "questionType": "text_completion",
+                  "options": [
+                    "A) sincere ... unchanged",
+                    "B) halfhearted ... high",
+                    "C) genuine ... low",
+                    "D) superficial ... moderate"
+                  ],
+                  "correctAnswer": "C",
+                  "weight": 1,
+                  "explanation": "The word 'despite' indicates a contrast, so genuine efforts that didn't improve satisfaction (low) makes sense."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "sentence_equivalence",
+          "directionText": "Select the two answer choices that, when used to complete the sentence, fit the meaning of the sentence as a whole and produce completed sentences that are alike in meaning.",
+          "context": "Sentence equivalence",
+          "questionGroups": [
+            {
+              "groupNumber": 2,
+              "groupName": "Sentence Equivalence",
+              "questionType": "sentence_equivalence",
+              "directionText": "Select the two answer choices that produce sentences that are alike in meaning.",
+              "questions": [
+                {
+                  "question": "The politician's speech was so _____ that even his supporters found it difficult to follow his argument.",
+                  "questionType": "sentence_equivalence",
+                  "options": [
+                    "A) convoluted",
+                    "B) eloquent",
+                    "C) straightforward",
+                    "D) confusing",
+                    "E) persuasive",
+                    "F) incomprehensible"
+                  ],
+                  "correctAnswer": ["A", "D"],
+                  "weight": 1,
+                  "explanation": "Both 'convoluted' and 'confusing' indicate that the speech was difficult to understand, which fits the context."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "reading_comprehension",
+          "directionText": "Read the passage and answer the questions that follow.",
+          "context": "Reading comprehension",
+          "questionGroups": [
+            {
+              "groupNumber": 3,
+              "groupName": "Reading Comprehension",
+              "questionType": "reading_comprehension",
+              "directionText": "Read the passage and answer the questions that follow.",
+              "passageText": "The concept of artificial intelligence (AI) has evolved significantly since its inception in the mid-20th century. Initially, AI research focused on creating machines that could perform tasks typically requiring human intelligence, such as problem-solving and pattern recognition. Early approaches, known as symbolic AI, relied on explicit programming of rules and knowledge representations. However, these systems proved limited in their ability to handle the complexity and ambiguity inherent in real-world problems.\n\nThe development of machine learning, particularly deep learning, has revolutionized the field. Unlike symbolic AI, machine learning systems can learn from data without being explicitly programmed for every possible scenario. This approach has led to remarkable breakthroughs in areas such as image recognition, natural language processing, and game playing. For instance, deep learning algorithms have achieved superhuman performance in complex games like Go and have enabled significant advances in medical diagnosis through the analysis of medical images.\n\nDespite these advances, current AI systems still face significant limitations. They often require vast amounts of data to learn effectively and can be brittle when faced with situations that differ from their training data. Additionally, the decision-making processes of many AI systems are opaque, making it difficult to understand how they arrive at their conclusions. This 'black box' problem raises important questions about accountability and trust, particularly in high-stakes applications such as autonomous vehicles and medical diagnosis.\n\nLooking forward, researchers are exploring approaches that combine the strengths of different AI paradigms. Hybrid systems that integrate symbolic reasoning with machine learning may offer a path toward more robust and interpretable AI systems. Such systems could potentially combine the transparency and reliability of symbolic approaches with the learning capabilities of machine learning methods.",
+              "questions": [
+                {
+                  "question": "The primary purpose of the passage is to:",
+                  "questionType": "single",
+                  "options": [
+                    "A) Compare different approaches to AI development",
+                    "B) Trace the evolution of AI from its origins to current challenges",
+                    "C) Argue for the superiority of machine learning over symbolic AI",
+                    "D) Predict the future direction of AI research"
+                  ],
+                  "correctAnswer": "B",
+                  "weight": 1,
+                  "explanation": "The passage traces AI from its early symbolic approaches through machine learning developments to current limitations and future possibilities."
+                },
+                {
+                  "question": "According to the passage, symbolic AI was limited because:",
+                  "questionType": "single",
+                  "options": [
+                    "A) It required too much computational power",
+                    "B) It couldn't handle real-world complexity and ambiguity",
+                    "C) It was too expensive to implement",
+                    "D) It lacked the ability to learn from data"
+                  ],
+                  "correctAnswer": "B",
+                  "weight": 1,
+                  "explanation": "The passage states that symbolic AI 'proved limited in their ability to handle the complexity and ambiguity inherent in real-world problems.'"
+                },
+                {
+                  "question": "The author mentions the 'black box' problem to illustrate:",
+                  "questionType": "single",
+                  "options": [
+                    "A) The computational complexity of AI systems",
+                    "B) The difficulty of understanding AI decision-making processes",
+                    "C) The need for more powerful hardware",
+                    "D) The limitations of current programming languages"
+                  ],
+                  "correctAnswer": "B",
+                  "weight": 1,
+                  "explanation": "The 'black box' problem refers to the opacity of AI decision-making processes, making it difficult to understand how conclusions are reached."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "examType": "GRE General",
+      "sectionType": "Quantitative Reasoning",
+      "title": "Quantitative Reasoning Section",
+      "duration": 3600,
+      "totalQuestions": 20,
+      "instructions": [
+        "This section tests your ability to understand, interpret, and analyze quantitative information.",
+        "You will have 60 minutes to complete this section.",
+        "You may use a calculator for this section."
+      ],
+      "parts": [
+        {
+          "type": "quantitative_comparison",
+          "directionText": "Compare the two quantities and select the appropriate answer.",
+          "context": "Quantitative comparison",
+          "questionGroups": [
+            {
+              "groupNumber": 1,
+              "groupName": "Quantitative Comparison",
+              "questionType": "quantitative_comparison",
+              "directionText": "Compare Quantity A and Quantity B, and select the appropriate answer.",
+              "questions": [
+                {
+                  "question": "Quantity A: The area of a circle with radius 5\nQuantity B: The area of a square with side length 8",
+                  "questionType": "quantitative_comparison",
+                  "options": [
+                    "A) Quantity A is greater",
+                    "B) Quantity B is greater",
+                    "C) The two quantities are equal",
+                    "D) The relationship cannot be determined from the information given"
+                  ],
+                  "correctAnswer": "A",
+                  "weight": 1,
+                  "explanation": "Quantity A: Area = π(5)² = 25π ≈ 78.54. Quantity B: Area = 8² = 64. Since 78.54 > 64, Quantity A is greater."
+                },
+                {
+                  "question": "Quantity A: 2x + 3y where x = 4 and y = 5\nQuantity B: 3x + 2y where x = 4 and y = 5",
+                  "questionType": "quantitative_comparison",
+                  "options": [
+                    "A) Quantity A is greater",
+                    "B) Quantity B is greater",
+                    "C) The two quantities are equal",
+                    "D) The relationship cannot be determined from the information given"
+                  ],
+                  "correctAnswer": "B",
+                  "weight": 1,
+                  "explanation": "Quantity A: 2(4) + 3(5) = 8 + 15 = 23. Quantity B: 3(4) + 2(5) = 12 + 10 = 22. Since 23 > 22, Quantity A is greater."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "multiple_choice",
+          "directionText": "Select the best answer choice.",
+          "context": "Multiple choice questions",
+          "questionGroups": [
+            {
+              "groupNumber": 2,
+              "groupName": "Multiple Choice",
+              "questionType": "multiple_choice",
+              "directionText": "Select the best answer choice for each question.",
+              "questions": [
+                {
+                  "question": "If a train travels 240 miles in 4 hours, what is its average speed in miles per hour?",
+                  "questionType": "single",
+                  "options": ["A) 50", "B) 60", "C) 70", "D) 80"],
+                  "correctAnswer": "B",
+                  "weight": 1,
+                  "explanation": "Average speed = Distance ÷ Time = 240 miles ÷ 4 hours = 60 miles per hour."
+                },
+                {
+                  "question": "What is the value of x in the equation 3x + 7 = 22?",
+                  "questionType": "single",
+                  "options": ["A) 3", "B) 4", "C) 5", "D) 6"],
+                  "correctAnswer": "C",
+                  "weight": 1,
+                  "explanation": "3x + 7 = 22, so 3x = 22 - 7 = 15, therefore x = 15 ÷ 3 = 5."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "multiple_choice_multiple",
+          "directionText": "Select all correct answer choices.",
+          "context": "Multiple selection",
+          "questionGroups": [
+            {
+              "groupNumber": 3,
+              "groupName": "Multiple Choice - Multiple Answers",
+              "questionType": "multiple_choice",
+              "directionText": "Select all correct answer choices for each question.",
+              "questions": [
+                {
+                  "question": "Which of the following numbers are prime? (Select all that apply)",
+                  "questionType": "multi",
+                  "options": ["A) 17", "B) 21", "C) 23", "D) 27", "E) 29"],
+                  "correctAnswer": ["A", "C", "E"],
+                  "weight": 1,
+                  "explanation": "Prime numbers are only divisible by 1 and themselves: 17, 23, and 29 are prime. 21 = 3 × 7 and 27 = 3 × 9, so they are not prime."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "numeric_entry",
+          "directionText": "Enter your answer in the answer box.",
+          "context": "Numeric entry",
+          "questionGroups": [
+            {
+              "groupNumber": 4,
+              "groupName": "Numeric Entry",
+              "questionType": "numeric_entry",
+              "directionText": "Enter your answer in the answer box provided.",
+              "questions": [
+                {
+                  "question": "What is 15% of 240?",
+                  "questionType": "numeric",
+                  "correctAnswer": "36",
+                  "weight": 1,
+                  "explanation": "15% of 240 = 0.15 × 240 = 36."
+                },
+                {
+                  "question": "If the ratio of boys to girls in a class is 3:2 and there are 30 students total, how many boys are in the class?",
+                  "questionType": "numeric",
+                  "correctAnswer": "18",
+                  "weight": 1,
+                  "explanation": "The ratio 3:2 means 3 parts boys and 2 parts girls, for a total of 5 parts. 30 ÷ 5 = 6 students per part. Boys = 3 × 6 = 18."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "data_interpretation",
+          "directionText": "Answer the questions based on the data provided.",
+          "context": "Data interpretation",
+          "questionGroups": [
+            {
+              "groupNumber": 5,
+              "groupName": "Data Interpretation",
+              "questionType": "data_interpretation",
+              "directionText": "Answer the questions based on the data in the table below.",
+              "passageText": "The following table shows the sales figures for a company over four quarters:\n\nQuarter | Sales (in thousands) | Growth Rate\nQ1      | 150                 | -        \nQ2      | 165                 | 10%      \nQ3      | 180                 | 9.1%     \nQ4      | 195                 | 8.3%     ",
+              "questions": [
+                {
+                  "question": "What was the total sales for the year?",
+                  "questionType": "numeric",
+                  "correctAnswer": "690",
+                  "weight": 1,
+                  "explanation": "Total sales = 150 + 165 + 180 + 195 = 690 thousand."
+                },
+                {
+                  "question": "Which quarter had the highest growth rate?",
+                  "questionType": "single",
+                  "options": ["A) Q1", "B) Q2", "C) Q3", "D) Q4"],
+                  "correctAnswer": "B",
+                  "weight": 1,
+                  "explanation": "Q2 had the highest growth rate at 10%, followed by Q3 at 9.1%, and Q4 at 8.3%."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+

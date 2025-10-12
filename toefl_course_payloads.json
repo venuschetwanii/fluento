@@ -1,0 +1,57 @@
+[
+  {
+    "title": "TOEFL iBT Complete Preparation Course",
+    "examType": "TOEFL iBT",
+    "description": "Comprehensive TOEFL iBT preparation covering Reading, Listening, Speaking, and Writing sections. Includes practice tests and score improvement strategies.",
+    "shortDescription": "Complete TOEFL iBT prep with practice tests",
+    "status": "published",
+    "publishedBy": "68ea2625285f4daf28311d5b",
+    "publishedAt": "2025-01-11T10:00:00.000Z",
+    "type": "video",
+    "url": "https://s3.amazonaws.com/fluento-courses/toefl-ibt-complete.mp4"
+  },
+  {
+    "title": "TOEFL Speaking & Writing Mastery",
+    "examType": "TOEFL iBT",
+    "description": "Advanced course focusing on TOEFL Speaking and Writing sections. Learn effective strategies for integrated and independent tasks.",
+    "shortDescription": "Master TOEFL Speaking and Writing sections",
+    "status": "published",
+    "publishedBy": "68ea2625285f4daf28311d5b",
+    "publishedAt": "2025-01-11T10:00:00.000Z",
+    "type": "video",
+    "url": "https://s3.amazonaws.com/fluento-courses/toefl-speaking-writing.mp4"
+  },
+  {
+    "title": "TOEFL Reading Comprehension Strategies",
+    "examType": "TOEFL iBT",
+    "description": "Specialized course for TOEFL Reading section. Learn time management, question types, and reading strategies for academic texts.",
+    "shortDescription": "TOEFL Reading strategies and time management",
+    "status": "published",
+    "publishedBy": "68ea2625285f4daf28311d5b",
+    "publishedAt": "2025-01-11T10:00:00.000Z",
+    "type": "pdf",
+    "url": "https://s3.amazonaws.com/fluento-courses/toefl-reading-strategies.pdf"
+  },
+  {
+    "title": "TOEFL Listening Skills Enhancement",
+    "examType": "TOEFL iBT",
+    "description": "Improve TOEFL Listening skills with practice tests, note-taking strategies, and audio exercises for academic lectures and conversations.",
+    "shortDescription": "Enhance TOEFL Listening skills and strategies",
+    "status": "published",
+    "publishedBy": "68ea2625285f4daf28311d5b",
+    "publishedAt": "2025-01-11T10:00:00.000Z",
+    "type": "video",
+    "url": "https://s3.amazonaws.com/fluento-courses/toefl-listening-enhancement.mp4"
+  },
+  {
+    "title": "TOEFL Integrated Writing Tasks",
+    "examType": "TOEFL iBT",
+    "description": "Master TOEFL Integrated Writing tasks. Learn to combine reading and listening materials to write effective responses.",
+    "shortDescription": "Master TOEFL Integrated Writing tasks",
+    "status": "draft",
+    "publishedBy": "68ea2625285f4daf28311d5b",
+    "publishedAt": null,
+    "type": "pdf",
+    "url": "https://s3.amazonaws.com/fluento-courses/toefl-integrated-writing.pdf"
+  }
+]

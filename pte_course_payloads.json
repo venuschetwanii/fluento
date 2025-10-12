@@ -1,0 +1,57 @@
+[
+  {
+    "title": "PTE Academic Complete Preparation",
+    "examType": "PTE Academic",
+    "description": "Comprehensive PTE Academic preparation covering all communicative skills: Speaking, Writing, Reading, and Listening. Includes practice tests and score improvement strategies.",
+    "shortDescription": "Complete PTE Academic prep with all skills",
+    "status": "published",
+    "publishedBy": "68ea2625285f4daf28311d5b",
+    "publishedAt": "2025-01-11T10:00:00.000Z",
+    "type": "video",
+    "url": "https://s3.amazonaws.com/fluento-courses/pte-academic-complete.mp4"
+  },
+  {
+    "title": "PTE Speaking & Pronunciation Mastery",
+    "examType": "PTE Academic",
+    "description": "Specialized course for PTE Speaking section. Focus on pronunciation, fluency, and speaking strategies for high scores.",
+    "shortDescription": "Master PTE Speaking and pronunciation",
+    "status": "published",
+    "publishedBy": "68ea2625285f4daf28311d5b",
+    "publishedAt": "2025-01-11T10:00:00.000Z",
+    "type": "video",
+    "url": "https://s3.amazonaws.com/fluento-courses/pte-speaking-pronunciation.mp4"
+  },
+  {
+    "title": "PTE Writing Skills Excellence",
+    "examType": "PTE Academic",
+    "description": "Advanced course for PTE Writing section. Learn essay writing, summarization, and writing strategies for high scores.",
+    "shortDescription": "Excel in PTE Writing section",
+    "status": "published",
+    "publishedBy": "68ea2625285f4daf28311d5b",
+    "publishedAt": "2025-01-11T10:00:00.000Z",
+    "type": "pdf",
+    "url": "https://s3.amazonaws.com/fluento-courses/pte-writing-excellence.pdf"
+  },
+  {
+    "title": "PTE Reading & Listening Strategies",
+    "examType": "PTE Academic",
+    "description": "Master PTE Reading and Listening sections with effective strategies, practice tests, and time management techniques.",
+    "shortDescription": "PTE Reading and Listening strategies",
+    "status": "published",
+    "publishedBy": "68ea2625285f4daf28311d5b",
+    "publishedAt": "2025-01-11T10:00:00.000Z",
+    "type": "video",
+    "url": "https://s3.amazonaws.com/fluento-courses/pte-reading-listening.mp4"
+  },
+  {
+    "title": "PTE Academic Practice Tests",
+    "examType": "PTE Academic",
+    "description": "Comprehensive PTE Academic practice tests with detailed explanations and score analysis for all question types.",
+    "shortDescription": "PTE Academic practice tests and analysis",
+    "status": "draft",
+    "publishedBy": "68ea2625285f4daf28311d5b",
+    "publishedAt": null,
+    "type": "pdf",
+    "url": "https://s3.amazonaws.com/fluento-courses/pte-practice-tests.pdf"
+  }
+]

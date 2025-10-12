@@ -1,0 +1,57 @@
+[
+  {
+    "title": "GRE Complete Preparation Program",
+    "examType": "GRE General",
+    "description": "Comprehensive GRE preparation covering Verbal Reasoning, Quantitative Reasoning, and Analytical Writing. Includes practice tests and score improvement strategies.",
+    "shortDescription": "Complete GRE prep with all sections covered",
+    "status": "published",
+    "publishedBy": "68ea2625285f4daf28311d5b",
+    "publishedAt": "2025-01-11T10:00:00.000Z",
+    "type": "video",
+    "url": "https://s3.amazonaws.com/fluento-courses/gre-complete-program.mp4"
+  },
+  {
+    "title": "GRE Analytical Writing Excellence",
+    "examType": "GRE General",
+    "description": "Master GRE Analytical Writing with detailed analysis of Issue and Argument tasks. Learn scoring criteria and writing techniques for high scores.",
+    "shortDescription": "Master GRE Analytical Writing for high scores",
+    "status": "published",
+    "publishedBy": "68ea2625285f4daf28311d5b",
+    "publishedAt": "2025-01-11T10:00:00.000Z",
+    "type": "pdf",
+    "url": "https://s3.amazonaws.com/fluento-courses/gre-analytical-writing.pdf"
+  },
+  {
+    "title": "GRE Quantitative Reasoning Mastery",
+    "examType": "GRE General",
+    "description": "Advanced course for GRE Quantitative Reasoning. Covers arithmetic, algebra, geometry, and data analysis with practice problems and strategies.",
+    "shortDescription": "Master GRE Quantitative Reasoning section",
+    "status": "published",
+    "publishedBy": "68ea2625285f4daf28311d5b",
+    "publishedAt": "2025-01-11T10:00:00.000Z",
+    "type": "video",
+    "url": "https://s3.amazonaws.com/fluento-courses/gre-quantitative-mastery.mp4"
+  },
+  {
+    "title": "GRE Verbal Reasoning Strategies",
+    "examType": "GRE General",
+    "description": "Master GRE Verbal Reasoning with vocabulary building, reading comprehension, and critical reasoning strategies for high scores.",
+    "shortDescription": "GRE Verbal Reasoning strategies and vocabulary",
+    "status": "published",
+    "publishedBy": "68ea2625285f4daf28311d5b",
+    "publishedAt": "2025-01-11T10:00:00.000Z",
+    "type": "pdf",
+    "url": "https://s3.amazonaws.com/fluento-courses/gre-verbal-reasoning.pdf"
+  },
+  {
+    "title": "GRE Math Fundamentals Review",
+    "examType": "GRE General",
+    "description": "Comprehensive review of GRE math fundamentals including arithmetic, algebra, geometry, and data interpretation.",
+    "shortDescription": "GRE Math fundamentals and concepts review",
+    "status": "draft",
+    "publishedBy": "68ea2625285f4daf28311d5b",
+    "publishedAt": null,
+    "type": "video",
+    "url": "https://s3.amazonaws.com/fluento-courses/gre-math-fundamentals.mp4"
+  }
+]

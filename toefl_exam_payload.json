@@ -1,0 +1,424 @@
+{
+  "title": "TOEFL iBT Practice Test 1",
+  "type": "TOEFL iBT",
+  "duration": 12600,
+  "totalQuestions": 30,
+  "status": "published",
+  "sections": [
+    {
+      "examType": "TOEFL iBT",
+      "sectionType": "Reading",
+      "title": "Reading Section",
+      "duration": 3600,
+      "totalQuestions": 10,
+      "instructions": [
+        "This section tests your ability to understand academic reading passages.",
+        "You will have 60-80 minutes to complete this section.",
+        "Read each passage carefully and answer the questions."
+      ],
+      "parts": [
+        {
+          "type": "academic_passage",
+          "directionText": "Read the passage and answer the questions that follow.",
+          "context": "Academic reading comprehension",
+          "questionGroups": [
+            {
+              "groupNumber": 1,
+              "groupName": "Passage 1 - Climate Change",
+              "questionType": "reading_comprehension",
+              "directionText": "Read the passage about climate change and answer questions 1-10.",
+              "passageText": "Climate change represents one of the most significant challenges facing humanity in the 21st century. The scientific consensus is overwhelming: human activities, particularly the burning of fossil fuels and deforestation, have dramatically increased the concentration of greenhouse gases in the atmosphere. This has led to a rise in global average temperatures, with the Earth's surface temperature increasing by approximately 1.1 degrees Celsius since the late 19th century.\n\nThe consequences of this warming are far-reaching and complex. Rising sea levels threaten coastal communities worldwide, with some island nations facing existential threats. Extreme weather events, including hurricanes, droughts, and heatwaves, are becoming more frequent and intense. Ecosystems are being disrupted, with many species struggling to adapt to rapidly changing conditions. Agricultural productivity is being affected, with some regions experiencing decreased crop yields due to changing precipitation patterns and increased temperatures.\n\nAddressing climate change requires immediate and coordinated action on multiple fronts. Governments must implement policies to reduce greenhouse gas emissions, such as carbon pricing and renewable energy incentives. Businesses need to adopt sustainable practices and invest in clean technologies. Individual actions, including reducing energy consumption and supporting environmentally conscious companies, also play a crucial role. International cooperation is essential, as climate change is a global problem that transcends national boundaries.\n\nThe transition to a low-carbon economy presents both challenges and opportunities. While some industries may face disruption, new sectors focused on renewable energy, energy efficiency, and sustainable technologies are emerging. This transition can create millions of new jobs and drive economic growth. However, it requires significant investment in research and development, infrastructure, and workforce training. The cost of inaction, however, far exceeds the cost of taking action to mitigate climate change.",
+              "questions": [
+                {
+                  "question": "According to the passage, what is the primary cause of climate change?",
+                  "questionType": "single",
+                  "options": [
+                    "A) Natural climate variations",
+                    "B) Solar radiation changes",
+                    "C) Human activities, especially fossil fuel burning",
+                    "D) Volcanic eruptions"
+                  ],
+                  "correctAnswer": "C",
+                  "weight": 1,
+                  "explanation": "The passage explicitly states that human activities, particularly the burning of fossil fuels and deforestation, are the primary cause of climate change."
+                },
+                {
+                  "question": "The word 'overwhelming' in the passage is closest in meaning to:",
+                  "questionType": "single",
+                  "options": [
+                    "A) Confusing",
+                    "B) Convincing",
+                    "C) Surprising",
+                    "D) Disappointing"
+                  ],
+                  "correctAnswer": "B",
+                  "weight": 1,
+                  "explanation": "In this context, 'overwhelming' means convincing or compelling, indicating strong scientific agreement."
+                },
+                {
+                  "question": "According to the passage, which of the following is NOT mentioned as a consequence of climate change?",
+                  "questionType": "single",
+                  "options": [
+                    "A) Rising sea levels",
+                    "B) More frequent extreme weather events",
+                    "C) Increased volcanic activity",
+                    "D) Disrupted ecosystems"
+                  ],
+                  "correctAnswer": "C",
+                  "weight": 1,
+                  "explanation": "The passage mentions rising sea levels, extreme weather events, and disrupted ecosystems, but does not mention increased volcanic activity."
+                },
+                {
+                  "question": "The passage suggests that addressing climate change requires:",
+                  "questionType": "single",
+                  "options": [
+                    "A) Only government action",
+                    "B) Only individual action",
+                    "C) Coordinated action on multiple fronts",
+                    "D) Only international cooperation"
+                  ],
+                  "correctAnswer": "C",
+                  "weight": 1,
+                  "explanation": "The passage states that addressing climate change requires immediate and coordinated action on multiple fronts, including government policies, business practices, individual actions, and international cooperation."
+                },
+                {
+                  "question": "What does the passage imply about the cost of addressing climate change?",
+                  "questionType": "single",
+                  "options": [
+                    "A) It is too expensive to implement",
+                    "B) The cost of inaction exceeds the cost of action",
+                    "C) Only wealthy countries can afford it",
+                    "D) It will bankrupt the global economy"
+                  ],
+                  "correctAnswer": "B",
+                  "weight": 1,
+                  "explanation": "The passage explicitly states that 'the cost of inaction, however, far exceeds the cost of taking action to mitigate climate change.'"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "examType": "TOEFL iBT",
+      "sectionType": "Listening",
+      "title": "Listening Section",
+      "duration": 2700,
+      "totalQuestions": 8,
+      "instructions": [
+        "This section tests your ability to understand spoken English in academic settings.",
+        "You will have 60-90 minutes to complete this section.",
+        "Listen carefully to each conversation and lecture."
+      ],
+      "parts": [
+        {
+          "type": "conversation",
+          "directionText": "Listen to a conversation between a student and a professor.",
+          "audioUrl": "https://s3.amazonaws.com/toefl-audio/conversation1.mp3",
+          "context": "Student-professor conversation",
+          "questionGroups": [
+            {
+              "groupNumber": 1,
+              "groupName": "Conversation 1",
+              "questionType": "listening_comprehension",
+              "directionText": "Listen to the conversation and answer the questions.",
+              "audioUrl": "https://s3.amazonaws.com/toefl-audio/conversation1.mp3",
+              "questions": [
+                {
+                  "question": "Why does the student visit the professor?",
+                  "questionType": "single",
+                  "options": [
+                    "A) To discuss a grade",
+                    "B) To ask about research opportunities",
+                    "C) To get help with an assignment",
+                    "D) To request an extension"
+                  ],
+                  "correctAnswer": "B",
+                  "weight": 1,
+                  "explanation": "The student is asking about research opportunities in the professor's lab."
+                },
+                {
+                  "question": "What does the professor suggest the student should do first?",
+                  "questionType": "single",
+                  "options": [
+                    "A) Complete more coursework",
+                    "B) Read recent research papers",
+                    "C) Talk to other students",
+                    "D) Apply for funding"
+                  ],
+                  "correctAnswer": "B",
+                  "weight": 1,
+                  "explanation": "The professor suggests the student should read recent research papers to understand the current work in the field."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "lecture",
+          "directionText": "Listen to a lecture about marine biology.",
+          "audioUrl": "https://s3.amazonaws.com/toefl-audio/lecture1.mp3",
+          "context": "Academic lecture",
+          "questionGroups": [
+            {
+              "groupNumber": 2,
+              "groupName": "Lecture 1 - Marine Biology",
+              "questionType": "listening_comprehension",
+              "directionText": "Listen to the lecture and answer the questions.",
+              "audioUrl": "https://s3.amazonaws.com/toefl-audio/lecture1.mp3",
+              "questions": [
+                {
+                  "question": "What is the main topic of the lecture?",
+                  "questionType": "single",
+                  "options": [
+                    "A) Ocean pollution",
+                    "B) Coral reef ecosystems",
+                    "C) Marine mammal behavior",
+                    "D) Deep sea exploration"
+                  ],
+                  "correctAnswer": "B",
+                  "weight": 1,
+                  "explanation": "The lecture focuses on coral reef ecosystems and their importance."
+                },
+                {
+                  "question": "According to the professor, what is the primary threat to coral reefs?",
+                  "questionType": "single",
+                  "options": [
+                    "A) Overfishing",
+                    "B) Ocean acidification",
+                    "C) Plastic pollution",
+                    "D) Oil spills"
+                  ],
+                  "correctAnswer": "B",
+                  "weight": 1,
+                  "explanation": "The professor identifies ocean acidification as the primary threat to coral reefs."
+                },
+                {
+                  "question": "What does the professor say about the relationship between coral and algae?",
+                  "questionType": "single",
+                  "options": [
+                    "A) They compete for resources",
+                    "B) They have a symbiotic relationship",
+                    "C) Algae harm the coral",
+                    "D) Coral depends on algae for food"
+                  ],
+                  "correctAnswer": "B",
+                  "weight": 1,
+                  "explanation": "The professor explains that coral and algae have a symbiotic relationship where both benefit."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "examType": "TOEFL iBT",
+      "sectionType": "Speaking",
+      "title": "Speaking Section",
+      "duration": 1200,
+      "totalQuestions": 4,
+      "instructions": [
+        "This section tests your ability to speak English effectively in academic settings.",
+        "You will have 20 minutes to complete this section.",
+        "You will be asked to speak about familiar topics and academic content."
+      ],
+      "parts": [
+        {
+          "type": "independent_speaking",
+          "directionText": "You will be asked to speak about a familiar topic.",
+          "context": "Independent speaking task",
+          "questionGroups": [
+            {
+              "groupNumber": 1,
+              "groupName": "Task 1 - Independent Speaking",
+              "questionType": "speaking",
+              "directionText": "You have 15 seconds to prepare and 45 seconds to speak. Describe a place you would like to visit and explain why you would like to go there.",
+              "questions": [
+                {
+                  "question": "Describe a place you would like to visit and explain why you would like to go there.",
+                  "questionType": "speaking",
+                  "maxTime": 45,
+                  "scoringCriteria": [
+                    "Delivery: Clear speech and natural pace",
+                    "Language Use: Appropriate vocabulary and grammar",
+                    "Topic Development: Well-developed response with specific details"
+                  ],
+                  "correctAnswer": "Sample response: I would like to visit Japan, specifically Tokyo, because I'm fascinated by the unique blend of traditional culture and modern technology. I'm particularly interested in experiencing the traditional tea ceremonies and visiting ancient temples, while also exploring the cutting-edge technology and vibrant city life. The food culture is another major draw for me, as I love trying authentic Japanese cuisine like sushi and ramen. Additionally, I'm studying Japanese language, so visiting would give me the opportunity to practice speaking with native speakers and immerse myself in the culture I've been learning about.",
+                  "weight": 1,
+                  "explanation": "This response provides specific details about the place, clear reasons for wanting to visit, and demonstrates good language use and topic development."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "integrated_speaking",
+          "directionText": "You will read a passage, listen to a conversation, and then speak about what you heard.",
+          "context": "Integrated speaking task",
+          "questionGroups": [
+            {
+              "groupNumber": 2,
+              "groupName": "Task 2 - Integrated Speaking",
+              "questionType": "speaking",
+              "directionText": "Read the announcement, listen to the conversation, and then explain the student's opinion about the announcement.",
+              "passageText": "University Library Announces New Study Hours\n\nThe university library will extend its operating hours during the final exam period. Starting next week, the library will be open 24 hours a day, seven days a week, to accommodate students' increased study needs. This change will remain in effect until the end of the semester. Additional security measures will be implemented to ensure student safety during extended hours.",
+              "audioUrl": "https://s3.amazonaws.com/toefl-audio/conversation2.mp3",
+              "questions": [
+                {
+                  "question": "Explain the student's opinion about the library's new study hours and the reasons for this opinion.",
+                  "questionType": "speaking",
+                  "maxTime": 60,
+                  "scoringCriteria": [
+                    "Delivery: Clear speech and natural pace",
+                    "Language Use: Appropriate vocabulary and grammar",
+                    "Topic Development: Accurate summary of both the announcement and student's opinion"
+                  ],
+                  "correctAnswer": "Sample response: The student is very pleased with the library's decision to extend its hours to 24/7 during exam period. She explains that this change will be extremely helpful for students who have different study schedules and prefer to study late at night or early in the morning. She mentions that many students, including herself, find it difficult to concentrate during regular hours when the library is crowded. The extended hours will allow students to study in a quieter environment and better manage their time around their class schedules and other commitments.",
+                  "weight": 1,
+                  "explanation": "This response accurately summarizes both the announcement and the student's positive opinion with supporting reasons."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "integrated_speaking",
+          "directionText": "You will listen to a lecture and then speak about what you heard.",
+          "context": "Integrated speaking task",
+          "questionGroups": [
+            {
+              "groupNumber": 3,
+              "groupName": "Task 3 - Integrated Speaking",
+              "questionType": "speaking",
+              "directionText": "Listen to the lecture and explain the concept of cognitive dissonance using the examples provided.",
+              "audioUrl": "https://s3.amazonaws.com/toefl-audio/lecture2.mp3",
+              "questions": [
+                {
+                  "question": "Explain the concept of cognitive dissonance and how the examples in the lecture illustrate this concept.",
+                  "questionType": "speaking",
+                  "maxTime": 60,
+                  "scoringCriteria": [
+                    "Delivery: Clear speech and natural pace",
+                    "Language Use: Appropriate vocabulary and grammar",
+                    "Topic Development: Accurate explanation of the concept with relevant examples"
+                  ],
+                  "correctAnswer": "Sample response: Cognitive dissonance is the psychological discomfort people experience when they hold conflicting beliefs or when their actions don't align with their beliefs. The professor explains this concept using two examples. First, a person who believes smoking is harmful but continues to smoke experiences cognitive dissonance. To reduce this discomfort, they might rationalize by thinking that the health risks are exaggerated. Second, a student who values academic honesty but cheats on an exam might resolve the dissonance by convincing themselves that everyone else is cheating too, making it acceptable. These examples show how people often change their beliefs or rationalize their behavior to reduce psychological discomfort.",
+                  "weight": 1,
+                  "explanation": "This response clearly explains the concept and uses the specific examples from the lecture to illustrate it."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "integrated_speaking",
+          "directionText": "You will listen to a lecture and then speak about what you heard.",
+          "context": "Integrated speaking task",
+          "questionGroups": [
+            {
+              "groupNumber": 4,
+              "groupName": "Task 4 - Integrated Speaking",
+              "questionType": "speaking",
+              "directionText": "Listen to the lecture and explain how the two examples demonstrate the concept of adaptation.",
+              "audioUrl": "https://s3.amazonaws.com/toefl-audio/lecture3.mp3",
+              "questions": [
+                {
+                  "question": "Explain how the two examples in the lecture demonstrate the concept of adaptation.",
+                  "questionType": "speaking",
+                  "maxTime": 60,
+                  "scoringCriteria": [
+                    "Delivery: Clear speech and natural pace",
+                    "Language Use: Appropriate vocabulary and grammar",
+                    "Topic Development: Accurate explanation with relevant examples"
+                  ],
+                  "correctAnswer": "Sample response: The professor explains adaptation as the process by which organisms change over time to better survive in their environment. The first example involves the peppered moth in England during the Industrial Revolution. Originally, light-colored moths were more common because they blended with light-colored tree bark. However, when pollution darkened the trees, dark-colored moths became more common because they were better camouflaged and less likely to be eaten by predators. The second example involves Darwin's finches in the Galapagos Islands. Different species of finches developed different beak shapes depending on the type of food available on their specific island. These examples show how environmental pressures drive evolutionary changes that improve survival chances.",
+                  "weight": 1,
+                  "explanation": "This response clearly explains the concept of adaptation and uses both examples to demonstrate how environmental pressures drive evolutionary changes."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "examType": "TOEFL iBT",
+      "sectionType": "Writing",
+      "title": "Writing Section",
+      "duration": 3000,
+      "totalQuestions": 2,
+      "instructions": [
+        "This section tests your ability to write in English in an academic style.",
+        "You will have 50 minutes to complete this section.",
+        "You will be asked to write essays based on reading and listening tasks."
+      ],
+      "parts": [
+        {
+          "type": "integrated_writing",
+          "directionText": "You will read a passage, listen to a lecture, and then write about how the lecture relates to the reading.",
+          "context": "Integrated writing task",
+          "questionGroups": [
+            {
+              "groupNumber": 1,
+              "groupName": "Task 1 - Integrated Writing",
+              "questionType": "integrated_essay",
+              "directionText": "Read the passage, listen to the lecture, and write an essay explaining how the lecture challenges the points made in the reading passage.",
+              "passageText": "The Benefits of Online Learning\n\nOnline learning has become increasingly popular in recent years, offering numerous advantages over traditional classroom education. One of the primary benefits is flexibility. Students can access course materials and complete assignments at their own pace and schedule, making education more accessible to working professionals and those with family commitments.\n\nAnother significant advantage is cost-effectiveness. Online courses typically cost less than traditional programs because they eliminate expenses such as classroom maintenance, transportation, and printed materials. This makes higher education more affordable for many students who might otherwise be unable to pursue their educational goals.\n\nFurthermore, online learning provides access to a wider range of courses and instructors. Students are not limited by geographical constraints and can enroll in programs offered by institutions worldwide. This global access allows learners to benefit from diverse perspectives and expertise that might not be available locally.\n\nFinally, online learning often incorporates innovative technologies that enhance the learning experience. Interactive multimedia, virtual simulations, and adaptive learning platforms can provide personalized instruction that caters to individual learning styles and needs.",
+              "audioUrl": "https://s3.amazonaws.com/toefl-audio/lecture4.mp3",
+              "questions": [
+                {
+                  "question": "Write an essay explaining how the lecture challenges the points made in the reading passage about online learning.",
+                  "questionType": "long",
+                  "minWords": 150,
+                  "maxWords": 225,
+                  "scoringCriteria": [
+                    "Content: Accurate summary of both reading and lecture",
+                    "Organization: Clear structure and logical flow",
+                    "Language Use: Appropriate vocabulary and grammar",
+                    "Development: Well-developed arguments"
+                  ],
+                  "correctAnswer": "Sample response: The reading passage presents online learning as having numerous benefits, while the lecture challenges these claims by highlighting significant drawbacks that the reading overlooks.\n\nThe reading emphasizes the flexibility of online learning, claiming that students can study at their own pace. However, the lecture points out that this flexibility often leads to procrastination and poor time management. Many students struggle with self-discipline when there are no fixed class schedules or face-to-face interactions with instructors to keep them motivated.\n\nWhile the reading argues that online learning is cost-effective, the lecture challenges this by noting hidden costs. Students often need to purchase expensive technology, software, and reliable internet connections. Additionally, the lack of hands-on experiences in fields like science and engineering may require students to take additional courses or training, ultimately increasing the total cost of education.\n\nThe reading claims that online learning provides access to diverse courses and instructors. However, the lecture argues that the quality of instruction can be inconsistent, and students may miss out on the personal attention and immediate feedback that traditional classrooms provide. The lack of face-to-face interaction can also limit networking opportunities and collaborative learning experiences.\n\nFinally, while the reading praises innovative technologies, the lecture points out that these technologies can create barriers for students who lack technical skills or access to reliable technology, potentially widening educational inequalities rather than reducing them.",
+                  "weight": 1,
+                  "explanation": "This response effectively summarizes both the reading and lecture, clearly showing how the lecture challenges each point made in the reading."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "independent_writing",
+          "directionText": "You will write an essay expressing your opinion on a given topic.",
+          "context": "Independent writing task",
+          "questionGroups": [
+            {
+              "groupNumber": 2,
+              "groupName": "Task 2 - Independent Writing",
+              "questionType": "opinion_essay",
+              "directionText": "Do you agree or disagree with the following statement? 'Technology has made our lives more complicated rather than simpler.' Use specific reasons and examples to support your answer.",
+              "questions": [
+                {
+                  "question": "Do you agree or disagree with the statement: 'Technology has made our lives more complicated rather than simpler.' Use specific reasons and examples to support your answer.",
+                  "questionType": "long",
+                  "minWords": 300,
+                  "maxWords": 400,
+                  "scoringCriteria": [
+                    "Content: Clear position with supporting arguments",
+                    "Organization: Logical structure and clear transitions",
+                    "Language Use: Sophisticated vocabulary and grammar",
+                    "Development: Well-developed examples and reasoning"
+                  ],
+                  "correctAnswer": "Sample response: I disagree with the statement that technology has made our lives more complicated rather than simpler. While technology does introduce certain complexities, its overall impact has been overwhelmingly positive in terms of simplifying daily tasks and improving efficiency.\n\nOne of the most significant ways technology has simplified our lives is through communication. In the past, staying in touch with family and friends required writing letters, making expensive long-distance phone calls, or traveling long distances. Today, we can instantly communicate with anyone worldwide through video calls, messaging apps, and social media platforms. This has made maintaining relationships much easier and more convenient.\n\nTechnology has also revolutionized how we access information and complete tasks. Online banking allows us to manage our finances without visiting a bank, online shopping eliminates the need to travel to multiple stores, and GPS navigation systems have replaced the need to carry physical maps or ask for directions. These conveniences save significant time and effort in our daily routines.\n\nFurthermore, technology has simplified complex processes in various fields. In healthcare, electronic medical records and telemedicine make it easier for patients to access care and for doctors to share information. In education, online learning platforms provide access to courses and resources that were previously unavailable to many people.\n\nWhile it's true that technology can sometimes be overwhelming, particularly for those who struggle to keep up with rapid changes, the benefits far outweigh the challenges. The key is to use technology mindfully and adapt to new tools gradually. When used effectively, technology serves as a powerful tool that enhances our quality of life and makes many aspects of daily living more manageable and efficient.",
+                  "weight": 2,
+                  "explanation": "This essay presents a clear position with well-developed arguments, specific examples, and sophisticated language use."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+

@@ -1,0 +1,143 @@
+{
+  "examId": "68ea2625285f4daf28311d5b",
+  "userId": "507f1f77bcf86cd799439011",
+  "responses": [
+    {
+      "sectionId": "68ea2625285f4daf28311d33",
+      "partId": "68ea2625285f4daf28311d2a",
+      "groupId": "68ea2625285f4daf28311d25",
+      "questionId": "68ea2625285f4daf28311d26",
+      "response": "B",
+      "timeSpentMs": 15000
+    },
+    {
+      "sectionId": "68ea2625285f4daf28311d33",
+      "partId": "68ea2625285f4daf28311d2a",
+      "groupId": "68ea2625285f4daf28311d25",
+      "questionId": "68ea2625285f4daf28311d27",
+      "response": "A",
+      "timeSpentMs": 12000
+    },
+    {
+      "sectionId": "68ea2625285f4daf28311d33",
+      "partId": "68ea2625285f4daf28311d2a",
+      "groupId": "68ea2625285f4daf28311d25",
+      "questionId": "68ea2625285f4daf28311d28",
+      "response": "B",
+      "timeSpentMs": 18000
+    },
+    {
+      "sectionId": "68ea2625285f4daf28311d33",
+      "partId": "68ea2625285f4daf28311d31",
+      "groupId": "68ea2625285f4daf28311d2c",
+      "questionId": "68ea2625285f4daf28311d2d",
+      "response": "1872",
+      "timeSpentMs": 25000
+    },
+    {
+      "sectionId": "68ea2625285f4daf28311d33",
+      "partId": "68ea2625285f4daf28311d31",
+      "groupId": "68ea2625285f4daf28311d2c",
+      "questionId": "68ea2625285f4daf28311d2e",
+      "response": "John Smith",
+      "timeSpentMs": 20000
+    },
+    {
+      "sectionId": "68ea2625285f4daf28311d33",
+      "partId": "68ea2625285f4daf28311d31",
+      "groupId": "68ea2625285f4daf28311d2c",
+      "questionId": "68ea2625285f4daf28311d2f",
+      "response": "3 million",
+      "timeSpentMs": 22000
+    },
+    {
+      "sectionId": "68ea2625285f4daf28311d3c",
+      "partId": "68ea2625285f4daf28311d3a",
+      "groupId": "68ea2625285f4daf28311d35",
+      "questionId": "68ea2625285f4daf28311d36",
+      "response": "i",
+      "timeSpentMs": 45000
+    },
+    {
+      "sectionId": "68ea2625285f4daf28311d3c",
+      "partId": "68ea2625285f4daf28311d3a",
+      "groupId": "68ea2625285f4daf28311d35",
+      "questionId": "68ea2625285f4daf28311d37",
+      "response": "ii",
+      "timeSpentMs": 40000
+    },
+    {
+      "sectionId": "68ea2625285f4daf28311d3c",
+      "partId": "68ea2625285f4daf28311d3a",
+      "groupId": "68ea2625285f4daf28311d35",
+      "questionId": "68ea2625285f4daf28311d38",
+      "response": "iii",
+      "timeSpentMs": 35000
+    },
+    {
+      "sectionId": "68ea2625285f4daf28311d48",
+      "partId": "68ea2625285f4daf28311d41",
+      "groupId": "68ea2625285f4daf28311d3e",
+      "questionId": "68ea2625285f4daf28311d3f",
+      "response": "The chart shows household income distribution in Country X from 1990 to 2020. In 1990, low-income households were 35%, middle-income 30%, high-income 20%, and very high-income 15%. By 2020, middle-income became the largest group at 40%, high-income increased to 30%, low-income decreased to 25%, and very high-income remained at 5%. This shows economic growth and improved living standards over the 30-year period.",
+      "timeSpentMs": 1200000
+    },
+    {
+      "sectionId": "68ea2625285f4daf28311d48",
+      "partId": "68ea2625285f4daf28311d46",
+      "groupId": "68ea2625285f4daf28311d43",
+      "questionId": "68ea2625285f4daf28311d44",
+      "response": "Technology has both positive and negative effects on our lives. Some people think it makes life more complicated because we have to learn new things all the time and there are many problems with computers and phones. Other people think technology makes life easier because we can do things faster and communicate with people far away. I think technology is mostly good because it helps us work better and stay connected with family and friends. However, we need to be careful not to use technology too much and remember to spend time with people in real life.",
+      "timeSpentMs": 2400000
+    },
+    {
+      "sectionId": "68ea2625285f4daf28311d59",
+      "partId": "68ea2625285f4daf28311d4d",
+      "groupId": "68ea2625285f4daf28311d4a",
+      "questionId": "68ea2625285f4daf28311d4b",
+      "response": "I'm from London, which is a big city in England. I like it because there are many shops and restaurants. The people are nice and there are many things to do. I enjoy going to parks and museums. The weather is sometimes rainy but that's okay. I think London is a good place to live because it has everything you need.",
+      "timeSpentMs": 45000
+    },
+    {
+      "sectionId": "68ea2625285f4daf28311d59",
+      "partId": "68ea2625285f4daf28311d52",
+      "groupId": "68ea2625285f4daf28311d4f",
+      "questionId": "68ea2625285f4daf28311d50",
+      "response": "I went to Paris last summer with my family. We stayed for one week and visited many famous places like the Eiffel Tower and the Louvre Museum. We ate French food and walked around the city. The weather was nice and sunny. I liked the architecture and the cafes. We took many photos and bought souvenirs. It was a memorable trip because it was my first time in France and I learned about French culture. The people were friendly and the city was beautiful.",
+      "timeSpentMs": 90000
+    },
+    {
+      "sectionId": "68ea2625285f4daf28311d59",
+      "partId": "68ea2625285f4daf28311d57",
+      "groupId": "68ea2625285f4daf28311d54",
+      "questionId": "68ea2625285f4daf28311d55",
+      "response": "Tourism has changed a lot in my country. More people are visiting now because of social media and the internet. Many tourists come to see famous places and take photos. However, this has caused some problems like overcrowding and pollution. The government is trying to manage tourism better by limiting visitors to some places and promoting sustainable tourism. I think tourism is good for the economy but we need to protect the environment and local culture.",
+      "timeSpentMs": 75000
+    }
+  ],
+  "sectionsStatus": [
+    {
+      "sectionId": "68ea2625285f4daf28311d33",
+      "status": "submitted",
+      "submittedAt": "2024-01-15T10:30:00.000Z"
+    },
+    {
+      "sectionId": "68ea2625285f4daf28311d3c",
+      "status": "submitted",
+      "submittedAt": "2024-01-15T11:15:00.000Z"
+    },
+    {
+      "sectionId": "68ea2625285f4daf28311d48",
+      "status": "submitted",
+      "submittedAt": "2024-01-15T12:00:00.000Z"
+    },
+    {
+      "sectionId": "68ea2625285f4daf28311d59",
+      "status": "submitted",
+      "submittedAt": "2024-01-15T12:45:00.000Z"
+    }
+  ],
+  "startedAt": "2024-01-15T09:00:00.000Z",
+  "submittedAt": "2024-01-15T12:45:00.000Z",
+  "status": "submitted"
+}

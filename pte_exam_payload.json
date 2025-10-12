@@ -1,0 +1,617 @@
+{
+  "title": "PTE Academic Practice Test 1",
+  "type": "PTE Academic",
+  "duration": 10800,
+  "totalQuestions": 20,
+  "status": "published",
+  "sections": [
+    {
+      "examType": "PTE Academic",
+      "sectionType": "Speaking & Writing",
+      "title": "Speaking & Writing Section",
+      "duration": 5400,
+      "totalQuestions": 8,
+      "instructions": [
+        "This section tests your speaking and writing skills.",
+        "You will have 77-93 minutes to complete this section.",
+        "Follow the instructions carefully for each task type."
+      ],
+      "parts": [
+        {
+          "type": "personal_introduction",
+          "directionText": "You will be asked to introduce yourself. This is not scored but helps with voice recognition setup.",
+          "context": "Personal introduction",
+          "questionGroups": [
+            {
+              "groupNumber": 1,
+              "groupName": "Personal Introduction",
+              "questionType": "introduction",
+              "directionText": "Please introduce yourself. You have 25 seconds to prepare and 30 seconds to record your response.",
+              "questions": [
+                {
+                  "question": "Please introduce yourself. Tell us about your name, where you're from, and what you do.",
+                  "questionType": "speaking",
+                  "maxTime": 30,
+                  "scoringCriteria": [
+                    "Content: Personal information provided",
+                    "Fluency: Natural speech flow",
+                    "Pronunciation: Clear and understandable"
+                  ],
+                  "correctAnswer": "Sample response: Hello, my name is Sarah Johnson. I'm from Melbourne, Australia, and I work as a software engineer for a technology company. I'm taking the PTE Academic test because I'm planning to apply for a master's degree in computer science in the United States. I enjoy programming and have been working in the tech industry for about three years now.",
+                  "weight": 0,
+                  "explanation": "This is an unscored introduction task used for voice recognition setup."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "read_aloud",
+          "directionText": "You will see a text on screen. Read the text aloud as clearly and naturally as possible.",
+          "context": "Reading aloud",
+          "questionGroups": [
+            {
+              "groupNumber": 2,
+              "groupName": "Read Aloud",
+              "questionType": "read_aloud",
+              "directionText": "You have 30-40 seconds to look at the text and prepare. Then read it aloud clearly and naturally.",
+              "passageText": "Climate change is one of the most pressing challenges of our time. The scientific evidence is overwhelming: global temperatures are rising, ice caps are melting, and sea levels are increasing at an unprecedented rate. These changes are primarily driven by human activities, particularly the burning of fossil fuels and deforestation. Immediate action is required to mitigate these effects and adapt to the changing environment.",
+              "questions": [
+                {
+                  "question": "Read the passage aloud clearly and naturally.",
+                  "questionType": "speaking",
+                  "maxTime": 40,
+                  "scoringCriteria": [
+                    "Content: All words read correctly",
+                    "Oral Fluency: Natural rhythm and pace",
+                    "Pronunciation: Clear articulation"
+                  ],
+                  "correctAnswer": "Climate change is one of the most pressing challenges of our time. The scientific evidence is overwhelming: global temperatures are rising, ice caps are melting, and sea levels are increasing at an unprecedented rate. These changes are primarily driven by human activities, particularly the burning of fossil fuels and deforestation. Immediate action is required to mitigate these effects and adapt to the changing environment.",
+                  "weight": 1,
+                  "explanation": "Focus on clear pronunciation, natural pace, and correct word stress."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "repeat_sentence",
+          "directionText": "You will hear a sentence. Repeat it exactly as you heard it.",
+          "audioUrl": "https://s3.amazonaws.com/pte-audio/repeat-sentence1.mp3",
+          "context": "Sentence repetition",
+          "questionGroups": [
+            {
+              "groupNumber": 3,
+              "groupName": "Repeat Sentence",
+              "questionType": "repeat_sentence",
+              "directionText": "Listen to the sentence and repeat it exactly as you heard it.",
+              "audioUrl": "https://s3.amazonaws.com/pte-audio/repeat-sentence1.mp3",
+              "questions": [
+                {
+                  "question": "Repeat the sentence you hear exactly as spoken.",
+                  "questionType": "speaking",
+                  "maxTime": 15,
+                  "scoringCriteria": [
+                    "Content: Exact repetition of words",
+                    "Oral Fluency: Natural delivery",
+                    "Pronunciation: Accurate pronunciation"
+                  ],
+                  "correctAnswer": "The university library is open twenty-four hours a day during exam periods.",
+                  "weight": 1,
+                  "explanation": "Repeat the sentence with the same words, stress, and intonation as the original."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "describe_image",
+          "directionText": "You will see an image. Describe it in detail.",
+          "imageUrl": "https://s3.amazonaws.com/pte-images/bar-chart.png",
+          "context": "Image description",
+          "questionGroups": [
+            {
+              "groupNumber": 4,
+              "groupName": "Describe Image",
+              "questionType": "describe_image",
+              "directionText": "Look at the image and describe it in detail. You have 25 seconds to prepare and 40 seconds to speak.",
+              "imageUrl": "https://s3.amazonaws.com/pte-images/bar-chart.png",
+              "questions": [
+                {
+                  "question": "Describe the image in detail, including all visible elements and data.",
+                  "questionType": "speaking",
+                  "maxTime": 40,
+                  "scoringCriteria": [
+                    "Content: Comprehensive description",
+                    "Oral Fluency: Smooth delivery",
+                    "Pronunciation: Clear speech"
+                  ],
+                  "correctAnswer": "This bar chart shows the sales performance of different product categories over four quarters. The chart displays five categories: Electronics, Clothing, Books, Home & Garden, and Sports. Electronics shows the highest sales throughout all quarters, starting at approximately 45,000 units in Q1, increasing to 50,000 in Q2, dropping slightly to 48,000 in Q3, and rising again to 52,000 in Q4. Clothing follows a similar pattern but with lower numbers, ranging from 30,000 to 35,000 units. Books show steady growth from 20,000 in Q1 to 28,000 in Q4. Home & Garden and Sports categories show more modest sales figures, with Sports being the lowest performing category throughout the year.",
+                  "weight": 1,
+                  "explanation": "Provide a detailed description covering all visual elements, trends, and specific data points."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "retell_lecture",
+          "directionText": "You will hear a lecture. Retell it in your own words.",
+          "audioUrl": "https://s3.amazonaws.com/pte-audio/lecture1.mp3",
+          "context": "Lecture retelling",
+          "questionGroups": [
+            {
+              "groupNumber": 5,
+              "groupName": "Retell Lecture",
+              "questionType": "retell_lecture",
+              "directionText": "Listen to the lecture and retell it in your own words. You have 10 seconds to prepare and 40 seconds to speak.",
+              "audioUrl": "https://s3.amazonaws.com/pte-audio/lecture1.mp3",
+              "questions": [
+                {
+                  "question": "Retell the lecture in your own words, covering the main points and key details.",
+                  "questionType": "speaking",
+                  "maxTime": 40,
+                  "scoringCriteria": [
+                    "Content: Main points covered",
+                    "Oral Fluency: Coherent delivery",
+                    "Pronunciation: Clear articulation"
+                  ],
+                  "correctAnswer": "The lecture discussed the importance of renewable energy sources in addressing climate change. The speaker explained that solar and wind power have become increasingly cost-effective over the past decade, making them viable alternatives to fossil fuels. They highlighted that many countries are now investing heavily in renewable energy infrastructure, with some achieving over 50% of their electricity from renewable sources. The lecturer also mentioned the challenges of energy storage and grid integration, but emphasized that technological advances are rapidly solving these issues. They concluded by stating that the transition to renewable energy is not only environmentally necessary but also economically beneficial in the long term.",
+                  "weight": 1,
+                  "explanation": "Capture the main ideas, key details, and overall message of the lecture in your own words."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "answer_short_question",
+          "directionText": "You will hear a question. Give a short answer.",
+          "audioUrl": "https://s3.amazonaws.com/pte-audio/short-question1.mp3",
+          "context": "Short answer questions",
+          "questionGroups": [
+            {
+              "groupNumber": 6,
+              "groupName": "Answer Short Question",
+              "questionType": "short_answer",
+              "directionText": "Listen to the question and give a short, one-word or brief answer.",
+              "audioUrl": "https://s3.amazonaws.com/pte-audio/short-question1.mp3",
+              "questions": [
+                {
+                  "question": "What is the capital city of Australia?",
+                  "questionType": "speaking",
+                  "maxTime": 10,
+                  "scoringCriteria": [
+                    "Content: Correct answer",
+                    "Pronunciation: Clear speech"
+                  ],
+                  "correctAnswer": "Canberra",
+                  "weight": 1,
+                  "explanation": "Give a brief, accurate answer to the question."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "summarize_written_text",
+          "directionText": "Read the passage and write a one-sentence summary.",
+          "context": "Text summarization",
+          "questionGroups": [
+            {
+              "groupNumber": 7,
+              "groupName": "Summarize Written Text",
+              "questionType": "summarize_text",
+              "directionText": "Read the passage and write a one-sentence summary in 5-75 words.",
+              "passageText": "Artificial intelligence has revolutionized numerous industries, from healthcare to finance, by automating complex processes and providing insights that were previously impossible to obtain. Machine learning algorithms can analyze vast amounts of data to identify patterns and make predictions with remarkable accuracy. In healthcare, AI systems can assist doctors in diagnosing diseases by analyzing medical images and patient data. In finance, AI is used for fraud detection, algorithmic trading, and risk assessment. However, the rapid advancement of AI also raises concerns about job displacement, privacy issues, and the need for ethical guidelines to ensure AI systems are used responsibly and fairly.",
+              "questions": [
+                {
+                  "question": "Write a one-sentence summary of the passage in 5-75 words.",
+                  "questionType": "text",
+                  "minWords": 5,
+                  "maxWords": 75,
+                  "scoringCriteria": [
+                    "Content: Main ideas included",
+                    "Form: One sentence only",
+                    "Grammar: Correct sentence structure",
+                    "Vocabulary: Appropriate word choice"
+                  ],
+                  "correctAnswer": "Artificial intelligence has transformed various industries by automating processes and providing valuable insights, though its rapid development raises concerns about job displacement, privacy, and the need for ethical guidelines.",
+                  "weight": 1,
+                  "explanation": "Summarize the main points about AI's benefits and concerns in one grammatically correct sentence."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "write_essay",
+          "directionText": "Write an essay on the given topic.",
+          "context": "Essay writing",
+          "questionGroups": [
+            {
+              "groupNumber": 8,
+              "groupName": "Write Essay",
+              "questionType": "essay",
+              "directionText": "Write an essay on the topic below. You have 20 minutes to plan and write your essay (200-300 words).",
+              "questions": [
+                {
+                  "question": "Some people believe that social media has a negative impact on society, while others argue that it brings people together. Discuss both views and give your opinion.",
+                  "questionType": "long",
+                  "minWords": 200,
+                  "maxWords": 300,
+                  "scoringCriteria": [
+                    "Content: Address both views and give opinion",
+                    "Form: 200-300 words",
+                    "Development: Well-developed arguments",
+                    "Grammar: Correct sentence structures",
+                    "Vocabulary: Appropriate word choice"
+                  ],
+                  "correctAnswer": "Social media's impact on society is a topic of ongoing debate, with compelling arguments on both sides regarding its effects on human relationships and social interaction.\n\nThose who argue that social media has a negative impact point to several concerning trends. Many people spend excessive amounts of time on these platforms, leading to decreased face-to-face interactions and potential social isolation. The curated nature of social media content can also create unrealistic expectations and contribute to mental health issues such as anxiety and depression. Additionally, the spread of misinformation and the creation of echo chambers can polarize society and reduce critical thinking.\n\nConversely, proponents of social media highlight its ability to connect people across vast distances and maintain relationships that might otherwise be lost. These platforms enable individuals to find communities with shared interests, support causes they care about, and access information and resources that were previously unavailable. Social media has also proven valuable during crises, allowing for rapid communication and coordination of relief efforts.\n\nIn my opinion, while social media does present certain challenges, its overall impact is largely positive when used responsibly. The key lies in finding a balance between online and offline interactions and being mindful of the content we consume and share. When used appropriately, social media serves as a powerful tool for connection, education, and social change.",
+                  "weight": 2,
+                  "explanation": "Address both perspectives with balanced arguments and provide a clear personal opinion with supporting reasoning."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "examType": "PTE Academic",
+      "sectionType": "Reading",
+      "title": "Reading Section",
+      "duration": 2700,
+      "totalQuestions": 5,
+      "instructions": [
+        "This section tests your reading skills.",
+        "You will have 32-41 minutes to complete this section.",
+        "Read each passage carefully and answer the questions."
+      ],
+      "parts": [
+        {
+          "type": "multiple_choice_single",
+          "directionText": "Read the passage and choose the correct answer.",
+          "context": "Reading comprehension",
+          "questionGroups": [
+            {
+              "groupNumber": 1,
+              "groupName": "Multiple Choice - Single Answer",
+              "questionType": "multiple_choice",
+              "directionText": "Read the passage and choose the correct answer for each question.",
+              "passageText": "The concept of sustainable development has gained significant attention in recent decades as societies grapple with the challenge of meeting present needs without compromising the ability of future generations to meet their own needs. This principle, first articulated in the 1987 Brundtland Report, emphasizes the interconnectedness of economic growth, social equity, and environmental protection. Sustainable development requires a holistic approach that considers long-term consequences of current actions and promotes responsible resource management. It challenges traditional models of development that prioritize short-term economic gains over environmental and social considerations.",
+              "questions": [
+                {
+                  "question": "According to the passage, sustainable development was first defined in:",
+                  "questionType": "single",
+                  "options": ["A) 1985", "B) 1987", "C) 1990", "D) 1992"],
+                  "correctAnswer": "B",
+                  "weight": 1,
+                  "explanation": "The passage explicitly states that sustainable development was first articulated in the 1987 Brundtland Report."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "multiple_choice_multiple",
+          "directionText": "Read the passage and choose all correct answers.",
+          "context": "Multiple selection",
+          "questionGroups": [
+            {
+              "groupNumber": 2,
+              "groupName": "Multiple Choice - Multiple Answers",
+              "questionType": "multiple_choice",
+              "directionText": "Read the passage and choose all correct answers for each question.",
+              "passageText": "Renewable energy sources have become increasingly important in the global energy mix due to their environmental benefits and decreasing costs. Solar power, generated through photovoltaic cells, has seen dramatic cost reductions over the past decade. Wind energy, harnessed through turbines, provides clean electricity in many regions. Hydroelectric power, generated from flowing water, remains one of the most reliable renewable sources. Geothermal energy, derived from the Earth's heat, offers consistent power generation. Biomass energy, produced from organic materials, provides a renewable alternative to fossil fuels. These technologies are becoming more efficient and cost-effective, making them viable alternatives to traditional energy sources.",
+              "questions": [
+                {
+                  "question": "Which of the following are mentioned as renewable energy sources? (Choose all that apply)",
+                  "questionType": "multi",
+                  "options": [
+                    "A) Solar power",
+                    "B) Nuclear power",
+                    "C) Wind energy",
+                    "D) Coal",
+                    "E) Hydroelectric power",
+                    "F) Geothermal energy"
+                  ],
+                  "correctAnswer": ["A", "C", "E", "F"],
+                  "weight": 1,
+                  "explanation": "Solar power, wind energy, hydroelectric power, and geothermal energy are all mentioned as renewable energy sources in the passage."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "reorder_paragraphs",
+          "directionText": "Put the paragraphs in the correct order.",
+          "context": "Paragraph ordering",
+          "questionGroups": [
+            {
+              "groupNumber": 3,
+              "groupName": "Re-order Paragraphs",
+              "questionType": "order",
+              "directionText": "The following paragraphs are in random order. Put them in the correct order.",
+              "textItems": [
+                "However, the rapid advancement of technology also presents significant challenges that society must address.",
+                "Technology has fundamentally transformed the way we live, work, and communicate in the 21st century.",
+                "These challenges include privacy concerns, job displacement, and the digital divide between different socioeconomic groups.",
+                "From smartphones to artificial intelligence, technological innovations have made our lives more convenient and connected.",
+                "It is crucial to develop policies and frameworks that ensure technology benefits everyone while minimizing its negative impacts."
+              ],
+              "questions": [
+                {
+                  "question": "Put the paragraphs in the correct logical order.",
+                  "questionType": "order",
+                  "correctAnswer": [2, 4, 1, 3, 5],
+                  "weight": 1,
+                  "explanation": "The correct order introduces the topic, provides examples, acknowledges challenges, details the challenges, and concludes with a solution."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "fill_in_blanks",
+          "directionText": "Fill in the blanks with the correct words.",
+          "context": "Fill in the blanks",
+          "questionGroups": [
+            {
+              "groupNumber": 4,
+              "groupName": "Fill in the Blanks",
+              "questionType": "fill_blank",
+              "directionText": "Read the passage and fill in the blanks with the correct words from the dropdown menus.",
+              "passageText": "The human brain is one of the most complex organs in the body, containing approximately 86 billion neurons that communicate through electrical and chemical signals. These neurons form intricate networks that enable various cognitive functions such as memory, learning, and decision-making. The brain is divided into several regions, each responsible for different functions. The frontal lobe controls executive functions and reasoning, while the temporal lobe is associated with memory and language processing. The occipital lobe processes visual information, and the parietal lobe integrates sensory information from different parts of the body.",
+              "questions": [
+                {
+                  "question": "Fill in the blank: The human brain contains approximately _____ billion neurons.",
+                  "questionType": "text",
+                  "correctAnswer": "86",
+                  "weight": 1,
+                  "explanation": "The passage states that the human brain contains approximately 86 billion neurons."
+                },
+                {
+                  "question": "Fill in the blank: The _____ lobe controls executive functions and reasoning.",
+                  "questionType": "text",
+                  "correctAnswer": "frontal",
+                  "weight": 1,
+                  "explanation": "The passage explicitly states that the frontal lobe controls executive functions and reasoning."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "examType": "PTE Academic",
+      "sectionType": "Listening",
+      "title": "Listening Section",
+      "duration": 2700,
+      "totalQuestions": 7,
+      "instructions": [
+        "This section tests your listening skills.",
+        "You will have 45-57 minutes to complete this section.",
+        "Listen carefully to each audio clip and answer the questions."
+      ],
+      "parts": [
+        {
+          "type": "summarize_spoken_text",
+          "directionText": "Listen to the lecture and write a summary.",
+          "audioUrl": "https://s3.amazonaws.com/pte-audio/lecture2.mp3",
+          "context": "Spoken text summarization",
+          "questionGroups": [
+            {
+              "groupNumber": 1,
+              "groupName": "Summarize Spoken Text",
+              "questionType": "summarize_audio",
+              "directionText": "Listen to the lecture and write a summary in 50-70 words.",
+              "audioUrl": "https://s3.amazonaws.com/pte-audio/lecture2.mp3",
+              "questions": [
+                {
+                  "question": "Write a summary of the lecture in 50-70 words.",
+                  "questionType": "text",
+                  "minWords": 50,
+                  "maxWords": 70,
+                  "scoringCriteria": [
+                    "Content: Main points included",
+                    "Form: 50-70 words",
+                    "Grammar: Correct sentence structures",
+                    "Vocabulary: Appropriate word choice"
+                  ],
+                  "correctAnswer": "The lecture discussed the importance of biodiversity in maintaining ecosystem balance. The speaker explained that diverse species provide essential services like pollination, water purification, and soil fertility. However, human activities such as deforestation and pollution are causing rapid species extinction. The lecturer emphasized that protecting biodiversity is crucial for human survival and requires immediate conservation efforts and sustainable practices.",
+                  "weight": 1,
+                  "explanation": "Summarize the main points about biodiversity, its importance, threats, and the need for conservation."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "multiple_choice_multiple",
+          "directionText": "Listen to the audio and choose all correct answers.",
+          "audioUrl": "https://s3.amazonaws.com/pte-audio/conversation1.mp3",
+          "context": "Multiple selection listening",
+          "questionGroups": [
+            {
+              "groupNumber": 2,
+              "groupName": "Multiple Choice - Multiple Answers",
+              "questionType": "multiple_choice",
+              "directionText": "Listen to the conversation and choose all correct answers.",
+              "audioUrl": "https://s3.amazonaws.com/pte-audio/conversation1.mp3",
+              "questions": [
+                {
+                  "question": "What are the benefits of remote work mentioned in the conversation? (Choose all that apply)",
+                  "questionType": "multi",
+                  "options": [
+                    "A) Increased productivity",
+                    "B) Better work-life balance",
+                    "C) Reduced commuting costs",
+                    "D) More job opportunities",
+                    "E) Improved employee satisfaction"
+                  ],
+                  "correctAnswer": ["A", "B", "C", "E"],
+                  "weight": 1,
+                  "explanation": "The conversation mentions increased productivity, better work-life balance, reduced commuting costs, and improved employee satisfaction as benefits of remote work."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "fill_in_blanks",
+          "directionText": "Listen to the audio and fill in the blanks.",
+          "audioUrl": "https://s3.amazonaws.com/pte-audio/lecture3.mp3",
+          "context": "Listening fill in blanks",
+          "questionGroups": [
+            {
+              "groupNumber": 3,
+              "groupName": "Fill in the Blanks",
+              "questionType": "fill_blank",
+              "directionText": "Listen to the lecture and fill in the blanks with the correct words.",
+              "audioUrl": "https://s3.amazonaws.com/pte-audio/lecture3.mp3",
+              "questions": [
+                {
+                  "question": "Fill in the blank: The _____ Revolution began in the late 18th century.",
+                  "questionType": "text",
+                  "correctAnswer": "Industrial",
+                  "weight": 1,
+                  "explanation": "The speaker mentions that the Industrial Revolution began in the late 18th century."
+                },
+                {
+                  "question": "Fill in the blank: Steam power was one of the most important _____ of this period.",
+                  "questionType": "text",
+                  "correctAnswer": "innovations",
+                  "weight": 1,
+                  "explanation": "The speaker describes steam power as one of the most important innovations of the Industrial Revolution."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "highlight_correct_summary",
+          "directionText": "Listen to the audio and choose the correct summary.",
+          "audioUrl": "https://s3.amazonaws.com/pte-audio/lecture4.mp3",
+          "context": "Summary selection",
+          "questionGroups": [
+            {
+              "groupNumber": 4,
+              "groupName": "Highlight Correct Summary",
+              "questionType": "multiple_choice",
+              "directionText": "Listen to the lecture and choose the summary that best matches what you heard.",
+              "audioUrl": "https://s3.amazonaws.com/pte-audio/lecture4.mp3",
+              "questions": [
+                {
+                  "question": "Which summary best matches the lecture?",
+                  "questionType": "single",
+                  "options": [
+                    "A) The lecture discusses the history of space exploration and its impact on scientific knowledge.",
+                    "B) The lecture explains the challenges of space travel and the need for better technology.",
+                    "C) The lecture describes the benefits of space exploration for humanity and future missions.",
+                    "D) The lecture focuses on the cost of space programs and their economic impact."
+                  ],
+                  "correctAnswer": "C",
+                  "weight": 1,
+                  "explanation": "The lecture primarily discusses the benefits of space exploration for humanity and mentions future missions."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "select_missing_word",
+          "directionText": "Listen to the audio and select the missing word.",
+          "audioUrl": "https://s3.amazonaws.com/pte-audio/lecture5.mp3",
+          "context": "Missing word selection",
+          "questionGroups": [
+            {
+              "groupNumber": 5,
+              "groupName": "Select Missing Word",
+              "questionType": "multiple_choice",
+              "directionText": "Listen to the lecture and select the missing word from the options.",
+              "audioUrl": "https://s3.amazonaws.com/pte-audio/lecture5.mp3",
+              "questions": [
+                {
+                  "question": "The missing word is:",
+                  "questionType": "single",
+                  "options": [
+                    "A) environment",
+                    "B) technology",
+                    "C) education",
+                    "D) economy"
+                  ],
+                  "correctAnswer": "A",
+                  "weight": 1,
+                  "explanation": "Based on the context about climate change and conservation, the missing word is 'environment'."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "highlight_incorrect_words",
+          "directionText": "Listen to the audio and highlight the words that are different from what you hear.",
+          "audioUrl": "https://s3.amazonaws.com/pte-audio/lecture6.mp3",
+          "context": "Word identification",
+          "questionGroups": [
+            {
+              "groupNumber": 6,
+              "groupName": "Highlight Incorrect Words",
+              "questionType": "highlight_incorrect",
+              "directionText": "Listen to the lecture and highlight the words in the transcript that are different from what you hear.",
+              "passageText": "The importance of renewable energy cannot be overstated in today's world. Solar and wind power are becoming increasingly cost-effective and efficient. Many countries are investing heavily in these technologies to reduce their dependence on fossil fuels. The transition to clean energy is essential for combating climate change and ensuring a sustainable future for generations to come.",
+              "audioUrl": "https://s3.amazonaws.com/pte-audio/lecture6.mp3",
+              "questions": [
+                {
+                  "question": "Highlight the words that are different from what you hear in the audio.",
+                  "questionType": "highlight",
+                  "correctAnswer": [
+                    "overstated",
+                    "efficient",
+                    "dependence",
+                    "combating"
+                  ],
+                  "weight": 1,
+                  "explanation": "These words are different in the audio: 'underestimated', 'effective', 'reliance', 'fighting'."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "write_from_dictation",
+          "directionText": "Listen to the sentence and write it exactly as you hear it.",
+          "audioUrl": "https://s3.amazonaws.com/pte-audio/dictation1.mp3",
+          "context": "Dictation",
+          "questionGroups": [
+            {
+              "groupNumber": 7,
+              "groupName": "Write from Dictation",
+              "questionType": "dictation",
+              "directionText": "Listen to the sentence and write it exactly as you hear it.",
+              "audioUrl": "https://s3.amazonaws.com/pte-audio/dictation1.mp3",
+              "questions": [
+                {
+                  "question": "Write the sentence exactly as you hear it.",
+                  "questionType": "text",
+                  "scoringCriteria": [
+                    "Content: Exact words",
+                    "Spelling: Correct spelling",
+                    "Punctuation: Proper punctuation"
+                  ],
+                  "correctAnswer": "The university library provides access to thousands of digital resources and academic journals.",
+                  "weight": 1,
+                  "explanation": "Write the sentence with exact words, correct spelling, and proper punctuation."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+

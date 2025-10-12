@@ -1,0 +1,356 @@
+{
+  "title": "IELTS Academic Practice Test 1",
+  "type": "IELTS Academic",
+  "duration": 18000,
+  "totalQuestions": 40,
+  "status": "published",
+  "sections": [
+    {
+      "examType": "IELTS Academic",
+      "sectionType": "Listening",
+      "title": "Listening Section",
+      "duration": 2700,
+      "totalQuestions": 10,
+      "instructions": [
+        "You will hear a number of different recordings and you will have to answer questions on what you hear.",
+        "There will be time for you to read the instructions and questions and you will have a chance to check your work.",
+        "All the recordings will be played once only.",
+        "The test is in four sections. At the end of the test you will be given 10 minutes to transfer your answers to an answer sheet."
+      ],
+      "parts": [
+        {
+          "type": "conversation",
+          "directionText": "You will hear a conversation between a student and a university accommodation officer. First, you have some time to look at questions 1-5.",
+          "audioUrl": "https://s3.amazonaws.com/ielts-audio/listening-part1.mp3",
+          "context": "University accommodation booking",
+          "questionGroups": [
+            {
+              "groupNumber": 1,
+              "groupName": "Accommodation Booking",
+              "questionType": "multiple_choice",
+              "directionText": "Choose the correct letter, A, B or C.",
+              "passageText": "Listen to the conversation and answer questions 1-5.",
+              "audioUrl": "https://s3.amazonaws.com/ielts-audio/listening-part1.mp3",
+              "questions": [
+                {
+                  "question": "What type of accommodation is the student looking for?",
+                  "questionType": "single",
+                  "options": [
+                    "A) Shared apartment",
+                    "B) Studio apartment",
+                    "C) Family homestay"
+                  ],
+                  "correctAnswer": "B",
+                  "weight": 1,
+                  "explanation": "The student specifically mentions wanting a studio apartment for privacy."
+                },
+                {
+                  "question": "What is the maximum rent the student can afford per week?",
+                  "questionType": "single",
+                  "options": ["A) £150", "B) £200", "C) £250"],
+                  "correctAnswer": "B",
+                  "weight": 1,
+                  "explanation": "The student states their budget is £200 per week maximum."
+                },
+                {
+                  "question": "Which area does the student prefer?",
+                  "questionType": "single",
+                  "options": [
+                    "A) City center",
+                    "B) Near the university",
+                    "C) Quiet residential area"
+                  ],
+                  "correctAnswer": "B",
+                  "weight": 1,
+                  "explanation": "The student mentions wanting to be close to the university campus."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "monologue",
+          "directionText": "You will hear a talk about the history of the university library. First, you have some time to look at questions 6-10.",
+          "audioUrl": "https://s3.amazonaws.com/ielts-audio/listening-part2.mp3",
+          "context": "University library history",
+          "questionGroups": [
+            {
+              "groupNumber": 2,
+              "groupName": "Library History",
+              "questionType": "completion",
+              "directionText": "Complete the notes below. Write NO MORE THAN TWO WORDS AND/OR A NUMBER for each answer.",
+              "passageText": "Listen to the talk and complete the notes about the university library.",
+              "audioUrl": "https://s3.amazonaws.com/ielts-audio/listening-part2.mp3",
+              "questions": [
+                {
+                  "question": "The library was founded in the year _____",
+                  "questionType": "text",
+                  "correctAnswer": "1872",
+                  "weight": 1,
+                  "explanation": "The speaker clearly states the library was founded in 1872."
+                },
+                {
+                  "question": "The original building was designed by architect _____",
+                  "questionType": "text",
+                  "correctAnswer": "John Smith",
+                  "weight": 1,
+                  "explanation": "The architect's name is mentioned as John Smith."
+                },
+                {
+                  "question": "The library currently houses over _____ books",
+                  "questionType": "text",
+                  "correctAnswer": "2 million",
+                  "weight": 1,
+                  "explanation": "The current collection exceeds 2 million books."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "examType": "IELTS Academic",
+      "sectionType": "Reading",
+      "title": "Reading Section",
+      "duration": 3600,
+      "totalQuestions": 13,
+      "instructions": [
+        "You should spend about 20 minutes on Questions 1-13, which are based on Reading Passage 1 below.",
+        "The reading passage has three sections, A-C.",
+        "Answer the questions using NO MORE THAN THREE WORDS from the passage for each answer."
+      ],
+      "parts": [
+        {
+          "type": "academic_text",
+          "directionText": "Read the passage about climate change and answer questions 1-13.",
+          "context": "Climate change research",
+          "questionGroups": [
+            {
+              "groupNumber": 1,
+              "groupName": "Climate Change Passage",
+              "questionType": "matching",
+              "directionText": "Reading Passage 1 has three sections, A-C. Choose the correct heading for each section from the list of headings below.",
+              "passageText": "A) Climate change represents one of the most pressing challenges of our time. The scientific consensus is clear: human activities, particularly the burning of fossil fuels, have significantly contributed to the warming of our planet. Since the Industrial Revolution, global temperatures have risen by approximately 1.1 degrees Celsius, with the rate of warming accelerating in recent decades.\n\nB) The consequences of climate change are far-reaching and multifaceted. Rising sea levels threaten coastal communities worldwide, while extreme weather events such as hurricanes, droughts, and heatwaves are becoming more frequent and intense. Ecosystems are being disrupted, with many species facing extinction due to habitat loss and changing environmental conditions.\n\nC) Addressing climate change requires immediate and coordinated action on multiple fronts. Governments must implement policies to reduce greenhouse gas emissions, while businesses need to adopt sustainable practices. Individual actions, such as reducing energy consumption and supporting renewable energy sources, also play a crucial role in mitigating the effects of climate change.",
+              "questions": [
+                {
+                  "question": "Section A: _____",
+                  "questionType": "single",
+                  "options": [
+                    "i) The causes of climate change",
+                    "ii) The effects of climate change",
+                    "iii) Solutions to climate change"
+                  ],
+                  "correctAnswer": "i",
+                  "weight": 1,
+                  "explanation": "Section A discusses the causes of climate change, particularly human activities and fossil fuel burning."
+                },
+                {
+                  "question": "Section B: _____",
+                  "questionType": "single",
+                  "options": [
+                    "i) The causes of climate change",
+                    "ii) The effects of climate change",
+                    "iii) Solutions to climate change"
+                  ],
+                  "correctAnswer": "ii",
+                  "weight": 1,
+                  "explanation": "Section B describes the consequences and effects of climate change on various aspects of life."
+                },
+                {
+                  "question": "Section C: _____",
+                  "questionType": "single",
+                  "options": [
+                    "i) The causes of climate change",
+                    "ii) The effects of climate change",
+                    "iii) Solutions to climate change"
+                  ],
+                  "correctAnswer": "iii",
+                  "weight": 1,
+                  "explanation": "Section C outlines solutions and actions needed to address climate change."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "examType": "IELTS Academic",
+      "sectionType": "Writing",
+      "title": "Writing Section",
+      "duration": 3600,
+      "totalQuestions": 2,
+      "instructions": [
+        "You should spend about 20 minutes on Task 1 and 40 minutes on Task 2.",
+        "Write at least 150 words for Task 1 and at least 250 words for Task 2.",
+        "Both tasks are assessed on task achievement, coherence and cohesion, lexical resource, and grammatical range and accuracy."
+      ],
+      "parts": [
+        {
+          "type": "task1",
+          "directionText": "You should spend about 20 minutes on this task.",
+          "context": "Academic writing task 1",
+          "questionGroups": [
+            {
+              "groupNumber": 1,
+              "groupName": "Writing Task 1",
+              "questionType": "descriptive",
+              "directionText": "The chart below shows the percentage of households in different income brackets in Country X from 1990 to 2020. Summarize the information by selecting and reporting the main features, and make comparisons where relevant.",
+              "imageUrl": "https://s3.amazonaws.com/ielts-images/income-brackets-chart.png",
+              "questions": [
+                {
+                  "question": "Write a report describing the chart showing household income distribution from 1990 to 2020.",
+                  "questionType": "long",
+                  "minWords": 150,
+                  "maxWords": 200,
+                  "scoringCriteria": [
+                    "Task Achievement: Clear overview of main trends",
+                    "Coherence and Cohesion: Logical organization",
+                    "Lexical Resource: Appropriate vocabulary",
+                    "Grammatical Range: Variety of sentence structures"
+                  ],
+                  "correctAnswer": "Sample answer: The chart illustrates the distribution of households across different income brackets in Country X over a 30-year period from 1990 to 2020. Overall, there has been a significant shift towards higher income brackets, with the middle-income group showing the most substantial growth.\n\nIn 1990, the largest proportion of households (35%) fell into the low-income bracket, while middle-income households accounted for 30% and high-income households for 20%. The remaining 15% were in the very high-income category.\n\nBy 2020, the distribution had changed dramatically. The middle-income bracket had become the largest group at 40%, representing a 10% increase. High-income households also increased significantly to 30%, while low-income households decreased to 25%. The very high-income bracket remained relatively stable at around 5%.\n\nThese changes suggest economic growth and improved living standards in Country X over the three-decade period.",
+                  "weight": 1,
+                  "explanation": "This response demonstrates good task achievement with clear overview, appropriate comparisons, and accurate data interpretation."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "task2",
+          "directionText": "You should spend about 40 minutes on this task.",
+          "context": "Academic writing task 2",
+          "questionGroups": [
+            {
+              "groupNumber": 2,
+              "groupName": "Writing Task 2",
+              "questionType": "argumentative",
+              "directionText": "Some people believe that technology has made our lives more complicated, while others argue that it has simplified our daily routines. Discuss both views and give your own opinion.",
+              "questions": [
+                {
+                  "question": "Write an essay discussing both views about technology's impact on life complexity and give your opinion.",
+                  "questionType": "long",
+                  "minWords": 250,
+                  "maxWords": 300,
+                  "scoringCriteria": [
+                    "Task Response: Address both views and give clear opinion",
+                    "Coherence and Cohesion: Clear paragraph structure",
+                    "Lexical Resource: Sophisticated vocabulary",
+                    "Grammatical Range: Complex sentence structures"
+                  ],
+                  "correctAnswer": "Sample answer: Technology's impact on modern life is a subject of ongoing debate, with compelling arguments on both sides regarding whether it complicates or simplifies our daily existence.\n\nThose who argue that technology complicates life point to several valid concerns. The constant connectivity through smartphones and social media can lead to information overload and increased stress. Many people find themselves overwhelmed by the sheer volume of notifications, emails, and digital demands. Additionally, the rapid pace of technological change requires continuous learning and adaptation, which can be mentally exhausting for individuals who struggle to keep up with new devices and software.\n\nConversely, proponents of technology's simplifying effects highlight numerous benefits. Smart home devices can automate routine tasks like adjusting temperature and lighting. Online banking and shopping eliminate the need for physical visits to banks and stores. GPS navigation systems have replaced the need to memorize routes or carry physical maps. Communication has become instantaneous and global, allowing people to maintain relationships across vast distances effortlessly.\n\nIn my opinion, while technology does introduce certain complexities, its overall effect is overwhelmingly positive in terms of simplifying life. The key lies in learning to use technology mindfully and setting appropriate boundaries. When used effectively, technology serves as a powerful tool that enhances efficiency and convenience, ultimately making our lives more manageable rather than more complicated.",
+                  "weight": 2,
+                  "explanation": "This essay effectively addresses both views with balanced arguments and provides a clear personal opinion with supporting reasoning."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "examType": "IELTS Academic",
+      "sectionType": "Speaking",
+      "title": "Speaking Section",
+      "duration": 900,
+      "totalQuestions": 3,
+      "instructions": [
+        "The Speaking test consists of three parts.",
+        "Part 1: Introduction and interview (4-5 minutes)",
+        "Part 2: Individual long turn (3-4 minutes)",
+        "Part 3: Two-way discussion (4-5 minutes)"
+      ],
+      "parts": [
+        {
+          "type": "part1",
+          "directionText": "The examiner will ask you questions about yourself and familiar topics.",
+          "context": "Introduction and interview",
+          "questionGroups": [
+            {
+              "groupNumber": 1,
+              "groupName": "Part 1 - Introduction",
+              "questionType": "interview",
+              "directionText": "Let's talk about your hometown. Where are you from?",
+              "questions": [
+                {
+                  "question": "Tell me about your hometown. What do you like most about it?",
+                  "questionType": "speaking",
+                  "maxTime": 60,
+                  "scoringCriteria": [
+                    "Fluency and Coherence: Natural speech flow",
+                    "Lexical Resource: Appropriate vocabulary",
+                    "Grammatical Range: Variety of structures",
+                    "Pronunciation: Clear and understandable"
+                  ],
+                  "correctAnswer": "Sample response: I'm from Manchester, which is a vibrant city in the north of England. What I love most about my hometown is its rich cultural heritage and the friendly atmosphere. Manchester has an incredible music scene, and I really enjoy the diverse range of restaurants and cafes throughout the city. The people are generally very welcoming, and there's always something interesting happening, whether it's festivals, exhibitions, or live music events.",
+                  "weight": 1,
+                  "explanation": "This response demonstrates good fluency, appropriate vocabulary, and covers the topic comprehensively within the time limit."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "part2",
+          "directionText": "You will have one minute to prepare and then speak for 1-2 minutes on a given topic.",
+          "context": "Individual long turn",
+          "questionGroups": [
+            {
+              "groupNumber": 2,
+              "groupName": "Part 2 - Long Turn",
+              "questionType": "monologue",
+              "directionText": "Describe a memorable journey you have taken. You should say: where you went, who you went with, what you did there, and explain why this journey was memorable for you.",
+              "questions": [
+                {
+                  "question": "Describe a memorable journey you have taken.",
+                  "questionType": "speaking",
+                  "maxTime": 120,
+                  "scoringCriteria": [
+                    "Task Achievement: Address all parts of the question",
+                    "Fluency: Natural speech without excessive hesitation",
+                    "Lexical Resource: Varied and appropriate vocabulary",
+                    "Grammatical Range: Complex sentences and structures"
+                  ],
+                  "correctAnswer": "Sample response: I'd like to tell you about a journey I took to Japan last year, which was absolutely unforgettable. I went with my best friend Sarah, and we spent two weeks exploring different cities including Tokyo, Kyoto, and Osaka.\n\nWhat made this journey particularly memorable was the incredible contrast between the ultra-modern cities and the traditional culture. In Tokyo, we were amazed by the futuristic technology and the bustling energy of places like Shibuya Crossing. However, in Kyoto, we experienced the serene beauty of ancient temples and traditional tea ceremonies.\n\nOne of the most memorable moments was when we stayed in a traditional ryokan, where we slept on futons and enjoyed a multi-course kaiseki dinner. The attention to detail in Japanese hospitality was extraordinary, and we felt truly immersed in the culture.\n\nThis journey was memorable because it opened my eyes to a completely different way of life and made me appreciate the importance of preserving cultural traditions while embracing modernity. The experience also strengthened my friendship with Sarah as we navigated language barriers and cultural differences together.",
+                  "weight": 2,
+                  "explanation": "This response effectively addresses all parts of the question with good structure, varied vocabulary, and personal insights."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "part3",
+          "directionText": "The examiner will ask you questions related to the topic from Part 2.",
+          "context": "Two-way discussion",
+          "questionGroups": [
+            {
+              "groupNumber": 3,
+              "groupName": "Part 3 - Discussion",
+              "questionType": "discussion",
+              "directionText": "Let's discuss travel and tourism in more general terms.",
+              "questions": [
+                {
+                  "question": "How has tourism changed in your country over the past decade?",
+                  "questionType": "speaking",
+                  "maxTime": 90,
+                  "scoringCriteria": [
+                    "Fluency: Natural conversation flow",
+                    "Lexical Resource: Sophisticated vocabulary",
+                    "Grammatical Range: Complex structures",
+                    "Ideas: Well-developed arguments"
+                  ],
+                  "correctAnswer": "Sample response: Tourism in my country has undergone significant transformation over the past decade. One of the most notable changes has been the shift towards sustainable and eco-friendly tourism practices. Many destinations have implemented measures to reduce their environmental impact, such as limiting visitor numbers to sensitive areas and promoting local, organic food options.\n\nTechnology has also revolutionized the tourism industry. The rise of platforms like Airbnb has given travelers more accommodation options, while mobile apps have made it easier to discover hidden gems and local experiences. Social media has played a crucial role in destination marketing, with Instagram-worthy locations becoming major tourist attractions.\n\nHowever, this growth has also brought challenges, particularly overtourism in popular destinations. Some cities have had to implement visitor taxes or time-slot bookings to manage crowds. The pandemic also highlighted the vulnerability of the tourism sector and accelerated the adoption of digital solutions like virtual tours.\n\nOverall, I think the changes have been largely positive, making travel more accessible and sustainable, though there's still work to be done in balancing tourism growth with environmental and social responsibility.",
+                  "weight": 2,
+                  "explanation": "This response demonstrates sophisticated vocabulary, complex grammatical structures, and well-developed ideas about tourism trends."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

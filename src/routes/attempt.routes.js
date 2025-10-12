@@ -5,8 +5,15 @@ const Exam = require("../models/exam.model");
 const Section = require("../models/section.model");
 const Part = require("../models/part.model");
 const QuestionGroup = require("../models/group.model");
+const OpenAI = require("openai");
 
 const router = Router();
+
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey:
+    "process.env.OPENAI_API_KEY",
+});
 
 // Require authentication for all attempt endpoints
 router.use(auth);
@@ -50,6 +57,16 @@ router.post("/resume", async (req, res) => {
         const ms = exam.duration * 60 * 1000;
         attempt.expiresAt = new Date(attempt.startedAt.getTime() + ms);
       }
+      await attempt.save();
+    }
+
+    // Auto-expire if past due
+    if (
+      attempt.expiresAt &&
+      new Date(attempt.expiresAt) < new Date() &&
+      attempt.status === "in_progress"
+    ) {
+      attempt.status = "expired";
       await attempt.save();
     }
 
@@ -121,6 +138,8 @@ router.post("/:id/response", async (req, res) => {
     const { id } = req.params;
     const { sectionId, partId, groupId, questionId, response, timeSpentMs } =
       req.body;
+    const audioUrl = req.body.audioUrl || req.body.speakingAudioUrl;
+    const transcript = req.body.transcript || req.body.speakingTranscript;
     if (!questionId)
       return res.status(400).json({ error: "questionId is required" });
 
@@ -163,12 +182,21 @@ router.post("/:id/response", async (req, res) => {
       }
     }
 
+    // If speaking payload provided as separate fields, store both URL and transcript together
+    let responsePayload = response;
+    if (audioUrl || transcript) {
+      responsePayload = {
+        audioUrl: audioUrl || undefined,
+        transcript: transcript || undefined,
+      };
+    }
+
     const newResp = {
       sectionId,
       partId,
       groupId,
       questionId,
-      response,
+      response: responsePayload,
       timeSpentMs,
     };
     if (matchIndex >= 0) {
@@ -202,8 +230,41 @@ router.post("/:id/submit", async (req, res) => {
       }
       return res.status(400).json({ error: "Attempt expired" });
     }
+    if (
+      attempt.status === "submitted" ||
+      attempt.status === "graded" ||
+      attempt.status === "cancelled"
+    ) {
+      return res.status(400).json({ error: "Attempt cannot be submitted" });
+    }
+
+    // Compute scoring snapshot (including scaled) before finalizing submission
+    await attempt.computeScoring();
+
+    // Update main attempt status
     attempt.status = "submitted";
     attempt.submittedAt = new Date();
+
+    // Update all section statuses to "submitted" and compute their scores
+    const now = new Date();
+    if (attempt.sectionsStatus && attempt.sectionsStatus.length > 0) {
+      for (let i = 0; i < attempt.sectionsStatus.length; i++) {
+        const sectionStatus = attempt.sectionsStatus[i];
+        if (sectionStatus.status === "in_progress") {
+          sectionStatus.status = "submitted";
+          sectionStatus.submittedAt = now;
+
+          // Compute and update section scoring
+          const sectionScore = await attempt.computeSectionScoring(
+            sectionStatus.sectionId
+          );
+          sectionStatus.score = sectionScore.score || 0;
+          sectionStatus.maxScore = sectionScore.maxScore || 0;
+          sectionStatus.accuracy = sectionScore.accuracy || 0;
+        }
+      }
+    }
+
     await attempt.save();
     res.json(attempt);
   } catch (e) {
@@ -380,6 +441,25 @@ router.post("/:id/expire", async (req, res) => {
   }
 });
 
+// Admin-only: expire all overdue in-progress attempts
+router.post("/expire-overdue", async (req, res) => {
+  try {
+    if (req.user.role !== "admin" && req.user.role !== "moderator")
+      return res.status(403).json({ error: "Forbidden" });
+    const now = new Date();
+    const result = await AttemptModel.updateMany(
+      { status: "in_progress", expiresAt: { $lt: now } },
+      { $set: { status: "expired" } }
+    );
+    res.json({
+      matched: result.matchedCount ?? result.n,
+      modified: result.modifiedCount ?? result.nModified,
+    });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
 // Timeline analytics (basic)
 router.get("/:id/timeline", async (req, res) => {
   try {
@@ -429,7 +509,10 @@ router.get("/:id", async (req, res) => {
   try {
     const attempt = await AttemptModel.findById(req.params.id);
     if (!attempt) return res.status(404).json({ error: "Not found" });
-    if (String(attempt.userId) !== String(req.user.id))
+    if (
+      String(attempt.userId) !== String(req.user.id) &&
+      req.user.role !== "admin"
+    )
       return res.status(403).json({ error: "Forbidden" });
     res.json(attempt);
   } catch (e) {
@@ -470,36 +553,218 @@ router.post("/:id/grade", async (req, res) => {
     let score = 0;
     let maxScore = 0;
     const perQuestion = [];
-    for (const r of attempt.responses) {
+
+    // Process all responses in parallel for better performance
+    const responsePromises = attempt.responses.map(async (r) => {
       const entry = questionMap.get(String(r.questionId));
-      if (!entry) continue;
-      const { q } = entry;
+      if (!entry) return null;
+
+      const { q, group } = entry;
       const weight = typeof q.weight === "number" ? q.weight : 1;
       const correctAnswer = q.correctAnswer;
-      const isCorrect = compareAnswers(
+      const given =
+        normalizeQuestionType(q.questionType) === "speaking" &&
+        r?.response &&
+        typeof r.response === "object"
+          ? r.response.transcript || r.response.audioUrl || r.response
+          : r.response;
+
+      // Get section info for AI evaluation
+      const section = sections.find((s) =>
+        s.parts.some((p) => p._id.toString() === r.partId.toString())
+      );
+      const sectionType = section?.sectionType || "Writing";
+
+      const isCorrect = await compareAnswers(
         q.questionType,
-        r.response,
-        correctAnswer
+        given,
+        correctAnswer,
+        exam.type || "IELTS",
+        sectionType,
+        q.question || ""
       );
       const earned = isCorrect ? weight : 0;
-      score += earned;
-      maxScore += weight;
-      perQuestion.push({
+
+      return {
         questionId: r.questionId,
         sectionId: r.sectionId,
         partId: r.partId,
         groupId: r.groupId,
+        sectionType: sectionType,
         isCorrect,
         earned,
         max: weight,
+      };
+    });
+
+    // Wait for all responses to be processed
+    const responseResults = await Promise.all(responsePromises);
+
+    // Process the results
+    for (const result of responseResults) {
+      if (!result) continue;
+
+      score += result.earned;
+      maxScore += result.max;
+      perQuestion.push({
+        questionId: result.questionId,
+        sectionId: result.sectionId,
+        partId: result.partId,
+        groupId: result.groupId,
+        isCorrect: result.isCorrect,
+        earned: result.earned,
+        max: result.max,
       });
     }
 
     const accuracy = maxScore > 0 ? score / maxScore : 0;
+    // Enhanced scaled scores per exam type with more accurate conversion
+    const examType = String(exam.type || "").toLowerCase();
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+
+    // Calculate section-specific scores according to real exam standards
+    let scaled;
+    const sectionBandScores = {};
+
+    if (examType.includes("ielts")) {
+      // IELTS: Calculate individual section bands (0-9), then average
+      const sections = ["Listening", "Reading", "Writing", "Speaking"];
+      const sectionBands = [];
+
+      for (const section of sections) {
+        const sectionResponses = responseResults.filter(
+          (r) => r.sectionType === section
+        );
+        if (sectionResponses.length > 0) {
+          const sectionAccuracy =
+            sectionResponses.reduce(
+              (sum, r) => sum + (r.isCorrect ? 1 : 0),
+              0
+            ) / sectionResponses.length;
+          const sectionBand =
+            Math.round(clamp(9 * sectionAccuracy, 0, 9) * 2) / 2;
+          sectionBands.push(sectionBand);
+          sectionBandScores[section] = sectionBand;
+        }
+      }
+
+      const overallBand =
+        sectionBands.length > 0
+          ? Math.round(
+              (sectionBands.reduce((sum, band) => sum + band, 0) /
+                sectionBands.length) *
+                2
+            ) / 2
+          : 0;
+      scaled = {
+        type: "IELTS",
+        score: overallBand,
+        sectionScores: sectionBandScores,
+      };
+    } else if (examType.includes("toefl")) {
+      // TOEFL: Each section scored 0-30, then summed for total
+      const sections = ["Reading", "Listening", "Speaking", "Writing"];
+      const sectionScaledScores = [];
+
+      for (const section of sections) {
+        const sectionResponses = responseResults.filter(
+          (r) => r.sectionType === section
+        );
+        if (sectionResponses.length > 0) {
+          const sectionAccuracy =
+            sectionResponses.reduce(
+              (sum, r) => sum + (r.isCorrect ? 1 : 0),
+              0
+            ) / sectionResponses.length;
+          const sectionScore = Math.round(clamp(30 * sectionAccuracy, 0, 30));
+          sectionBandScores[section] = sectionScore;
+          sectionScaledScores.push(sectionScore);
+        }
+      }
+
+      const totalScore = sectionScaledScores.reduce(
+        (sum, score) => sum + score,
+        0
+      );
+      scaled = {
+        type: "TOEFL",
+        score: totalScore,
+        sectionScores: sectionBandScores,
+      };
+    } else if (examType.includes("gre")) {
+      // GRE: Analytical Writing scored 0-6 in 0.5 increments
+      const writingResponses = responseResults.filter(
+        (r) => r.sectionType === "Writing"
+      );
+      if (writingResponses.length > 0) {
+        const writingAccuracy =
+          writingResponses.reduce((sum, r) => sum + (r.isCorrect ? 1 : 0), 0) /
+          writingResponses.length;
+        const writingScore =
+          Math.round(clamp(6 * writingAccuracy, 0, 6) * 2) / 2;
+        sectionBandScores["Analytical Writing"] = writingScore;
+        scaled = {
+          type: "GRE",
+          score: writingScore,
+          sectionScores: sectionBandScores,
+        };
+      } else {
+        scaled = { type: "GRE", score: 0, sectionScores: sectionBandScores };
+      }
+    } else if (examType.includes("pte")) {
+      // PTE: Communicative Skills (10-90) for each section
+      const sections = ["Speaking", "Writing", "Reading", "Listening"];
+      const communicativeScores = [];
+
+      for (const section of sections) {
+        const sectionResponses = responseResults.filter(
+          (r) => r.sectionType === section
+        );
+        if (sectionResponses.length > 0) {
+          const sectionAccuracy =
+            sectionResponses.reduce(
+              (sum, r) => sum + (r.isCorrect ? 1 : 0),
+              0
+            ) / sectionResponses.length;
+          const sectionScore = Math.round(
+            clamp(10 + 80 * sectionAccuracy, 10, 90)
+          );
+          sectionBandScores[section] = sectionScore;
+          communicativeScores.push(sectionScore);
+        }
+      }
+
+      const overallScore =
+        communicativeScores.length > 0
+          ? Math.round(
+              communicativeScores.reduce((sum, score) => sum + score, 0) /
+                communicativeScores.length
+            )
+          : 10;
+      scaled = {
+        type: "PTE",
+        score: overallScore,
+        sectionScores: sectionBandScores,
+      };
+    }
+
     attempt.status = "graded";
-    attempt.scoring = { score, maxScore, accuracy, perQuestion };
+    attempt.scoring = {
+      score,
+      maxScore,
+      accuracy,
+      perQuestion,
+      scaled,
+      bandScores: scaled?.sectionScores || {},
+    };
     await attempt.save();
-    res.json({ score, maxScore, accuracy });
+    res.json({
+      score,
+      maxScore,
+      accuracy,
+      scaled: attempt.scoring.scaled,
+      bandScores: attempt.scoring.bandScores,
+    });
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
@@ -520,15 +785,31 @@ router.post("/:id/grade/manual", async (req, res) => {
     if (!attempt.scoring)
       attempt.scoring = { score: 0, maxScore: 0, accuracy: 0, perQuestion: [] };
     const pq = attempt.scoring.perQuestion || [];
+    // Map responses by questionId to recover section/part/group for manual updates
+    const responseByQuestionId = new Map(
+      (attempt.responses || []).map((r) => [String(r.questionId), r])
+    );
     for (const u of updates) {
       const idx = pq.findIndex(
         (x) => String(x.questionId) === String(u.questionId)
       );
       if (idx >= 0) {
-        pq[idx] = { ...pq[idx], ...u };
+        const resp = responseByQuestionId.get(String(u.questionId));
+        pq[idx] = {
+          ...pq[idx],
+          ...u,
+          // Ensure section/part/group are populated when we can infer them
+          sectionId: pq[idx].sectionId || resp?.sectionId || pq[idx].sectionId,
+          partId: pq[idx].partId || resp?.partId || pq[idx].partId,
+          groupId: pq[idx].groupId || resp?.groupId || pq[idx].groupId,
+        };
       } else {
+        const resp = responseByQuestionId.get(String(u.questionId));
         pq.push({
           questionId: u.questionId,
+          sectionId: resp?.sectionId,
+          partId: resp?.partId,
+          groupId: resp?.groupId,
           earned: u.earned || 0,
           max: u.max || 0,
           isCorrect: !!u.isCorrect,
@@ -546,9 +827,188 @@ router.post("/:id/grade/manual", async (req, res) => {
     attempt.scoring.maxScore = maxScore;
     attempt.scoring.accuracy =
       maxScore > 0 ? score / maxScore : answered > 0 ? correct / answered : 0;
+
+    // Compute scaled scores
+    const exam = await Exam.findById(attempt.examId);
+    const examType = String(exam?.type || "").toLowerCase();
+    const acc = attempt.scoring.accuracy || 0;
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+    const IELTS = Math.round(clamp(9 * acc, 0, 9) * 2) / 2;
+    const GRE = Math.round(clamp(6 * acc, 0, 6) * 2) / 2;
+    const TOEFL = Math.round(clamp(30 * acc, 0, 30));
+    const PTE = Math.round(clamp(10 + 80 * acc, 10, 90));
+    let primary;
+    if (examType.includes("ielts")) primary = { type: "IELTS", score: IELTS };
+    else if (examType.includes("gre")) primary = { type: "GRE", score: GRE };
+    else if (examType.includes("toefl"))
+      primary = { type: "TOEFL", score: TOEFL };
+    else if (examType.includes("pte")) primary = { type: "PTE", score: PTE };
+    let scaled;
+    if (examType.includes("ielts")) scaled = { type: "IELTS", score: IELTS };
+    else if (examType.includes("gre")) scaled = { type: "GRE", score: GRE };
+    else if (examType.includes("toefl"))
+      scaled = { type: "TOEFL", score: TOEFL };
+    else if (examType.includes("pte")) scaled = { type: "PTE", score: PTE };
+    attempt.scoring.scaled = scaled;
+
+    // Update per-section aggregates in sectionsStatus based on perQuestion entries
+    const bySection = new Map();
+    for (const item of pq) {
+      if (!item.sectionId) continue;
+      const key = String(item.sectionId);
+      const t = bySection.get(key) || { score: 0, max: 0 };
+      t.score += Number(item.earned) || 0;
+      t.max += Number(item.max) || 0;
+      bySection.set(key, t);
+    }
+
+    if (!Array.isArray(attempt.sectionsStatus)) attempt.sectionsStatus = [];
+    for (const [sid, t] of bySection.entries()) {
+      const idx = attempt.sectionsStatus.findIndex(
+        (s) => String(s.sectionId) === String(sid)
+      );
+      const accuracy = t.max > 0 ? t.score / t.max : 0;
+      if (idx >= 0) {
+        attempt.sectionsStatus[idx].score = t.score;
+        attempt.sectionsStatus[idx].maxScore = t.max;
+        attempt.sectionsStatus[idx].accuracy = accuracy;
+        if (attempt.sectionsStatus[idx].status === "submitted") {
+          attempt.sectionsStatus[idx].status = "graded";
+        }
+      } else {
+        attempt.sectionsStatus.push({
+          sectionId: sid,
+          status: "graded",
+          score: t.score,
+          maxScore: t.max,
+          accuracy,
+        });
+      }
+    }
     attempt.status = "graded";
     await attempt.save();
     res.json(attempt.scoring);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Ingest grading results from an external evaluator for long answers/speaking
+// Body: { updates: [{ questionId, earned, max, isCorrect, feedback, sectionId?, partId?, groupId? }], finalizeAttempt?: boolean }
+router.post("/:id/grade/external", async (req, res) => {
+  try {
+    const attempt = await AttemptModel.findById(req.params.id);
+    if (!attempt) return res.status(404).json({ error: "Not found" });
+    // Only non-student roles can set grades programmatically
+    if (req.user.role === "student")
+      return res.status(403).json({ error: "Forbidden" });
+
+    const { updates, finalizeAttempt = true } = req.body || {};
+    if (!Array.isArray(updates) || updates.length === 0)
+      return res.status(400).json({ error: "updates array is required" });
+
+    if (!attempt.scoring)
+      attempt.scoring = { score: 0, maxScore: 0, accuracy: 0, perQuestion: [] };
+    const pq = attempt.scoring.perQuestion || [];
+    const responseByQuestionId = new Map(
+      (attempt.responses || []).map((r) => [String(r.questionId), r])
+    );
+
+    for (const u of updates) {
+      if (!u || !u.questionId) continue;
+      const idx = pq.findIndex(
+        (x) => String(x.questionId) === String(u.questionId)
+      );
+      const resp = responseByQuestionId.get(String(u.questionId));
+      const base = {
+        questionId: u.questionId,
+        sectionId: u.sectionId ?? resp?.sectionId,
+        partId: u.partId ?? resp?.partId,
+        groupId: u.groupId ?? resp?.groupId,
+        earned: Number(u.earned) || 0,
+        max: Number(u.max) || 0,
+        isCorrect: Boolean(u.isCorrect),
+        feedback: u.feedback,
+      };
+      if (idx >= 0) {
+        pq[idx] = { ...pq[idx], ...base };
+      } else {
+        pq.push(base);
+      }
+    }
+
+    // Recompute totals
+    const score = pq.reduce((s, x) => s + (Number(x.earned) || 0), 0);
+    const maxScore = pq.reduce((s, x) => s + (Number(x.max) || 0), 0);
+    const answered = pq.filter((x) => x.max > 0).length;
+    const correct = pq.filter((x) => x.isCorrect).length;
+    attempt.scoring.perQuestion = pq;
+    attempt.scoring.score = score;
+    attempt.scoring.maxScore = maxScore;
+    attempt.scoring.accuracy =
+      maxScore > 0 ? score / maxScore : answered > 0 ? correct / answered : 0;
+
+    // Update per-section aggregates and sectionsStatus
+    const bySection = new Map();
+    for (const item of pq) {
+      if (!item.sectionId) continue;
+      const key = String(item.sectionId);
+      const t = bySection.get(key) || { score: 0, max: 0 };
+      t.score += Number(item.earned) || 0;
+      t.max += Number(item.max) || 0;
+      bySection.set(key, t);
+    }
+    if (!Array.isArray(attempt.sectionsStatus)) attempt.sectionsStatus = [];
+    for (const [sid, t] of bySection.entries()) {
+      const sIdx = attempt.sectionsStatus.findIndex(
+        (s) => String(s.sectionId) === String(sid)
+      );
+      const acc = t.max > 0 ? t.score / t.max : 0;
+      if (sIdx >= 0) {
+        attempt.sectionsStatus[sIdx].score = t.score;
+        attempt.sectionsStatus[sIdx].maxScore = t.max;
+        attempt.sectionsStatus[sIdx].accuracy = acc;
+        if (attempt.sectionsStatus[sIdx].status === "submitted")
+          attempt.sectionsStatus[sIdx].status = "graded";
+      } else {
+        attempt.sectionsStatus.push({
+          sectionId: sid,
+          status: "graded",
+          score: t.score,
+          maxScore: t.max,
+          accuracy: acc,
+        });
+      }
+    }
+
+    if (finalizeAttempt) attempt.status = "graded";
+    // Compute scaled scores
+    const exam = await Exam.findById(attempt.examId);
+    const examType = String(exam?.type || "").toLowerCase();
+    const acc = attempt.scoring.accuracy || 0;
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+    const IELTS = Math.round(clamp(9 * acc, 0, 9) * 2) / 2;
+    const GRE = Math.round(clamp(6 * acc, 0, 6) * 2) / 2;
+    const TOEFL = Math.round(clamp(30 * acc, 0, 30));
+    const PTE = Math.round(clamp(10 + 80 * acc, 10, 90));
+    let primary;
+    if (examType.includes("ielts")) primary = { type: "IELTS", score: IELTS };
+    else if (examType.includes("gre")) primary = { type: "GRE", score: GRE };
+    else if (examType.includes("toefl"))
+      primary = { type: "TOEFL", score: TOEFL };
+    else if (examType.includes("pte")) primary = { type: "PTE", score: PTE };
+    let scaled;
+    if (examType.includes("ielts")) scaled = { type: "IELTS", score: IELTS };
+    else if (examType.includes("gre")) scaled = { type: "GRE", score: GRE };
+    else if (examType.includes("toefl"))
+      scaled = { type: "TOEFL", score: TOEFL };
+    else if (examType.includes("pte")) scaled = { type: "PTE", score: PTE };
+    attempt.scoring.scaled = scaled;
+    await attempt.save();
+    res.json({
+      scoring: attempt.scoring,
+      sectionsStatus: attempt.sectionsStatus,
+    });
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
@@ -588,6 +1048,7 @@ router.get("/:id/summary", async (req, res) => {
       score: scoring?.score || 0,
       maxScore: scoring?.maxScore || 0,
       accuracy: scoring?.accuracy || 0,
+      scaled: scoring?.scaled,
       timeMs,
       sectionsStatus,
     });
@@ -595,6 +1056,184 @@ router.get("/:id/summary", async (req, res) => {
     res.status(400).json({ error: e.message });
   }
 });
+
+// AI-powered evaluator for text/speaking using GPT API
+async function aiEvaluateText({
+  examType,
+  sectionType,
+  questionText,
+  modelAnswer,
+  userAnswer,
+  weight = 1,
+}) {
+  try {
+    const cleaned = String(userAnswer || "").trim();
+    if (!cleaned) {
+      return { earned: 0, max: weight, feedback: "No answer provided" };
+    }
+
+    const prompt = `You are an expert, calibrated examiner for English language & standardized tests with deep knowledge of official scoring criteria.
+You will receive input with these variables:
+
+Exam_Type = ${examType}
+Section = ${sectionType}
+Question = ${questionText}
+Model_Answer = ${modelAnswer}
+User_Answer = ${userAnswer}
+
+Your task is to evaluate the User_Answer using the EXACT official scoring criteria for this exam type and section, then normalize to [0,1].
+
+---
+
+### DETAILED OFFICIAL SCORING CRITERIA
+
+**IELTS ACADEMIC**
+
+**Writing Task 1 (Report Writing):**
+- Task Achievement (25%): Complete task, clear overview, accurate data, appropriate comparisons
+- Coherence & Cohesion (25%): Logical organization, clear progression, appropriate linking
+- Lexical Resource (25%): Range and accuracy of vocabulary, collocation, spelling
+- Grammatical Range & Accuracy (25%): Sentence variety, accuracy, complex structures
+
+**Writing Task 2 (Essay):**
+- Task Response (25%): Address all parts, clear position, relevant ideas, examples
+- Coherence & Cohesion (25%): Clear structure, logical flow, cohesive devices
+- Lexical Resource (25%): Sophisticated vocabulary, natural usage, word formation
+- Grammatical Range & Accuracy (25%): Complex sentences, accuracy, flexibility
+
+**Speaking:**
+- Fluency & Coherence (25%): Natural pace, hesitation, self-correction, topic development
+- Lexical Resource (25%): Range, precision, paraphrasing, collocation
+- Grammatical Range & Accuracy (25%): Complex structures, accuracy, flexibility
+- Pronunciation (25%): Intelligibility, word stress, sentence stress, intonation
+
+**TOEFL iBT**
+
+**Speaking (0-4 scale per task):**
+- Delivery: Clear pronunciation, natural pace, good intonation
+- Language Use: Grammar accuracy, vocabulary range and precision
+- Topic Development: Complete response, clear progression, relevant details
+
+**Writing (0-5 scale per task):**
+- Integrated Writing: Accurate summary, clear connections, language use
+- Independent Writing: Clear position, well-developed ideas, organization, language use
+
+**PTE ACADEMIC**
+
+**Writing:**
+- Content: Addresses prompt, relevant ideas, appropriate length
+- Form: Correct format, word count, structure
+- Vocabulary: Range, accuracy, appropriateness
+- Grammar: Accuracy, range, complexity
+- Spelling: Correct spelling throughout
+
+**Speaking:**
+- Content: Addresses prompt, relevant ideas
+- Oral Fluency: Natural pace, smooth delivery, appropriate pausing
+- Pronunciation: Clear, intelligible, natural stress and intonation
+- Vocabulary: Range, accuracy, appropriateness
+- Grammar: Accuracy, range, complexity
+
+**GRE ANALYTICAL WRITING**
+
+**Issue Task & Argument Task (0-6 scale):**
+- Clarity: Clear thesis, logical organization, effective transitions
+- Reasoning: Strong arguments, relevant examples, critical analysis
+- Language Use: Precise vocabulary, varied sentence structure, few errors
+- Organization: Clear structure, logical flow, effective development
+
+---
+
+### EVALUATION PROCESS
+
+1. **Analyze each criterion** for the specific exam and section
+2. **Score each criterion** using the official scale (IELTS 0-9, TOEFL 0-4/5, PTE 0-90, GRE 0-6)
+3. **Calculate weighted average** based on official weightings
+4. **Normalize to [0,1]** by dividing by maximum possible score
+5. **Be strict but fair** - use official standards, not lenient interpretation
+
+**CRITICAL**: Output ONLY a decimal number between 0.0 and 1.0. No explanation, no text, just the number.`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: prompt,
+        },
+      ],
+      temperature: 0.1,
+      max_tokens: 10,
+    });
+
+    const scoreText = response.choices[0]?.message?.content?.trim();
+    const normalizedScore = parseFloat(scoreText);
+
+    if (isNaN(normalizedScore) || normalizedScore < 0 || normalizedScore > 1) {
+      // Fallback to heuristic if AI response is invalid
+      return heuristicEvaluateText({
+        text: userAnswer,
+        correct: modelAnswer,
+        weight,
+      });
+    }
+
+    const earned = Math.round(normalizedScore * weight * 100) / 100;
+    const feedback = `AI Evaluation: ${(normalizedScore * 100).toFixed(
+      1
+    )}% (${examType} ${sectionType})`;
+
+    return { earned, max: weight, feedback };
+  } catch (error) {
+    console.error("AI evaluation error:", error);
+    // Fallback to heuristic evaluation
+    return heuristicEvaluateText({
+      text: userAnswer,
+      correct: modelAnswer,
+      weight,
+    });
+  }
+}
+
+// Fallback heuristic evaluator for when AI is unavailable
+function heuristicEvaluateText({
+  text,
+  correct,
+  weight = 1,
+  minWords = 30,
+  maxWords = 300,
+}) {
+  try {
+    const cleaned = String(text || "").trim();
+    if (!cleaned)
+      return { earned: 0, max: weight, feedback: "No answer provided" };
+    const wc = cleaned.split(/\s+/).filter(Boolean).length;
+    let lengthRatio = 1;
+    if (wc < minWords) {
+      const deficit = Math.min(minWords - wc, minWords);
+      lengthRatio = Math.max(0.5, 1 - deficit / minWords);
+    } else if (wc > maxWords) {
+      const excess = Math.min(wc - maxWords, maxWords);
+      lengthRatio = Math.max(0.5, 1 - excess / maxWords);
+    }
+    const lc = cleaned.toLowerCase();
+    const ref = String(correct || "").toLowerCase();
+    const refTokens = Array.from(
+      new Set(ref.split(/[^a-z0-9]+/).filter((t) => t.length > 3))
+    );
+    let matched = 0;
+    for (const t of refTokens) if (lc.includes(t)) matched += 1;
+    const coverageRatio = refTokens.length ? matched / refTokens.length : 1;
+    const combined = 0.7 * coverageRatio + 0.3 * lengthRatio;
+    const earned = Math.round(combined * weight * 100) / 100;
+    const feedback = `Heuristic: keywords ${matched}/${
+      refTokens.length || 0
+    }; words ${wc} (target ${minWords}-${maxWords})`;
+    return { earned, max: weight, feedback };
+  } catch {
+    return { earned: 0, max: weight, feedback: "Evaluation error" };
+  }
+}
 
 // Detailed review: user answer vs correct answer
 router.get("/:id/review", async (req, res) => {
@@ -632,44 +1271,55 @@ router.get("/:id/review", async (req, res) => {
 
     // Assemble full exam structure with annotations
     const examObj = exam.toObject();
-    examObj.sections = sections.map((section) => {
-      const sectionObj = section.toObject();
-      sectionObj.parts = (section.parts || [])
-        .map((pid) => {
-          const partDoc = partsById.get(String(pid._id || pid));
-          if (!partDoc) return null;
-          const partObj = partDoc.toObject();
-          partObj.questionGroups = (partObj.questionGroups || [])
-            .map((gid) => {
-              const groupDoc = groupsById.get(String(gid._id || gid));
-              if (!groupDoc) return null;
-              const groupObj = groupDoc.toObject();
-              groupObj.questions = (groupObj.questions || []).map((q) => {
-                const key2 = String(q._id);
-                const resp = responseByQuestionId.get(key2);
+    examObj.sections = await Promise.all(
+      sections.map(async (section) => {
+        const sectionObj = section.toObject();
+        sectionObj.parts = await Promise.all(
+          (section.parts || [])
+            .map(async (pid) => {
+              const partDoc = partsById.get(String(pid._id || pid));
+              if (!partDoc) return null;
+              const partObj = partDoc.toObject();
+              partObj.questionGroups = await Promise.all(
+                (partObj.questionGroups || [])
+                  .map(async (gid) => {
+                    const groupDoc = groupsById.get(String(gid._id || gid));
+                    if (!groupDoc) return null;
+                    const groupObj = groupDoc.toObject();
+                    groupObj.questions = await Promise.all(
+                      (groupObj.questions || []).map(async (q) => {
+                        const key2 = String(q._id);
+                        const resp = responseByQuestionId.get(key2);
 
-                const isCorrect = resp
-                  ? compareAnswers(
-                      q.questionType,
-                      resp.response,
-                      q.correctAnswer
-                    )
-                  : false;
-                return {
-                  ...q,
-                  userResponse: resp?.response,
-                  isCorrect,
-                  timeSpentMs: resp?.timeSpentMs,
-                };
-              });
-              return groupObj;
+                        const isCorrect = resp
+                          ? await compareAnswers(
+                              q.questionType,
+                              resp.response,
+                              q.correctAnswer,
+                              exam.type || "IELTS",
+                              section.sectionType || "Writing",
+                              q.question || ""
+                            )
+                          : false;
+                        return {
+                          ...q,
+                          userResponse: resp?.response,
+                          isCorrect,
+                          timeSpentMs: resp?.timeSpentMs,
+                        };
+                      })
+                    );
+                    return groupObj;
+                  })
+                  .filter(Boolean)
+              );
+              return partObj;
             })
-            .filter(Boolean);
-          return partObj;
-        })
-        .filter(Boolean);
-      return sectionObj;
-    });
+            .filter(Boolean)
+        );
+        return sectionObj;
+      })
+    );
 
     return res.json({
       exam: examObj,
@@ -679,6 +1329,7 @@ router.get("/:id/review", async (req, res) => {
         startedAt: attempt.startedAt,
         submittedAt: attempt.submittedAt,
         scoring: attempt.scoring,
+        sectionsStatus: attempt.sectionsStatus,
       },
     });
   } catch (e) {
@@ -713,6 +1364,11 @@ function normalizeQuestionType(type) {
     case "fill_in_blank":
     case "fill-in-the-blank":
       return "text";
+    case "long":
+    case "long-answer":
+    case "long_answer":
+    case "essay":
+      return "long";
     case "speaking":
     case "speech":
       return "speaking";
@@ -721,8 +1377,15 @@ function normalizeQuestionType(type) {
   }
 }
 
-// Helper: compare answers by canonical type
-function compareAnswers(type, given, correct) {
+// Helper: compare answers by canonical type (async for AI evaluation)
+async function compareAnswers(
+  type,
+  given,
+  correct,
+  examType = "IELTS",
+  sectionType = "Writing",
+  questionText = ""
+) {
   try {
     if (correct == null) return false;
     switch (normalizeQuestionType(type)) {
@@ -746,9 +1409,39 @@ function compareAnswers(type, given, correct) {
             .toLowerCase();
         return normalize(given) === normalize(correct);
       }
+      case "long": {
+        const suggested = await aiEvaluateText({
+          examType,
+          sectionType,
+          questionText,
+          modelAnswer: correct,
+          userAnswer: given,
+          weight: 1,
+        });
+        // More realistic thresholds for writing tasks
+        const threshold = sectionType.toLowerCase().includes("writing")
+          ? 0.3
+          : 0.6;
+        return (suggested?.earned ?? 0) >= threshold * (suggested?.max ?? 1);
+      }
       case "speaking":
-        // Speaking typically requires manual or ML grading; do not auto-grade
-        return false;
+        // If given is an audio URL, cannot auto-grade here
+        if (typeof given === "string" && /^https?:\/\//i.test(given))
+          return false;
+        // If given is transcribed text, use AI evaluation
+        const suggested = await aiEvaluateText({
+          examType,
+          sectionType,
+          questionText,
+          modelAnswer: correct,
+          userAnswer: given,
+          weight: 1,
+        });
+        // More realistic thresholds for speaking tasks
+        const threshold = sectionType.toLowerCase().includes("speaking")
+          ? 0.4
+          : 0.6;
+        return (suggested?.earned ?? 0) >= threshold * (suggested?.max ?? 1);
       default:
         return String(given) === String(correct);
     }
