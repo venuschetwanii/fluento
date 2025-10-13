@@ -61,6 +61,37 @@ router.get("/open/:examId", async (req, res) => {
   }
 });
 
+// Public: get a specific section of a published exam (basic fields only)
+router.get("/open/:examId/sections/:sectionId", async (req, res) => {
+  try {
+    const { examId, sectionId } = req.params;
+    const exam = await Exam.findOne({
+      _id: examId,
+      status: "published",
+      deletedAt: null,
+    }).select("sections");
+    if (!exam) return res.status(404).json({ error: "Exam not found" });
+
+    const isMember = (exam.sections || []).some(
+      (s) => String(s._id || s) === String(sectionId)
+    );
+    if (!isMember)
+      return res.status(404).json({ error: "Section not part of this exam" });
+
+    const section = await Section.findById(sectionId).select(
+      "sectionType title duration totalQuestions instructions"
+    );
+    if (!section) return res.status(404).json({ error: "Section not found" });
+
+    return res.json(section);
+  } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(400).json({ error: "Invalid ID" });
+    }
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 // Protect all exam routes with JWT auth
 router.use(auth);
 
@@ -333,6 +364,169 @@ router.get("/:examId", async (req, res) => {
       return res.status(400).json({ error: "Invalid Exam ID" });
     }
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Authenticated: list sections for an exam (basic metadata)
+router.get("/:examId/sections", async (req, res) => {
+  try {
+    const { examId } = req.params;
+    const exam = await Exam.findOne({ _id: examId, deletedAt: null }).select(
+      "status sections"
+    );
+    if (!exam) return res.status(404).json({ error: "Exam not found" });
+
+    // Students may only view published exams
+    if (req.user?.role === "student" && exam.status !== "published") {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    const sections = await Section.find({ _id: { $in: exam.sections } }).select(
+      "sectionType title duration totalQuestions"
+    );
+    return res.json({ items: sections });
+  } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(400).json({ error: "Invalid Exam ID" });
+    }
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// Authenticated: get a specific section of an exam; validates membership
+router.get("/:examId/sections/:sectionId", async (req, res) => {
+  try {
+    const { examId, sectionId } = req.params;
+    const exam = await Exam.findOne({ _id: examId, deletedAt: null }).select(
+      "status sections"
+    );
+    if (!exam) return res.status(404).json({ error: "Exam not found" });
+
+    const isMember = (exam.sections || []).some(
+      (s) => String(s._id || s) === String(sectionId)
+    );
+    if (!isMember)
+      return res.status(404).json({ error: "Section not part of this exam" });
+
+    // Role policy: students can only access sections of published exams
+    const role = req.user?.role;
+    const isStaff = ["admin", "teacher", "moderator"].includes(role);
+    if (role === "student" && exam.status !== "published") {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    // Load section, parts, groups
+    const section = await Section.findById(sectionId);
+    if (!section) return res.status(404).json({ error: "Section not found" });
+
+    const partIds = (section.parts || []).map((p) => p._id || p);
+    const parts = await Part.find({ _id: { $in: partIds } });
+    const groupIds = parts.flatMap((p) =>
+      (p.questionGroups || []).map((g) => g._id || g)
+    );
+    const groups = await QuestionGroup.find({ _id: { $in: groupIds } });
+
+    // Assemble nested structure
+    const partsById = new Map(parts.map((p) => [String(p._id), p]));
+    const groupsById = new Map(groups.map((g) => [String(g._id), g]));
+
+    const sectionObj = section.toObject();
+    sectionObj.parts = (section.parts || [])
+      .map((pid) => {
+        const part = partsById.get(String(pid._id || pid));
+        if (!part) return null;
+        const partObj = part.toObject();
+        partObj.questionGroups = (part.questionGroups || [])
+          .map((gid) => {
+            const group = groupsById.get(String(gid._id || gid));
+            if (!group) return null;
+            const groupObj = group.toObject();
+            // In this endpoint, staff can see answers; students will also see unless you prefer otherwise.
+            // We keep answers for staff only by stripping for non-staff.
+            if (!isStaff) {
+              groupObj.questions = (groupObj.questions || []).map((q) => {
+                const { correctAnswer, explanation, ...rest } = q;
+                return rest;
+              });
+            }
+            return groupObj;
+          })
+          .filter(Boolean);
+        return partObj;
+      })
+      .filter(Boolean);
+
+    return res.json(sectionObj);
+  } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(400).json({ error: "Invalid ID" });
+    }
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+// Authenticated: student-safe endpoint that always hides correct answers and explanations
+router.get("/:examId/sections/:sectionId/student", async (req, res) => {
+  try {
+    const { examId, sectionId } = req.params;
+    const exam = await Exam.findOne({ _id: examId, deletedAt: null }).select(
+      "status sections"
+    );
+    if (!exam) return res.status(404).json({ error: "Exam not found" });
+
+    // Student-safe: must be published
+    if (exam.status !== "published") {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    const isMember = (exam.sections || []).some(
+      (s) => String(s._id || s) === String(sectionId)
+    );
+    if (!isMember)
+      return res.status(404).json({ error: "Section not part of this exam" });
+
+    const section = await Section.findById(sectionId);
+    if (!section) return res.status(404).json({ error: "Section not found" });
+
+    const partIds = (section.parts || []).map((p) => p._id || p);
+    const parts = await Part.find({ _id: { $in: partIds } });
+    const groupIds = parts.flatMap((p) =>
+      (p.questionGroups || []).map((g) => g._id || g)
+    );
+    const groups = await QuestionGroup.find({ _id: { $in: groupIds } });
+
+    const partsById = new Map(parts.map((p) => [String(p._id), p]));
+    const groupsById = new Map(groups.map((g) => [String(g._id), g]));
+
+    const sectionObj = section.toObject();
+    sectionObj.parts = (section.parts || [])
+      .map((pid) => {
+        const part = partsById.get(String(pid._id || pid));
+        if (!part) return null;
+        const partObj = part.toObject();
+        partObj.questionGroups = (part.questionGroups || [])
+          .map((gid) => {
+            const group = groupsById.get(String(gid._id || gid));
+            if (!group) return null;
+            const groupObj = group.toObject();
+            // Always hide answers here
+            groupObj.questions = (groupObj.questions || []).map((q) => {
+              const { correctAnswer, explanation, ...rest } = q;
+              return rest;
+            });
+            return groupObj;
+          })
+          .filter(Boolean);
+        return partObj;
+      })
+      .filter(Boolean);
+
+    return res.json(sectionObj);
+  } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(400).json({ error: "Invalid ID" });
+    }
+    return res.status(500).json({ error: error.message });
   }
 });
 

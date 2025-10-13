@@ -9,6 +9,9 @@ const QuestionSchema = new Schema({
   maxWords: { type: Number },
   minWords: { type: Number },
   maxTime: { type: Number },
+  // New timing controls (in seconds)
+  preparationTime: { type: Number },
+  recordingTimelimit: { type: Number },
   scoringCriteria: [{ type: String }],
   taskType: { type: String },
   textItems: [{ type: String }],
