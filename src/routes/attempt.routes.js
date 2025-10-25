@@ -807,7 +807,9 @@ router.post("/:id/grade", async (req, res) => {
 
       for (const section of sections) {
         const sectionResponses = responseResults.filter(
-          (r) => r.sectionType === section
+          (r) =>
+            r.sectionType &&
+            r.sectionType.toLowerCase() === section.toLowerCase()
         );
         if (sectionResponses.length > 0) {
           const sectionAccuracy =
@@ -842,7 +844,9 @@ router.post("/:id/grade", async (req, res) => {
 
       for (const section of sections) {
         const sectionResponses = responseResults.filter(
-          (r) => r.sectionType === section
+          (r) =>
+            r.sectionType &&
+            r.sectionType.toLowerCase() === section.toLowerCase()
         );
         if (sectionResponses.length > 0) {
           const sectionAccuracy =
@@ -892,7 +896,9 @@ router.post("/:id/grade", async (req, res) => {
 
       for (const section of sections) {
         const sectionResponses = responseResults.filter(
-          (r) => r.sectionType === section
+          (r) =>
+            r.sectionType &&
+            r.sectionType.toLowerCase() === section.toLowerCase()
         );
         if (sectionResponses.length > 0) {
           const sectionAccuracy =

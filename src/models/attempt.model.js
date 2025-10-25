@@ -515,7 +515,8 @@ AttemptSchema.methods.computeScoring = async function () {
 
     for (const section of sections) {
       const sectionResponses = responseResults.filter(
-        (r) => r.sectionType === section
+        (r) =>
+          r.sectionType && r.sectionType.toLowerCase() === section.toLowerCase()
       );
       if (sectionResponses.length > 0) {
         const sectionAccuracy =
@@ -548,7 +549,8 @@ AttemptSchema.methods.computeScoring = async function () {
 
     for (const section of sections) {
       const sectionResponses = responseResults.filter(
-        (r) => r.sectionType === section
+        (r) =>
+          r.sectionType && r.sectionType.toLowerCase() === section.toLowerCase()
       );
       if (sectionResponses.length > 0) {
         const sectionAccuracy =
@@ -572,7 +574,7 @@ AttemptSchema.methods.computeScoring = async function () {
   } else if (examType.includes("gre")) {
     // GRE: Analytical Writing scored 0-6 in 0.5 increments
     const writingResponses = responseResults.filter(
-      (r) => r.sectionType === "Writing"
+      (r) => r.sectionType && r.sectionType.toLowerCase() === "writing"
     );
     if (writingResponses.length > 0) {
       const writingAccuracy =
@@ -595,7 +597,8 @@ AttemptSchema.methods.computeScoring = async function () {
 
     for (const section of sections) {
       const sectionResponses = responseResults.filter(
-        (r) => r.sectionType === section
+        (r) =>
+          r.sectionType && r.sectionType.toLowerCase() === section.toLowerCase()
       );
       if (sectionResponses.length > 0) {
         const sectionAccuracy =
