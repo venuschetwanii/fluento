@@ -36,21 +36,21 @@ const CourseSchema = new Schema(
       trim: true,
       maxlength: 2000,
     },
-    shortDescription: {
+    thumbnail: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    category: {
       type: String,
       required: true,
       trim: true,
-      maxlength: 500,
+      maxlength: 100,
     },
-    type: {
-      type: String,
-      enum: ["video", "pdf"],
-      required: true,
-    },
-    url: {
-      type: String,
-      required: true,
-      trim: true,
+    studentsCount: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
     deletedAt: {
       type: Date,
@@ -65,10 +65,21 @@ const CourseSchema = new Schema(
 CourseSchema.index({ title: 1, examType: 1 });
 CourseSchema.index({ status: 1, deletedAt: 1 });
 CourseSchema.index({ publishedBy: 1, status: 1 });
+CourseSchema.index({ category: 1, status: 1 });
+CourseSchema.index({ studentsCount: -1 });
 
 // Virtual for published status
 CourseSchema.virtual("isPublished").get(function () {
   return this.status === "published";
+});
+
+// Virtual for lessons
+CourseSchema.virtual("lessons", {
+  ref: "Lesson",
+  localField: "_id",
+  foreignField: "course",
+  match: { deletedAt: null },
+  options: { sort: { order: 1 } },
 });
 
 // Pre-save middleware to set publishedAt when status changes to published

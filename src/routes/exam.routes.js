@@ -16,14 +16,34 @@ router.get("/open", async (req, res) => {
     if (type) query.type = { $regex: String(type), $options: "i" };
 
     const skip = (Number(page) - 1) * Number(limit);
-    const [items, total] = await Promise.all([
+    const [exams, total] = await Promise.all([
       Exam.find(query)
-        .select("title type duration totalQuestions status createdAt")
+        .select(
+          "title type duration totalQuestions featureImage status sections createdAt"
+        )
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(Number(limit)),
       Exam.countDocuments(query),
     ]);
+
+    // Load section details for each exam
+    const items = await Promise.all(
+      exams.map(async (exam) => {
+        const examObj = exam.toObject();
+
+        // Load section documents for this exam
+        const sections = await Section.find({
+          _id: { $in: exam.sections },
+        }).select("sectionType title duration totalQuestions");
+
+        return {
+          ...examObj,
+          sections,
+        };
+      })
+    );
+
     res.json({ items, total, page: Number(page), limit: Number(limit) });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -37,7 +57,9 @@ router.get("/open/:examId", async (req, res) => {
       _id: examId,
       status: "published",
       deletedAt: null,
-    }).select("title type duration totalQuestions status sections");
+    }).select(
+      "title type duration totalQuestions featureImage status sections"
+    );
     if (!exam) return res.status(404).json({ error: "Exam not found" });
 
     // Load only section documents (no parts/groups)
@@ -51,6 +73,7 @@ router.get("/open/:examId", async (req, res) => {
       type: exam.type,
       duration: exam.duration,
       totalQuestions: exam.totalQuestions,
+      featureImage: exam.featureImage,
       sections,
     });
   } catch (error) {
@@ -115,7 +138,8 @@ router.post(
   requireRole("teacher", "moderator", "admin"),
   async (req, res) => {
     try {
-      const { title, type, duration, totalQuestions, sections } = req.body;
+      const { title, type, duration, totalQuestions, featureImage, sections } =
+        req.body;
 
       if (!title || !type) {
         return res
@@ -239,6 +263,7 @@ router.post(
         type,
         duration,
         totalQuestions,
+        featureImage,
         status,
         sections: sectionIds,
       });
@@ -275,7 +300,9 @@ router.get("/", async (req, res) => {
     const skip = (Number(page) - 1) * Number(limit);
     const [items, total] = await Promise.all([
       Exam.find(query)
-        .select("title type duration totalQuestions status deletedAt")
+        .select(
+          "title type duration totalQuestions featureImage status deletedAt"
+        )
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(Number(limit)),

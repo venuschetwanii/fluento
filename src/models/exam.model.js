@@ -8,6 +8,7 @@ const ExamSchema = new Schema(
     type: { type: String, required: true },
     duration: Number,
     totalQuestions: Number,
+    featureImage: { type: String, trim: true, default: null },
     status: {
       type: String,
       enum: ["draft", "published"],

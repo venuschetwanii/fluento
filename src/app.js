@@ -10,6 +10,7 @@ const groupRoutes = require("./routes/group.routes");
 const uploadRoutes = require("./routes/uploads.routes");
 const attemptRoutes = require("./routes/attempt.routes");
 const courseRoutes = require("./routes/course.routes");
+const lessonRoutes = require("./routes/lesson.routes");
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
@@ -26,6 +27,7 @@ app.use("/groups", groupRoutes);
 app.use("/uploads", uploadRoutes);
 app.use("/attempts", attemptRoutes);
 app.use("/courses", courseRoutes);
+app.use("/lessons", lessonRoutes);
 
 // Background jobs
 require("./jobs/attempts.cron");

@@ -1,5 +1,6 @@
 const Router = require("express").Router;
 const Course = require("../models/course.model");
+const Lesson = require("../models/lesson.model");
 const auth = require("../middlewares/auth.middleware");
 
 const router = Router();
@@ -21,17 +22,25 @@ const requireRole =
 // Open endpoints (no auth): published and non-deleted courses
 router.get("/open", async (req, res) => {
   try {
-    const { examType, page = 1, limit = 20 } = req.query;
+    const { examType, category, page = 1, limit = 20 } = req.query;
     const query = { status: "published", deletedAt: null };
     if (examType) query.examType = { $regex: String(examType), $options: "i" };
+    if (category) query.category = { $regex: String(category), $options: "i" };
 
     const skip = (Number(page) - 1) * Number(limit);
     const [items, total] = await Promise.all([
       Course.find(query)
         .select(
-          "title examType shortDescription status type url publishedAt createdAt"
+          "title examType description thumbnail category studentsCount status publishedAt createdAt"
         )
         .populate("publishedBy", "name email")
+        .populate({
+          path: "lessons",
+          select:
+            "title description type duration url thumbnail publishedAt order",
+          match: { deletedAt: null },
+          options: { sort: { order: 1 } },
+        })
         .sort({ publishedAt: -1, createdAt: -1 })
         .skip(skip)
         .limit(Number(limit)),
@@ -52,9 +61,16 @@ router.get("/open/:courseId", async (req, res) => {
       deletedAt: null,
     })
       .select(
-        "title examType description shortDescription type url publishedAt createdAt"
+        "title examType description thumbnail category studentsCount status publishedAt createdAt"
       )
-      .populate("publishedBy", "name email");
+      .populate("publishedBy", "name email")
+      .populate({
+        path: "lessons",
+        select:
+          "title description type duration url thumbnail publishedAt order",
+        match: { deletedAt: null },
+        options: { sort: { order: 1 } },
+      });
 
     if (!course) return res.status(404).json({ error: "Course not found" });
 
@@ -80,30 +96,17 @@ router.post(
         title,
         examType,
         description,
-        shortDescription,
+        thumbnail,
+        category,
+        studentsCount,
         status,
-        type,
-        url,
+        lessons = [],
       } = req.body;
 
-      if (
-        !title ||
-        !examType ||
-        !description ||
-        !shortDescription ||
-        !type ||
-        !url
-      ) {
+      if (!title || !examType || !description || !category) {
         return res.status(400).json({
           error:
-            "Title, examType, description, shortDescription, type, and url are required fields.",
-        });
-      }
-
-      // Validate material type
-      if (!["video", "pdf"].includes(type)) {
-        return res.status(400).json({
-          error: "Type must be either 'video' or 'pdf'",
+            "Title, examType, description, and category are required fields.",
         });
       }
 
@@ -128,13 +131,38 @@ router.post(
         title,
         examType,
         description,
-        shortDescription,
-        type,
-        url,
+        thumbnail,
+        category,
+        studentsCount: studentsCount || 0,
       });
 
-      // Populate the publishedBy field for response
+      // Create lessons if provided
+      if (lessons && lessons.length > 0) {
+        const lessonPromises = lessons.map((lesson, index) => {
+          return Lesson.create({
+            title: lesson.title,
+            description: lesson.description,
+            type: lesson.type,
+            duration: lesson.duration,
+            url: lesson.url,
+            thumbnail: lesson.thumbnail,
+            publishedAt: lesson.publishedAt || new Date(),
+            course: course._id,
+            order: lesson.order || index + 1,
+          });
+        });
+        await Promise.all(lessonPromises);
+      }
+
+      // Populate the course with lessons and publishedBy
       await course.populate("publishedBy", "name email");
+      await course.populate({
+        path: "lessons",
+        select:
+          "title description type duration url thumbnail publishedAt order",
+        match: { deletedAt: null },
+        options: { sort: { order: 1 } },
+      });
 
       return res.status(201).json(course);
     } catch (error) {
@@ -151,6 +179,7 @@ router.get("/", async (req, res) => {
       limit = 20,
       q,
       examType,
+      category,
       status,
       includeDeleted = false,
     } = req.query;
@@ -162,6 +191,7 @@ router.get("/", async (req, res) => {
 
     if (q) query.title = { $regex: String(q), $options: "i" };
     if (examType) query.examType = { $regex: String(examType), $options: "i" };
+    if (category) query.category = { $regex: String(category), $options: "i" };
 
     // Students only see published by default
     if (req.user?.role === "student") {
@@ -174,9 +204,16 @@ router.get("/", async (req, res) => {
     const [items, total] = await Promise.all([
       Course.find(query)
         .select(
-          "title examType shortDescription status type url publishedAt deletedAt createdAt"
+          "title examType description thumbnail category studentsCount status publishedAt deletedAt createdAt"
         )
         .populate("publishedBy", "name email")
+        .populate({
+          path: "lessons",
+          select:
+            "title description type duration url thumbnail publishedAt order",
+          match: { deletedAt: null },
+          options: { sort: { order: 1 } },
+        })
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(Number(limit)),
@@ -198,7 +235,15 @@ router.get("/:courseId", async (req, res) => {
     const course = await Course.findOne({
       _id: courseId,
       deletedAt: null,
-    }).populate("publishedBy", "name email");
+    })
+      .populate("publishedBy", "name email")
+      .populate({
+        path: "lessons",
+        select:
+          "title description type duration url thumbnail publishedAt order",
+        match: { deletedAt: null },
+        options: { sort: { order: 1 } },
+      });
 
     if (!course) {
       return res.status(404).json({ error: "Course not found" });
@@ -225,6 +270,7 @@ router.put(
   async (req, res) => {
     try {
       const { courseId } = req.params;
+      const { lessons, ...courseData } = req.body;
 
       // Check if course exists and user has permission
       const existingCourse = await Course.findOne({
@@ -246,25 +292,60 @@ router.put(
 
       // Validate status if provided
       if (
-        req.body.status &&
-        !["draft", "published"].includes(req.body.status)
+        courseData.status &&
+        !["draft", "published"].includes(courseData.status)
       ) {
         return res.status(400).json({
           error: "Status must be either 'draft' or 'published'",
         });
       }
 
-      // Validate type if provided
-      if (req.body.type && !["video", "pdf"].includes(req.body.type)) {
-        return res.status(400).json({
-          error: "Type must be either 'video' or 'pdf'",
-        });
+      // Update course data
+      const updatedCourse = await Course.findByIdAndUpdate(
+        courseId,
+        courseData,
+        {
+          new: true, // Return the updated document
+          runValidators: true, // Run schema validators
+        }
+      );
+
+      // Handle lessons update if provided
+      if (lessons && Array.isArray(lessons)) {
+        // Soft delete existing lessons
+        await Lesson.updateMany(
+          { course: courseId, deletedAt: null },
+          { deletedAt: new Date() }
+        );
+
+        // Create new lessons
+        if (lessons.length > 0) {
+          const lessonPromises = lessons.map((lesson, index) => {
+            return Lesson.create({
+              title: lesson.title,
+              description: lesson.description,
+              type: lesson.type,
+              duration: lesson.duration,
+              url: lesson.url,
+              thumbnail: lesson.thumbnail,
+              publishedAt: lesson.publishedAt || new Date(),
+              course: courseId,
+              order: lesson.order || index + 1,
+            });
+          });
+          await Promise.all(lessonPromises);
+        }
       }
 
-      const updatedCourse = await Course.findByIdAndUpdate(courseId, req.body, {
-        new: true, // Return the updated document
-        runValidators: true, // Run schema validators
-      }).populate("publishedBy", "name email");
+      // Populate the updated course
+      await updatedCourse.populate("publishedBy", "name email");
+      await updatedCourse.populate({
+        path: "lessons",
+        select:
+          "title description type duration url thumbnail publishedAt order",
+        match: { deletedAt: null },
+        options: { sort: { order: 1 } },
+      });
 
       res.json(updatedCourse);
     } catch (error) {
@@ -354,8 +435,14 @@ router.delete(
       course.deletedAt = new Date();
       await course.save();
 
+      // Also soft delete all associated lessons
+      await Lesson.updateMany(
+        { course: courseId, deletedAt: null },
+        { deletedAt: new Date() }
+      );
+
       res.status(200).json({
-        message: "Course soft deleted successfully.",
+        message: "Course and associated lessons soft deleted successfully.",
         deletedAt: course.deletedAt,
       });
     } catch (error) {
@@ -391,8 +478,14 @@ router.post(
       course.deletedAt = null;
       await course.save();
 
+      // Also restore all associated lessons
+      await Lesson.updateMany(
+        { course: courseId, deletedAt: { $ne: null } },
+        { deletedAt: null }
+      );
+
       res.status(200).json({
-        message: "Course restored successfully.",
+        message: "Course and associated lessons restored successfully.",
         course: {
           _id: course._id,
           title: course.title,
@@ -415,11 +508,14 @@ router.delete("/:courseId/hard", requireRole("admin"), async (req, res) => {
       return res.status(404).json({ error: "Course not found" });
     }
 
+    // Delete all associated lessons permanently first
+    await Lesson.deleteMany({ course: courseId });
+
     // Delete the course permanently
     await Course.findByIdAndDelete(courseId);
 
     res.status(200).json({
-      message: "Course permanently deleted.",
+      message: "Course and associated lessons permanently deleted.",
       deletedCourse: {
         _id: courseToDelete._id,
         title: courseToDelete.title,
