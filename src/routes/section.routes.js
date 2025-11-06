@@ -26,7 +26,7 @@ const requireRole =
 // Append parts to a section (IDs or objects)
 router.post(
   "/:sectionId/parts",
-  requireRole("teacher", "moderator", "admin"),
+  requireRole("tutor", "admin"),
   async (req, res) => {
     try {
       const { sectionId } = req.params;
@@ -83,7 +83,7 @@ router.post(
 // Replace parts list for a section (IDs or objects)
 router.put(
   "/:sectionId/parts",
-  requireRole("teacher", "moderator", "admin"),
+  requireRole("tutor", "admin"),
   async (req, res) => {
     try {
       const { sectionId } = req.params;
@@ -135,7 +135,7 @@ router.put(
 // Unlink a part from a section (non-destructive)
 router.delete(
   "/:sectionId/parts/:partId",
-  requireRole("teacher", "moderator", "admin"),
+  requireRole("tutor", "admin"),
   async (req, res) => {
     try {
       const { sectionId, partId } = req.params;

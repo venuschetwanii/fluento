@@ -6,6 +6,11 @@ const Section = require("../models/section.model");
 const Part = require("../models/part.model");
 const QuestionGroup = require("../models/group.model");
 const OpenAI = require("openai");
+const {
+  gradeIELTSSection,
+  gradeIELTSExam,
+  calculateOverallBand,
+} = require("../services/ielts-grading.service");
 
 const router = Router();
 
@@ -20,21 +25,55 @@ router.use(auth);
 // Resume or create an in-progress attempt for an exam
 router.post("/resume", async (req, res) => {
   try {
-    const { examId } = req.body;
+    const { examId, forceNew = false } = req.body;
     if (!examId) return res.status(400).json({ error: "examId is required" });
 
     // Validate exam exists
     const exam = await Exam.findById(examId);
     if (!exam) return res.status(404).json({ error: "Exam not found" });
 
-    // Reuse existing in-progress attempt if present
-    let attempt = await AttemptModel.findOne({
+    // Check if exam is active/available
+    if (exam.status && exam.status !== "active") {
+      return res.status(400).json({
+        error: "Exam is not available",
+        examStatus: exam.status,
+      });
+    }
+
+    // Check for existing attempts
+    const existingAttempts = await AttemptModel.find({
       userId: req.user.id,
       examId,
-      status: "in_progress",
-    });
+    }).sort({ createdAt: -1 });
 
-    if (!attempt) {
+    // Check for expired attempts
+    const expiredAttempts = existingAttempts.filter(
+      (a) =>
+        a.status === "expired" ||
+        (a.expiresAt && new Date(a.expiresAt) < new Date())
+    );
+
+    // Check for in-progress attempts
+    let inProgressAttempt = existingAttempts.find(
+      (a) =>
+        a.status === "in_progress" &&
+        (!a.expiresAt || new Date(a.expiresAt) > new Date())
+    );
+
+    // Auto-expire overdue in-progress attempts
+    if (
+      inProgressAttempt &&
+      inProgressAttempt.expiresAt &&
+      new Date(inProgressAttempt.expiresAt) < new Date()
+    ) {
+      inProgressAttempt.status = "expired";
+      await inProgressAttempt.save();
+      inProgressAttempt = null;
+    }
+
+    let attempt;
+
+    if (forceNew || !inProgressAttempt) {
       // Create new attempt
       attempt = new AttemptModel({
         userId: req.user.id,
@@ -43,34 +82,72 @@ router.post("/resume", async (req, res) => {
         status: "in_progress",
         startedAt: new Date(),
       });
-      // initialize per-section status
-      try {
-        if (exam && Array.isArray(exam.sections)) {
-          attempt.sectionsStatus = (exam.sections || []).map((sid) => ({
-            sectionId: sid._id || sid,
-            status: "in_progress",
-          }));
-        }
-      } catch {}
-      // set expiresAt based on exam duration (assumed minutes)
+
+      // Initialize per-section status
+      if (exam && Array.isArray(exam.sections)) {
+        attempt.sectionsStatus = (exam.sections || []).map((sid) => ({
+          sectionId: sid._id || sid,
+          status: "in_progress",
+        }));
+      }
+
+      // Set expiresAt based on exam duration (assumed minutes)
       if (typeof exam.duration === "number" && exam.duration > 0) {
         const ms = exam.duration * 60 * 1000;
         attempt.expiresAt = new Date(attempt.startedAt.getTime() + ms);
       }
+
       await attempt.save();
+    } else {
+      // Resume existing attempt
+      attempt = inProgressAttempt;
     }
 
-    // Auto-expire if past due
-    if (
-      attempt.expiresAt &&
-      new Date(attempt.expiresAt) < new Date() &&
-      attempt.status === "in_progress"
-    ) {
-      attempt.status = "expired";
-      await attempt.save();
+    // Calculate remaining time
+    let remainingMs = null;
+    let isExpired = false;
+    if (attempt.expiresAt) {
+      remainingMs = Math.max(0, new Date(attempt.expiresAt) - new Date());
+      isExpired = remainingMs === 0;
     }
 
-    return res.json(attempt);
+    // Return comprehensive attempt data
+    const response = {
+      attempt: {
+        _id: attempt._id,
+        userId: attempt.userId,
+        examId: attempt.examId,
+        attemptType: attempt.attemptType,
+        status: attempt.status,
+        startedAt: attempt.startedAt,
+        expiresAt: attempt.expiresAt,
+        submittedAt: attempt.submittedAt,
+        sectionsStatus: attempt.sectionsStatus,
+        responses: attempt.responses?.length || 0,
+        scoring: attempt.scoring,
+      },
+      exam: {
+        _id: exam._id,
+        title: exam.title,
+        type: exam.type,
+        duration: exam.duration,
+        sections: exam.sections?.length || 0,
+      },
+      timeInfo: {
+        remainingMs,
+        isExpired,
+        totalDuration: exam.duration ? exam.duration * 60 * 1000 : null,
+      },
+      previousAttempts: {
+        total: existingAttempts.length,
+        expired: expiredAttempts.length,
+        submitted: existingAttempts.filter((a) => a.status === "submitted")
+          .length,
+        graded: existingAttempts.filter((a) => a.status === "graded").length,
+      },
+    };
+
+    return res.json(response);
   } catch (e) {
     return res.status(400).json({ error: e.message });
   }
@@ -522,19 +599,69 @@ router.post("/:id/cancel", async (req, res) => {
 });
 
 // Expire attempt (server/admin action)
+// Manually expire a specific attempt
 router.post("/:id/expire", async (req, res) => {
   try {
+    const { reason, force = false } = req.body;
     const attempt = await AttemptModel.findById(req.params.id);
-    if (!attempt) return res.status(404).json({ error: "Not found" });
-    // Allow owner or elevated roles; simple check here assumes middleware role present
+
+    if (!attempt) return res.status(404).json({ error: "Attempt not found" });
+
+    // Check permissions - owner or admin/tutor
     if (
       String(attempt.userId) !== String(req.user.id) &&
-      req.user.role === "student"
-    )
+      !["admin", "tutor"].includes(req.user.role)
+    ) {
       return res.status(403).json({ error: "Forbidden" });
+    }
+
+    // Check if attempt can be expired
+    if (!force && attempt.status !== "in_progress") {
+      return res.status(400).json({
+        error: "Only in-progress attempts can be expired",
+        currentStatus: attempt.status,
+      });
+    }
+
+    // Update attempt status
+    const previousStatus = attempt.status;
     attempt.status = "expired";
+
+    // Add expiration metadata
+    attempt.expiredAt = new Date();
+    if (reason) {
+      attempt.expirationReason = reason;
+    }
+    if (req.user.id !== attempt.userId) {
+      attempt.expiredBy = req.user.id;
+    }
+
     await attempt.save();
-    res.json(attempt);
+
+    // Return comprehensive response
+    const response = {
+      attempt: {
+        _id: attempt._id,
+        userId: attempt.userId,
+        examId: attempt.examId,
+        status: attempt.status,
+        previousStatus,
+        startedAt: attempt.startedAt,
+        expiredAt: attempt.expiredAt,
+        expirationReason: attempt.expirationReason,
+        expiredBy: attempt.expiredBy,
+      },
+      timeInfo: {
+        duration: attempt.startedAt
+          ? new Date(attempt.expiredAt) - new Date(attempt.startedAt)
+          : null,
+        wasOverdue: attempt.expiresAt
+          ? new Date(attempt.expiresAt) < new Date()
+          : false,
+      },
+    };
+
+    res.json(response);
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
@@ -543,16 +670,220 @@ router.post("/:id/expire", async (req, res) => {
 // Admin-only: expire all overdue in-progress attempts
 router.post("/expire-overdue", async (req, res) => {
   try {
-    if (req.user.role !== "admin" && req.user.role !== "moderator")
+    if (req.user.role !== "admin")
       return res.status(403).json({ error: "Forbidden" });
     const now = new Date();
     const result = await AttemptModel.updateMany(
       { status: "in_progress", expiresAt: { $lt: now } },
-      { $set: { status: "expired" } }
+      { $set: { status: "expired", expiredAt: now, expiredBy: req.user.id } }
     );
     res.json({
       matched: result.matchedCount ?? result.n,
       modified: result.modifiedCount ?? result.nModified,
+      expiredAt: now,
+    });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Get exam status and time remaining for a specific attempt
+router.get("/:id/status", async (req, res) => {
+  try {
+    const attempt = await AttemptModel.findById(req.params.id);
+    if (!attempt) return res.status(404).json({ error: "Attempt not found" });
+    if (String(attempt.userId) !== String(req.user.id))
+      return res.status(403).json({ error: "Forbidden" });
+
+    const now = new Date();
+    let remainingMs = null;
+    let isExpired = false;
+    let timeStatus = "unknown";
+
+    if (attempt.expiresAt) {
+      remainingMs = Math.max(0, new Date(attempt.expiresAt) - now);
+      isExpired = remainingMs === 0;
+
+      if (isExpired) {
+        timeStatus = "expired";
+      } else if (remainingMs < 5 * 60 * 1000) {
+        // Less than 5 minutes
+        timeStatus = "critical";
+      } else if (remainingMs < 15 * 60 * 1000) {
+        // Less than 15 minutes
+        timeStatus = "warning";
+      } else {
+        timeStatus = "normal";
+      }
+    }
+
+    const response = {
+      attempt: {
+        _id: attempt._id,
+        status: attempt.status,
+        startedAt: attempt.startedAt,
+        expiresAt: attempt.expiresAt,
+        submittedAt: attempt.submittedAt,
+        expiredAt: attempt.expiredAt,
+      },
+      timeInfo: {
+        remainingMs,
+        isExpired,
+        timeStatus,
+        totalDuration:
+          attempt.startedAt && attempt.expiresAt
+            ? new Date(attempt.expiresAt) - new Date(attempt.startedAt)
+            : null,
+        elapsed: attempt.startedAt ? now - new Date(attempt.startedAt) : null,
+      },
+      progress: {
+        sectionsTotal: attempt.sectionsStatus?.length || 0,
+        sectionsCompleted:
+          attempt.sectionsStatus?.filter((s) => s.status === "submitted")
+            .length || 0,
+        responsesCount: attempt.responses?.length || 0,
+      },
+    };
+
+    res.json(response);
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Get all attempts for a specific exam by user
+router.get("/exam/:examId", async (req, res) => {
+  try {
+    const { examId } = req.params;
+    const { status, limit = 10, page = 1 } = req.query;
+
+    // Build query
+    const query = { userId: req.user.id, examId };
+    if (status) {
+      query.status = status;
+    }
+
+    // Get attempts with pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const attempts = await AttemptModel.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .select("-responses -snapshot"); // Exclude large fields for list view
+
+    const total = await AttemptModel.countDocuments(query);
+
+    // Get exam info
+    const exam = await Exam.findById(examId).select("title type duration");
+
+    res.json({
+      attempts,
+      exam,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit)),
+      },
+    });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Cancel an in-progress attempt
+router.post("/:id/cancel", async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const attempt = await AttemptModel.findById(req.params.id);
+
+    if (!attempt) return res.status(404).json({ error: "Attempt not found" });
+    if (String(attempt.userId) !== String(req.user.id))
+      return res.status(403).json({ error: "Forbidden" });
+    if (attempt.status !== "in_progress")
+      return res.status(400).json({
+        error: "Only in-progress attempts can be cancelled",
+        currentStatus: attempt.status,
+      });
+
+    attempt.status = "cancelled";
+    attempt.cancelledAt = new Date();
+    if (reason) {
+      attempt.cancellationReason = reason;
+    }
+
+    await attempt.save();
+
+    res.json({
+      attempt: {
+        _id: attempt._id,
+        status: attempt.status,
+        cancelledAt: attempt.cancelledAt,
+        cancellationReason: attempt.cancellationReason,
+      },
+      message: "Attempt cancelled successfully",
+    });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// Get exam flow statistics for a user
+router.get("/stats/overview", async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const now = new Date();
+
+    // Get basic stats
+    const totalAttempts = await AttemptModel.countDocuments({ userId });
+    const inProgressAttempts = await AttemptModel.countDocuments({
+      userId,
+      status: "in_progress",
+    });
+    const submittedAttempts = await AttemptModel.countDocuments({
+      userId,
+      status: "submitted",
+    });
+    const gradedAttempts = await AttemptModel.countDocuments({
+      userId,
+      status: "graded",
+    });
+    const expiredAttempts = await AttemptModel.countDocuments({
+      userId,
+      status: "expired",
+    });
+
+    // Get recent attempts
+    const recentAttempts = await AttemptModel.find({ userId })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select("examId status startedAt submittedAt createdAt")
+      .populate("examId", "title type");
+
+    // Get overdue attempts
+    const overdueAttempts = await AttemptModel.find({
+      userId,
+      status: "in_progress",
+      expiresAt: { $lt: now },
+    }).select("examId expiresAt startedAt");
+
+    res.json({
+      overview: {
+        total: totalAttempts,
+        inProgress: inProgressAttempts,
+        submitted: submittedAttempts,
+        graded: gradedAttempts,
+        expired: expiredAttempts,
+        overdue: overdueAttempts.length,
+      },
+      recentAttempts,
+      overdueAttempts: overdueAttempts.map((attempt) => ({
+        _id: attempt._id,
+        examId: attempt.examId,
+        startedAt: attempt.startedAt,
+        expiresAt: attempt.expiresAt,
+        overdueBy: now - new Date(attempt.expiresAt),
+      })),
     });
   } catch (e) {
     res.status(400).json({ error: e.message });
@@ -801,9 +1132,10 @@ router.post("/:id/grade", async (req, res) => {
     const sectionBandScores = {};
 
     if (examType.includes("ielts")) {
-      // IELTS: Calculate individual section bands (0-9), then average
+      // IELTS: Use official grading system
       const sections = ["Listening", "Reading", "Writing", "Speaking"];
-      const sectionBands = [];
+      const sectionBands = {};
+      const testType = exam.type === "IELTS_GT" ? "general" : "academic";
 
       for (const section of sections) {
         const sectionResponses = responseResults.filter(
@@ -811,31 +1143,27 @@ router.post("/:id/grade", async (req, res) => {
             r.sectionType &&
             r.sectionType.toLowerCase() === section.toLowerCase()
         );
+
         if (sectionResponses.length > 0) {
-          const sectionAccuracy =
-            sectionResponses.reduce(
-              (sum, r) => sum + (r.isCorrect ? 1 : 0),
-              0
-            ) / sectionResponses.length;
-          const sectionBand =
-            Math.round(clamp(9 * sectionAccuracy, 0, 9) * 2) / 2;
-          sectionBands.push(sectionBand);
-          sectionBandScores[section] = sectionBand;
+          // Use official IELTS grading
+          const sectionResult = gradeIELTSSection(
+            sectionResponses,
+            section,
+            testType
+          );
+          sectionBands[section] = sectionResult.bandScore;
+          sectionBandScores[section] = sectionResult.bandScore;
         }
       }
 
-      const overallBand =
-        sectionBands.length > 0
-          ? Math.round(
-              (sectionBands.reduce((sum, band) => sum + band, 0) /
-                sectionBands.length) *
-                2
-            ) / 2
-          : 0;
+      // Calculate overall band with proper rounding
+      const overallBand = calculateOverallBand(sectionBands);
+
       scaled = {
         type: "IELTS",
         score: overallBand,
         sectionScores: sectionBandScores,
+        testType: testType,
       };
     } else if (examType.includes("toefl")) {
       // TOEFL: Each section scored 0-30, then summed for total
@@ -955,7 +1283,7 @@ router.post("/:id/grade/manual", async (req, res) => {
   try {
     const attempt = await AttemptModel.findById(req.params.id);
     if (!attempt) return res.status(404).json({ error: "Not found" });
-    // Only owner non-student (teacher/admin) or the owner themself if policy allows; here we restrict students
+    // Only owner non-student (tutor/admin) or the owner themself if policy allows; here we restrict students
     if (req.user.role === "student")
       return res.status(403).json({ error: "Forbidden" });
     const { updates } = req.body; // [{ questionId (_id), earned, max, isCorrect, feedback }]
@@ -1197,7 +1525,7 @@ router.post("/:id/grade/external", async (req, res) => {
 // Override entire scoring object (admin only)
 router.patch("/:id/score", async (req, res) => {
   try {
-    if (req.user.role !== "admin" && req.user.role !== "moderator")
+    if (req.user.role !== "admin")
       return res.status(403).json({ error: "Forbidden" });
     const attempt = await AttemptModel.findById(req.params.id);
     if (!attempt) return res.status(404).json({ error: "Not found" });

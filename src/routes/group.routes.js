@@ -24,7 +24,7 @@ const requireRole =
 // Append questions to a group
 router.post(
   "/:groupId/questions",
-  requireRole("teacher", "moderator", "admin"),
+  requireRole("tutor", "admin"),
   async (req, res) => {
     try {
       const { groupId } = req.params;
@@ -50,7 +50,7 @@ router.post(
 // Replace all questions in a group
 router.put(
   "/:groupId/questions",
-  requireRole("teacher", "moderator", "admin"),
+  requireRole("tutor", "admin"),
   async (req, res) => {
     try {
       const { groupId } = req.params;
@@ -71,7 +71,7 @@ router.put(
 // Update a single question by question _id (partial update)
 router.patch(
   "/:groupId/questions/:questionId",
-  requireRole("teacher", "moderator", "admin"),
+  requireRole("tutor", "admin"),
   async (req, res) => {
     try {
       const { groupId, questionId } = req.params;
@@ -98,7 +98,7 @@ router.patch(
 // Delete a question from a group by question _id
 router.delete(
   "/:groupId/questions/:questionId",
-  requireRole("teacher", "moderator", "admin"),
+  requireRole("tutor", "admin"),
   async (req, res) => {
     try {
       const { groupId, questionId } = req.params;
@@ -121,7 +121,7 @@ router.delete(
 // Bulk import questions (expects array)
 router.post(
   "/:groupId/questions:bulk-import",
-  requireRole("teacher", "moderator", "admin"),
+  requireRole("tutor", "admin"),
   async (req, res) => {
     try {
       const { groupId } = req.params;

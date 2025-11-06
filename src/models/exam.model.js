@@ -15,6 +15,12 @@ const ExamSchema = new Schema(
       default: "draft",
       index: true,
     },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
     sections: [{ type: mongoose.Schema.Types.ObjectId, ref: "Section" }],
     deletedAt: { type: Date, default: null, index: true },
   },

@@ -25,7 +25,7 @@ router.use(auth);
 // **CREATE** a new Lesson
 router.post(
   "/",
-  requireRole("teacher", "moderator", "admin"),
+  requireRole("tutor", "admin"),
   async (req, res) => {
     try {
       const {
@@ -64,12 +64,13 @@ router.post(
         return res.status(404).json({ error: "Course not found" });
       }
 
-      // Only allow course owner, moderators, or admins to add lessons
+      // Only allow course owner (tutor) or admins to add lessons
+      // Tutors can only edit their own courses, admins can edit all
       if (
-        String(courseDoc.publishedBy) !== String(req.user.id) &&
-        !["moderator", "admin"].includes(req.user.role)
+        String(courseDoc.createdBy) !== String(req.user.id) &&
+        req.user.role !== "admin"
       ) {
-        return res.status(403).json({ error: "Forbidden" });
+        return res.status(403).json({ error: "Forbidden: You can only edit courses created by you" });
       }
 
       // Get the next order number if not provided
@@ -229,7 +230,7 @@ router.get("/:lessonId", async (req, res) => {
 // **UPDATE** a Lesson
 router.put(
   "/:lessonId",
-  requireRole("teacher", "moderator", "admin"),
+  requireRole("tutor", "admin"),
   async (req, res) => {
     try {
       const { lessonId } = req.params;
@@ -238,18 +239,19 @@ router.put(
       const existingLesson = await Lesson.findOne({
         _id: lessonId,
         deletedAt: null,
-      }).populate("course", "publishedBy");
+      }).populate("course", "createdBy");
 
       if (!existingLesson) {
         return res.status(404).json({ error: "Lesson not found" });
       }
 
-      // Only allow course owner, moderators, or admins to update
+      // Only allow course owner (tutor) or admins to update
+      // Tutors can only edit their own courses, admins can edit all
       if (
-        String(existingLesson.course.publishedBy) !== String(req.user.id) &&
-        !["moderator", "admin"].includes(req.user.role)
+        String(existingLesson.course.createdBy) !== String(req.user.id) &&
+        req.user.role !== "admin"
       ) {
-        return res.status(403).json({ error: "Forbidden" });
+        return res.status(403).json({ error: "Forbidden: You can only edit courses created by you" });
       }
 
       // Validate type if provided
@@ -274,7 +276,7 @@ router.put(
 // **SOFT DELETE** a Lesson
 router.delete(
   "/:lessonId",
-  requireRole("teacher", "moderator", "admin"),
+  requireRole("tutor", "admin"),
   async (req, res) => {
     try {
       const { lessonId } = req.params;
@@ -282,18 +284,19 @@ router.delete(
       const lesson = await Lesson.findOne({
         _id: lessonId,
         deletedAt: null,
-      }).populate("course", "publishedBy");
+      }).populate("course", "createdBy");
 
       if (!lesson) {
         return res.status(404).json({ error: "Lesson not found" });
       }
 
-      // Only allow course owner, moderators, or admins to delete
+      // Only allow course owner (tutor) or admins to delete
+      // Tutors can only edit their own courses, admins can edit all
       if (
-        String(lesson.course.publishedBy) !== String(req.user.id) &&
-        !["moderator", "admin"].includes(req.user.role)
+        String(lesson.course.createdBy) !== String(req.user.id) &&
+        req.user.role !== "admin"
       ) {
-        return res.status(403).json({ error: "Forbidden" });
+        return res.status(403).json({ error: "Forbidden: You can only edit courses created by you" });
       }
 
       // Soft delete: set deletedAt timestamp
@@ -313,7 +316,7 @@ router.delete(
 // **RESTORE** a soft-deleted Lesson
 router.post(
   "/:lessonId/restore",
-  requireRole("teacher", "moderator", "admin"),
+  requireRole("tutor", "admin"),
   async (req, res) => {
     try {
       const { lessonId } = req.params;
@@ -321,18 +324,19 @@ router.post(
       const lesson = await Lesson.findOne({
         _id: lessonId,
         deletedAt: { $ne: null },
-      }).populate("course", "publishedBy");
+      }).populate("course", "createdBy");
 
       if (!lesson) {
         return res.status(404).json({ error: "Soft-deleted lesson not found" });
       }
 
-      // Only allow course owner, moderators, or admins to restore
+      // Only allow course owner (tutor) or admins to restore
+      // Tutors can only edit their own courses, admins can edit all
       if (
-        String(lesson.course.publishedBy) !== String(req.user.id) &&
-        !["moderator", "admin"].includes(req.user.role)
+        String(lesson.course.createdBy) !== String(req.user.id) &&
+        req.user.role !== "admin"
       ) {
-        return res.status(403).json({ error: "Forbidden" });
+        return res.status(403).json({ error: "Forbidden: You can only edit courses created by you" });
       }
 
       lesson.deletedAt = null;

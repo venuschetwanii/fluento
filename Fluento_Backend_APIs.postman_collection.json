@@ -1,0 +1,535 @@
+{
+	"info": {
+		"_postman_id": "fluento-backend-apis",
+		"name": "Fluento Backend APIs",
+		"description": "Complete API collection for Fluento Backend including User Management, Dashboard, and Transfer Ownership APIs",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{accessToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "User Management",
+			"item": [
+				{
+					"name": "List All Students",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users/students?page=1&limit=20&status=active&q=&sortBy=createdAt&sortOrder=desc",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", "students"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Page number"
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Items per page"
+								},
+								{
+									"key": "status",
+									"value": "active",
+									"description": "Filter by status: active or blocked",
+									"disabled": true
+								},
+								{
+									"key": "q",
+									"value": "",
+									"description": "Search query (name, email, phone)",
+									"disabled": true
+								},
+								{
+									"key": "sortBy",
+									"value": "createdAt",
+									"description": "Sort field: name, email, createdAt, updatedAt"
+								},
+								{
+									"key": "sortOrder",
+									"value": "desc",
+									"description": "Sort direction: asc or desc"
+								}
+							]
+						},
+						"description": "Get list of all students. Accessible by Admin and Tutor."
+					},
+					"response": []
+				},
+				{
+					"name": "List All Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users?page=1&limit=20&role=&status=&q=",
+							"host": ["{{baseUrl}}"],
+							"path": ["users"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "role",
+									"value": "",
+									"description": "Filter by role: student, admin, tutor",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "",
+									"description": "Filter by status: active, blocked",
+									"disabled": true
+								},
+								{
+									"key": "q",
+									"value": "",
+									"description": "Search query",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get list of all users. Admin only."
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users/:userId",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", ":userId"],
+							"variable": [
+								{
+									"key": "userId",
+									"value": ""
+								}
+							]
+						},
+						"description": "Get a single user by ID. Admin only."
+					},
+					"response": []
+				},
+				{
+					"name": "Create User (Admin/Tutor)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Tutor\",\n  \"email\": \"tutor@example.com\",\n  \"phone\": \"9876543210\",\n  \"password\": \"password123\",\n  \"role\": \"tutor\",\n  \"status\": \"active\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": ["{{baseUrl}}"],
+							"path": ["users"]
+						},
+						"description": "Create a new user with admin or tutor role. Admin only."
+					},
+					"response": []
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Name\",\n  \"email\": \"updated@example.com\",\n  \"phone\": \"9876543210\",\n  \"role\": \"tutor\",\n  \"status\": \"active\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/:userId",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", ":userId"],
+							"variable": [
+								{
+									"key": "userId",
+									"value": ""
+								}
+							]
+						},
+						"description": "Update a user. Admin only."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete/Block User",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users/:userId",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", ":userId"],
+							"variable": [
+								{
+									"key": "userId",
+									"value": ""
+								}
+							]
+						},
+						"description": "Delete/block a user (soft delete). Admin only."
+					},
+					"response": []
+				},
+				{
+					"name": "Unblock User",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users/:userId/unblock",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", ":userId", "unblock"],
+							"variable": [
+								{
+									"key": "userId",
+									"value": ""
+								}
+							]
+						},
+						"description": "Unblock a user. Admin only."
+					},
+					"response": []
+				}
+			],
+			"description": "User management APIs for admin operations"
+		},
+		{
+			"name": "Transfer Ownership",
+			"item": [
+				{
+					"name": "Transfer Exam Ownership",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"newOwnerId\": \"new_tutor_user_id\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/exams/:examId/transfer-ownership",
+							"host": ["{{baseUrl}}"],
+							"path": ["exams", ":examId", "transfer-ownership"],
+							"variable": [
+								{
+									"key": "examId",
+									"value": ""
+								}
+							]
+						},
+						"description": "Transfer exam ownership to a new tutor/admin. Admin only. Useful when a tutor leaves the organization."
+					},
+					"response": []
+				},
+				{
+					"name": "Transfer Course Ownership",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"newOwnerId\": \"new_tutor_user_id\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/courses/:courseId/transfer-ownership",
+							"host": ["{{baseUrl}}"],
+							"path": ["courses", ":courseId", "transfer-ownership"],
+							"variable": [
+								{
+									"key": "courseId",
+									"value": ""
+								}
+							]
+						},
+						"description": "Transfer course ownership to a new tutor/admin. Admin only. Useful when a tutor leaves the organization."
+					},
+					"response": []
+				}
+			],
+			"description": "APIs for transferring exam and course ownership when tutors leave"
+		},
+		{
+			"name": "Dashboard",
+			"item": [
+				{
+					"name": "Dashboard Overview",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/dashboard/overview",
+							"host": ["{{baseUrl}}"],
+							"path": ["dashboard", "overview"]
+						},
+						"description": "Get complete dashboard overview with all statistics. Admin only."
+					},
+					"response": []
+				},
+				{
+					"name": "Total Students",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/dashboard/stats/students?status=",
+							"host": ["{{baseUrl}}"],
+							"path": ["dashboard", "stats", "students"],
+							"query": [
+								{
+									"key": "status",
+									"value": "",
+									"description": "Filter by status: active or blocked",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get total students count with active/blocked breakdown. Admin only."
+					},
+					"response": []
+				},
+				{
+					"name": "Total Exams",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/dashboard/stats/exams",
+							"host": ["{{baseUrl}}"],
+							"path": ["dashboard", "stats", "exams"]
+						},
+						"description": "Get total exams count with published/draft breakdown. Admin only."
+					},
+					"response": []
+				},
+				{
+					"name": "Total Courses",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/dashboard/stats/courses",
+							"host": ["{{baseUrl}}"],
+							"path": ["dashboard", "stats", "courses"]
+						},
+						"description": "Get total courses count with published/draft breakdown. Admin only."
+					},
+					"response": []
+				},
+				{
+					"name": "Total Attempts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/dashboard/stats/attempts",
+							"host": ["{{baseUrl}}"],
+							"path": ["dashboard", "stats", "attempts"]
+						},
+						"description": "Get total attempts count with status breakdown. Admin only."
+					},
+					"response": []
+				},
+				{
+					"name": "Month-wise Attempts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/dashboard/stats/attempts/monthly?year=",
+							"host": ["{{baseUrl}}"],
+							"path": ["dashboard", "stats", "attempts", "monthly"],
+							"query": [
+								{
+									"key": "year",
+									"value": "",
+									"description": "Filter by specific year (optional)",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get attempts grouped by month. Admin only."
+					},
+					"response": []
+				},
+				{
+					"name": "Exams Per Exam Type",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/dashboard/stats/exams/by-type",
+							"host": ["{{baseUrl}}"],
+							"path": ["dashboard", "stats", "exams", "by-type"]
+						},
+						"description": "Get exams grouped by exam type with published/draft breakdown. Admin only."
+					},
+					"response": []
+				}
+			],
+			"description": "Dashboard statistics APIs for admin"
+		},
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
+						},
+						"description": "Login with email and password. Returns access token."
+					},
+					"response": []
+				},
+				{
+					"name": "Send OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"phone\": \"9876543210\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/send-otp",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "send-otp"]
+						},
+						"description": "Send OTP to phone number using authkey.io service."
+					},
+					"response": []
+				},
+				{
+					"name": "Verify OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"phone\": \"9876543210\",\n  \"otp\": \"123456\",\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/verify-otp",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "verify-otp"]
+						},
+						"description": "Verify OTP and complete registration/login."
+					},
+					"response": []
+				}
+			],
+			"description": "Authentication APIs"
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "accessToken",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
+

@@ -87,89 +87,86 @@ router.get("/open/:courseId", async (req, res) => {
 router.use(auth);
 
 // **CREATE** a new Course
-router.post(
-  "/",
-  requireRole("teacher", "moderator", "admin"),
-  async (req, res) => {
-    try {
-      const {
-        title,
-        examType,
-        description,
-        thumbnail,
-        category,
-        studentsCount,
-        status,
-        lessons = [],
-      } = req.body;
+router.post("/", requireRole("tutor", "admin"), async (req, res) => {
+  try {
+    const {
+      title,
+      examType,
+      description,
+      thumbnail,
+      category,
+      studentsCount,
+      status,
+      lessons = [],
+    } = req.body;
 
-      if (!title || !examType || !description || !category) {
-        return res.status(400).json({
-          error:
-            "Title, examType, description, and category are required fields.",
-        });
-      }
-
-      // Duplicate guard: same title+examType not allowed
-      const existing = await Course.findOne({
-        title,
-        examType,
-        deletedAt: null,
+    if (!title || !examType || !description || !category) {
+      return res.status(400).json({
+        error:
+          "Title, examType, description, and category are required fields.",
       });
-      if (existing) {
-        return res.status(409).json({
-          error: "Course with same title and exam type already exists",
-        });
-      }
-
-      // Validate status
-      const validStatus = status === "published" ? "published" : "draft";
-
-      const course = await Course.create({
-        publishedBy: req.user.id,
-        status: validStatus,
-        title,
-        examType,
-        description,
-        thumbnail,
-        category,
-        studentsCount: studentsCount || 0,
-      });
-
-      // Create lessons if provided
-      if (lessons && lessons.length > 0) {
-        const lessonPromises = lessons.map((lesson, index) => {
-          return Lesson.create({
-            title: lesson.title,
-            description: lesson.description,
-            type: lesson.type,
-            duration: lesson.duration,
-            url: lesson.url,
-            thumbnail: lesson.thumbnail,
-            publishedAt: lesson.publishedAt || new Date(),
-            course: course._id,
-            order: lesson.order || index + 1,
-          });
-        });
-        await Promise.all(lessonPromises);
-      }
-
-      // Populate the course with lessons and publishedBy
-      await course.populate("publishedBy", "name email");
-      await course.populate({
-        path: "lessons",
-        select:
-          "title description type duration url thumbnail publishedAt order",
-        match: { deletedAt: null },
-        options: { sort: { order: 1 } },
-      });
-
-      return res.status(201).json(course);
-    } catch (error) {
-      return res.status(500).json({ error: error.message });
     }
+
+    // Duplicate guard: same title+examType not allowed
+    const existing = await Course.findOne({
+      title,
+      examType,
+      deletedAt: null,
+    });
+    if (existing) {
+      return res.status(409).json({
+        error: "Course with same title and exam type already exists",
+      });
+    }
+
+    // Validate status
+    const validStatus = status === "published" ? "published" : "draft";
+
+    const course = await Course.create({
+      createdBy: req.user.id,
+      publishedBy: req.user.id,
+      status: validStatus,
+      title,
+      examType,
+      description,
+      thumbnail,
+      category,
+      studentsCount: studentsCount || 0,
+    });
+
+    // Create lessons if provided
+    if (lessons && lessons.length > 0) {
+      const lessonPromises = lessons.map((lesson, index) => {
+        return Lesson.create({
+          title: lesson.title,
+          description: lesson.description,
+          type: lesson.type,
+          duration: lesson.duration,
+          url: lesson.url,
+          thumbnail: lesson.thumbnail,
+          publishedAt: lesson.publishedAt || new Date(),
+          course: course._id,
+          order: lesson.order || index + 1,
+        });
+      });
+      await Promise.all(lessonPromises);
+    }
+
+    // Populate the course with lessons and owners
+    await course.populate("createdBy", "name email");
+    await course.populate("publishedBy", "name email");
+    await course.populate({
+      path: "lessons",
+      select: "title description type duration url thumbnail publishedAt order",
+      match: { deletedAt: null },
+      options: { sort: { order: 1 } },
+    });
+
+    return res.status(201).json(course);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
   }
-);
+});
 
 // **READ** all Courses (list view)
 router.get("/", async (req, res) => {
@@ -181,6 +178,7 @@ router.get("/", async (req, res) => {
       examType,
       category,
       status,
+      createdBy,
       includeDeleted = false,
     } = req.query;
 
@@ -193,6 +191,15 @@ router.get("/", async (req, res) => {
     if (examType) query.examType = { $regex: String(examType), $options: "i" };
     if (category) query.category = { $regex: String(category), $options: "i" };
 
+    // Optional filter by createdBy (supports createdBy=me)
+    if (createdBy) {
+      if (createdBy === "me" && req.user?.id) {
+        query.createdBy = req.user.id;
+      } else {
+        query.createdBy = createdBy;
+      }
+    }
+
     // Students only see published by default
     if (req.user?.role === "student") {
       query.status = "published";
@@ -204,8 +211,9 @@ router.get("/", async (req, res) => {
     const [items, total] = await Promise.all([
       Course.find(query)
         .select(
-          "title examType description thumbnail category studentsCount status publishedAt deletedAt createdAt"
+          "title examType description thumbnail category studentsCount status publishedAt deletedAt createdAt createdBy"
         )
+        .populate("createdBy", "name email")
         .populate("publishedBy", "name email")
         .populate({
           path: "lessons",
@@ -264,100 +272,94 @@ router.get("/:courseId", async (req, res) => {
 });
 
 // **UPDATE** a Course
-router.put(
-  "/:courseId",
-  requireRole("teacher", "moderator", "admin"),
-  async (req, res) => {
-    try {
-      const { courseId } = req.params;
-      const { lessons, ...courseData } = req.body;
+router.put("/:courseId", requireRole("tutor", "admin"), async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const { lessons, ...courseData } = req.body;
 
-      // Check if course exists and user has permission
-      const existingCourse = await Course.findOne({
-        _id: courseId,
-        deletedAt: null,
+    // Check if course exists and user has permission
+    const existingCourse = await Course.findOne({
+      _id: courseId,
+      deletedAt: null,
+    });
+
+    if (!existingCourse) {
+      return res.status(404).json({ error: "Course not found" });
+    }
+
+    // Only allow course owner (tutor) or admins to update
+    // Tutors can only edit their own courses, admins can edit all
+    if (
+      String(existingCourse.createdBy) !== String(req.user.id) &&
+      req.user.role !== "admin"
+    ) {
+      return res
+        .status(403)
+        .json({ error: "Forbidden: You can only edit courses created by you" });
+    }
+
+    // Validate status if provided
+    if (
+      courseData.status &&
+      !["draft", "published"].includes(courseData.status)
+    ) {
+      return res.status(400).json({
+        error: "Status must be either 'draft' or 'published'",
       });
+    }
 
-      if (!existingCourse) {
-        return res.status(404).json({ error: "Course not found" });
-      }
+    // Update course data
+    const updatedCourse = await Course.findByIdAndUpdate(courseId, courseData, {
+      new: true, // Return the updated document
+      runValidators: true, // Run schema validators
+    });
 
-      // Only allow course owner, moderators, or admins to update
-      if (
-        String(existingCourse.publishedBy) !== String(req.user.id) &&
-        !["moderator", "admin"].includes(req.user.role)
-      ) {
-        return res.status(403).json({ error: "Forbidden" });
-      }
-
-      // Validate status if provided
-      if (
-        courseData.status &&
-        !["draft", "published"].includes(courseData.status)
-      ) {
-        return res.status(400).json({
-          error: "Status must be either 'draft' or 'published'",
-        });
-      }
-
-      // Update course data
-      const updatedCourse = await Course.findByIdAndUpdate(
-        courseId,
-        courseData,
-        {
-          new: true, // Return the updated document
-          runValidators: true, // Run schema validators
-        }
+    // Handle lessons update if provided
+    if (lessons && Array.isArray(lessons)) {
+      // Soft delete existing lessons
+      await Lesson.updateMany(
+        { course: courseId, deletedAt: null },
+        { deletedAt: new Date() }
       );
 
-      // Handle lessons update if provided
-      if (lessons && Array.isArray(lessons)) {
-        // Soft delete existing lessons
-        await Lesson.updateMany(
-          { course: courseId, deletedAt: null },
-          { deletedAt: new Date() }
-        );
-
-        // Create new lessons
-        if (lessons.length > 0) {
-          const lessonPromises = lessons.map((lesson, index) => {
-            return Lesson.create({
-              title: lesson.title,
-              description: lesson.description,
-              type: lesson.type,
-              duration: lesson.duration,
-              url: lesson.url,
-              thumbnail: lesson.thumbnail,
-              publishedAt: lesson.publishedAt || new Date(),
-              course: courseId,
-              order: lesson.order || index + 1,
-            });
+      // Create new lessons
+      if (lessons.length > 0) {
+        const lessonPromises = lessons.map((lesson, index) => {
+          return Lesson.create({
+            title: lesson.title,
+            description: lesson.description,
+            type: lesson.type,
+            duration: lesson.duration,
+            url: lesson.url,
+            thumbnail: lesson.thumbnail,
+            publishedAt: lesson.publishedAt || new Date(),
+            course: courseId,
+            order: lesson.order || index + 1,
           });
-          await Promise.all(lessonPromises);
-        }
+        });
+        await Promise.all(lessonPromises);
       }
-
-      // Populate the updated course
-      await updatedCourse.populate("publishedBy", "name email");
-      await updatedCourse.populate({
-        path: "lessons",
-        select:
-          "title description type duration url thumbnail publishedAt order",
-        match: { deletedAt: null },
-        options: { sort: { order: 1 } },
-      });
-
-      res.json(updatedCourse);
-    } catch (error) {
-      res.status(400).json({ error: error.message });
     }
+
+    // Populate the updated course
+    await updatedCourse.populate("publishedBy", "name email");
+    await updatedCourse.populate({
+      path: "lessons",
+      select: "title description type duration url thumbnail publishedAt order",
+      match: { deletedAt: null },
+      options: { sort: { order: 1 } },
+    });
+
+    res.json(updatedCourse);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
-);
+});
 
 // **UPDATE COURSE STATUS** - Dedicated endpoint for status updates
 router.patch(
   "/:courseId/status",
-  requireRole("teacher", "moderator", "admin"),
+  requireRole("tutor", "admin"),
   async (req, res) => {
     try {
       const { courseId } = req.params;
@@ -376,12 +378,15 @@ router.patch(
         return res.status(404).json({ error: "Course not found" });
       }
 
-      // Only allow course owner, moderators, or admins to update status
+      // Only allow course owner (tutor) or admins to update status
+      // Tutors can only edit their own courses, admins can edit all
       if (
-        String(course.publishedBy) !== String(req.user.id) &&
-        !["moderator", "admin"].includes(req.user.role)
+        String(course.createdBy) !== String(req.user.id) &&
+        req.user.role !== "admin"
       ) {
-        return res.status(403).json({ error: "Forbidden" });
+        return res.status(403).json({
+          error: "Forbidden: You can only edit courses created by you",
+        });
       }
 
       // Update only the status field
@@ -411,50 +416,49 @@ router.patch(
 );
 
 // **SOFT DELETE** a Course
-router.delete(
-  "/:courseId",
-  requireRole("teacher", "moderator", "admin"),
-  async (req, res) => {
-    try {
-      const { courseId } = req.params;
+router.delete("/:courseId", requireRole("tutor", "admin"), async (req, res) => {
+  try {
+    const { courseId } = req.params;
 
-      const course = await Course.findOne({ _id: courseId, deletedAt: null });
-      if (!course) {
-        return res.status(404).json({ error: "Course not found" });
-      }
-
-      // Only allow course owner, moderators, or admins to delete
-      if (
-        String(course.publishedBy) !== String(req.user.id) &&
-        !["moderator", "admin"].includes(req.user.role)
-      ) {
-        return res.status(403).json({ error: "Forbidden" });
-      }
-
-      // Soft delete: set deletedAt timestamp
-      course.deletedAt = new Date();
-      await course.save();
-
-      // Also soft delete all associated lessons
-      await Lesson.updateMany(
-        { course: courseId, deletedAt: null },
-        { deletedAt: new Date() }
-      );
-
-      res.status(200).json({
-        message: "Course and associated lessons soft deleted successfully.",
-        deletedAt: course.deletedAt,
-      });
-    } catch (error) {
-      res.status(500).json({ error: error.message });
+    const course = await Course.findOne({ _id: courseId, deletedAt: null });
+    if (!course) {
+      return res.status(404).json({ error: "Course not found" });
     }
+
+    // Only allow course owner (tutor) or admins to delete
+    // Tutors can only delete their own courses, admins can delete all
+    if (
+      String(course.createdBy) !== String(req.user.id) &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(403).json({
+        error: "Forbidden: You can only delete courses created by you",
+      });
+    }
+
+    // Soft delete: set deletedAt timestamp
+    course.deletedAt = new Date();
+    await course.save();
+
+    // Also soft delete all associated lessons
+    await Lesson.updateMany(
+      { course: courseId, deletedAt: null },
+      { deletedAt: new Date() }
+    );
+
+    res.status(200).json({
+      message: "Course and associated lessons soft deleted successfully.",
+      deletedAt: course.deletedAt,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
-);
+});
 
 // **RESTORE** a soft-deleted Course
 router.post(
   "/:courseId/restore",
-  requireRole("teacher", "moderator", "admin"),
+  requireRole("tutor", "admin"),
   async (req, res) => {
     try {
       const { courseId } = req.params;
@@ -467,12 +471,15 @@ router.post(
         return res.status(404).json({ error: "Soft-deleted course not found" });
       }
 
-      // Only allow course owner, moderators, or admins to restore
+      // Only allow course owner (tutor) or admins to restore
+      // Tutors can only restore their own courses, admins can restore all
       if (
-        String(course.publishedBy) !== String(req.user.id) &&
-        !["moderator", "admin"].includes(req.user.role)
+        String(course.createdBy) !== String(req.user.id) &&
+        req.user.role !== "admin"
       ) {
-        return res.status(403).json({ error: "Forbidden" });
+        return res.status(403).json({
+          error: "Forbidden: You can only restore courses created by you",
+        });
       }
 
       course.deletedAt = null;
@@ -493,6 +500,97 @@ router.post(
         },
       });
     } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+);
+
+// **TRANSFER COURSE OWNERSHIP** - Admin only (for when tutor leaves)
+router.patch(
+  "/:courseId/transfer-ownership",
+  requireRole("admin"),
+  async (req, res) => {
+    try {
+      const { courseId } = req.params;
+      const { newOwnerId } = req.body;
+
+      if (!newOwnerId) {
+        return res.status(400).json({
+          error: "newOwnerId is required",
+        });
+      }
+
+      // Find the course
+      const course = await Course.findOne({
+        _id: courseId,
+        deletedAt: null,
+      });
+      if (!course) {
+        return res.status(404).json({ error: "Course not found" });
+      }
+
+      // Validate new owner exists and has appropriate role (tutor or admin)
+      const UserModel = require("../models/user.model");
+      const newOwner = await UserModel.findById(newOwnerId);
+      if (!newOwner) {
+        return res.status(404).json({ error: "New owner user not found" });
+      }
+
+      if (!["tutor", "admin"].includes(newOwner.role)) {
+        return res.status(400).json({
+          error: "New owner must have 'tutor' or 'admin' role",
+        });
+      }
+
+      if (newOwner.status !== "active") {
+        return res.status(400).json({
+          error: "New owner must have 'active' status",
+        });
+      }
+
+      // Store old owner for response
+      const oldOwnerId = course.createdBy;
+
+      // Update the course ownership (transfer both createdBy and publishedBy)
+      course.createdBy = newOwnerId;
+      course.publishedBy = newOwnerId; // Also update publishedBy for consistency
+      await course.save();
+
+      // Populate for response
+      await course.populate("createdBy", "name email role");
+      await course.populate("publishedBy", "name email role");
+
+      res.json({
+        message: "Course ownership transferred successfully",
+        course: {
+          _id: course._id,
+          title: course.title,
+          examType: course.examType,
+          createdBy: {
+            _id: course.createdBy._id,
+            name: course.createdBy.name,
+            email: course.createdBy.email,
+            role: course.createdBy.role,
+          },
+          publishedBy: {
+            _id: course.publishedBy._id,
+            name: course.publishedBy.name,
+            email: course.publishedBy.email,
+            role: course.publishedBy.role,
+          },
+        },
+        previousOwner: oldOwnerId,
+        newOwner: {
+          _id: newOwner._id,
+          name: newOwner.name,
+          email: newOwner.email,
+          role: newOwner.role,
+        },
+      });
+    } catch (error) {
+      if (error.name === "CastError") {
+        return res.status(400).json({ error: "Invalid Course ID or User ID" });
+      }
       res.status(500).json({ error: error.message });
     }
   }

@@ -135,7 +135,7 @@ const requireRole =
 // **CREATE** a new Exam (supports creating new Sections/Parts/Groups)
 router.post(
   "/",
-  requireRole("teacher", "moderator", "admin"),
+  requireRole("tutor", "admin"),
   async (req, res) => {
     try {
       const { title, type, duration, totalQuestions, featureImage, sections } =
@@ -265,6 +265,7 @@ router.post(
         totalQuestions,
         featureImage,
         status,
+        createdBy: req.user.id,
         sections: sectionIds,
       });
 
@@ -283,6 +284,7 @@ router.get("/", async (req, res) => {
       q,
       type,
       status,
+      createdBy,
       includeDeleted = false,
     } = req.query;
     const query = { deletedAt: null }; // Exclude soft-deleted by default
@@ -291,6 +293,13 @@ router.get("/", async (req, res) => {
     }
     if (q) query.title = { $regex: String(q), $options: "i" };
     if (type) query.type = { $regex: String(type), $options: "i" };
+    if (createdBy) {
+      if (createdBy === "me" && req.user?.id) {
+        query.createdBy = req.user.id;
+      } else {
+        query.createdBy = createdBy;
+      }
+    }
     // Students only see published by default
     if (req.user?.role === "student") {
       query.status = "published";
@@ -301,7 +310,7 @@ router.get("/", async (req, res) => {
     const [items, total] = await Promise.all([
       Exam.find(query)
         .select(
-          "title type duration totalQuestions featureImage status deletedAt"
+          "title type duration totalQuestions featureImage status deletedAt createdBy"
         )
         .sort({ createdAt: -1 })
         .skip(skip)
@@ -344,7 +353,7 @@ router.get("/:examId", async (req, res) => {
     // 5. Assemble the complete exam structure
     const examStructure = exam.toObject();
     const userRole = req.user?.role;
-    const isAdminOrTeacher = ["admin", "teacher", "moderator"].includes(
+    const isAdminOrTutor = ["admin", "tutor"].includes(
       userRole
     );
 
@@ -365,7 +374,7 @@ router.get("/:examId", async (req, res) => {
               const groupObj = group.toObject();
 
               // Hide correct answers for students
-              if (!isAdminOrTeacher) {
+              if (!isAdminOrTutor) {
                 groupObj.questions = (groupObj.questions || []).map(
                   (question) => {
                     const {
@@ -437,7 +446,7 @@ router.get("/:examId/sections/:sectionId", async (req, res) => {
 
     // Role policy: students can only access sections of published exams
     const role = req.user?.role;
-    const isStaff = ["admin", "teacher", "moderator"].includes(role);
+    const isStaff = ["admin", "tutor"].includes(role);
     if (role === "student" && exam.status !== "published") {
       return res.status(403).json({ error: "Forbidden" });
     }
@@ -560,18 +569,34 @@ router.get("/:examId/sections/:sectionId/student", async (req, res) => {
 // **UPDATE** an Exam
 router.put(
   "/:examId",
-  requireRole("teacher", "moderator", "admin"),
+  requireRole("tutor", "admin"),
   async (req, res) => {
     try {
       const { examId } = req.params;
+      
+      // Check if exam exists and user has permission
+      const existingExam = await Exam.findOne({
+        _id: examId,
+        deletedAt: null,
+      });
+
+      if (!existingExam) {
+        return res.status(404).json({ error: "Exam not found" });
+      }
+
+      // Only allow exam owner (tutor) or admins to update
+      // Tutors can only edit their own exams, admins can edit all
+      if (
+        String(existingExam.createdBy) !== String(req.user.id) &&
+        req.user.role !== "admin"
+      ) {
+        return res.status(403).json({ error: "Forbidden: You can only edit exams created by you" });
+      }
+
       const updatedExam = await Exam.findByIdAndUpdate(examId, req.body, {
         new: true, // Return the updated document
         runValidators: true, // Run schema validators
       });
-
-      if (!updatedExam) {
-        return res.status(404).json({ error: "Exam not found" });
-      }
 
       res.json(updatedExam);
     } catch (error) {
@@ -583,7 +608,7 @@ router.put(
 // **SOFT DELETE** an Exam
 router.delete(
   "/:examId",
-  requireRole("teacher", "moderator", "admin"),
+  requireRole("tutor", "admin"),
   async (req, res) => {
     try {
       const { examId } = req.params;
@@ -591,6 +616,15 @@ router.delete(
       const exam = await Exam.findOne({ _id: examId, deletedAt: null });
       if (!exam) {
         return res.status(404).json({ error: "Exam not found" });
+      }
+
+      // Only allow exam owner (tutor) or admins to delete
+      // Tutors can only delete their own exams, admins can delete all
+      if (
+        String(exam.createdBy) !== String(req.user.id) &&
+        req.user.role !== "admin"
+      ) {
+        return res.status(403).json({ error: "Forbidden: You can only delete exams created by you" });
       }
 
       // Soft delete: set deletedAt timestamp
@@ -610,7 +644,7 @@ router.delete(
 // **RESTORE** a soft-deleted Exam
 router.post(
   "/:examId/restore",
-  requireRole("teacher", "moderator", "admin"),
+  requireRole("tutor", "admin"),
   async (req, res) => {
     try {
       const { examId } = req.params;
@@ -621,6 +655,15 @@ router.post(
       });
       if (!exam) {
         return res.status(404).json({ error: "Soft-deleted exam not found" });
+      }
+
+      // Only allow exam owner (tutor) or admins to restore
+      // Tutors can only restore their own exams, admins can restore all
+      if (
+        String(exam.createdBy) !== String(req.user.id) &&
+        req.user.role !== "admin"
+      ) {
+        return res.status(403).json({ error: "Forbidden: You can only restore exams created by you" });
       }
 
       exam.deletedAt = null;
@@ -732,7 +775,7 @@ router.delete("/:examId/hard", requireRole("admin"), async (req, res) => {
 // Sections management on an exam (Option B parity for sections)
 router.post(
   "/:examId/sections",
-  requireRole("teacher", "moderator", "admin"),
+  requireRole("tutor", "admin"),
   async (req, res) => {
     try {
       const { examId } = req.params;
@@ -741,6 +784,15 @@ router.post(
         return res.status(400).json({ error: "sections array is required" });
       const exam = await Exam.findById(examId);
       if (!exam) return res.status(404).json({ error: "Exam not found" });
+
+      // Only allow exam owner (tutor) or admins to manage sections
+      // Tutors can only edit their own exams, admins can edit all
+      if (
+        String(exam.createdBy) !== String(req.user.id) &&
+        req.user.role !== "admin"
+      ) {
+        return res.status(403).json({ error: "Forbidden: You can only edit exams created by you" });
+      }
 
       const newIds = [];
       for (const item of sections) {
@@ -788,7 +840,7 @@ router.post(
   }
 );
 
-// Answer key with policy: teachers/moderators/admin unrestricted; students only if they have a graded attempt for this exam
+// Answer key with policy: tutors/admin unrestricted; students only if they have a graded attempt for this exam
 router.get("/:examId/answer-key", async (req, res) => {
   try {
     const { examId } = req.params;
@@ -864,7 +916,7 @@ router.get("/:examId/answer-key", async (req, res) => {
 
 router.put(
   "/:examId/sections",
-  requireRole("teacher", "moderator", "admin"),
+  requireRole("tutor", "admin"),
   async (req, res) => {
     try {
       const { examId } = req.params;
@@ -873,6 +925,15 @@ router.put(
         return res.status(400).json({ error: "sections array is required" });
       const exam = await Exam.findById(examId);
       if (!exam) return res.status(404).json({ error: "Exam not found" });
+
+      // Only allow exam owner (tutor) or admins to manage sections
+      // Tutors can only edit their own exams, admins can edit all
+      if (
+        String(exam.createdBy) !== String(req.user.id) &&
+        req.user.role !== "admin"
+      ) {
+        return res.status(403).json({ error: "Forbidden: You can only edit exams created by you" });
+      }
 
       const builtIds = [];
       for (const item of sections) {
@@ -917,12 +978,22 @@ router.put(
 
 router.delete(
   "/:examId/sections/:sectionId",
-  requireRole("teacher", "moderator", "admin"),
+  requireRole("tutor", "admin"),
   async (req, res) => {
     try {
       const { examId, sectionId } = req.params;
       const exam = await Exam.findById(examId);
       if (!exam) return res.status(404).json({ error: "Exam not found" });
+
+      // Only allow exam owner (tutor) or admins to manage sections
+      // Tutors can only edit their own exams, admins can edit all
+      if (
+        String(exam.createdBy) !== String(req.user.id) &&
+        req.user.role !== "admin"
+      ) {
+        return res.status(403).json({ error: "Forbidden: You can only edit exams created by you" });
+      }
+
       exam.sections = exam.sections.filter(
         (s) => String(s._id || s) !== String(sectionId)
       );
@@ -934,10 +1005,90 @@ router.delete(
   }
 );
 
+// **TRANSFER EXAM OWNERSHIP** - Admin only (for when tutor leaves)
+router.patch(
+  "/:examId/transfer-ownership",
+  requireRole("admin"),
+  async (req, res) => {
+    try {
+      const { examId } = req.params;
+      const { newOwnerId } = req.body;
+
+      if (!newOwnerId) {
+        return res.status(400).json({
+          error: "newOwnerId is required",
+        });
+      }
+
+      // Find the exam
+      const exam = await Exam.findOne({ _id: examId, deletedAt: null });
+      if (!exam) {
+        return res.status(404).json({ error: "Exam not found" });
+      }
+
+      // Validate new owner exists and has appropriate role (tutor or admin)
+      const UserModel = require("../models/user.model");
+      const newOwner = await UserModel.findById(newOwnerId);
+      if (!newOwner) {
+        return res.status(404).json({ error: "New owner user not found" });
+      }
+
+      if (!["tutor", "admin"].includes(newOwner.role)) {
+        return res.status(400).json({
+          error: "New owner must have 'tutor' or 'admin' role",
+        });
+      }
+
+      if (newOwner.status !== "active") {
+        return res.status(400).json({
+          error: "New owner must have 'active' status",
+        });
+      }
+
+      // Store old owner for response
+      const oldOwnerId = exam.createdBy;
+
+      // Update the exam ownership
+      exam.createdBy = newOwnerId;
+      await exam.save();
+
+      // Populate for response
+      await exam.populate("createdBy", "name email role");
+
+      res.json({
+        message: "Exam ownership transferred successfully",
+        exam: {
+          _id: exam._id,
+          title: exam.title,
+          type: exam.type,
+          createdBy: {
+            _id: exam.createdBy._id,
+            name: exam.createdBy.name,
+            email: exam.createdBy.email,
+            role: exam.createdBy.role,
+          },
+        },
+        previousOwner: oldOwnerId,
+        newOwner: {
+          _id: newOwner._id,
+          name: newOwner.name,
+          email: newOwner.email,
+          role: newOwner.role,
+        },
+      });
+    } catch (error) {
+      if (error.name === "CastError") {
+        return res.status(400).json({ error: "Invalid Exam ID or User ID" });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  }
+);
+
 // **UPDATE EXAM STATUS** - Dedicated endpoint for status updates
 router.patch(
   "/:examId/status",
-  requireRole("teacher", "moderator", "admin"),
+  requireRole("tutor", "admin"),
   async (req, res) => {
     try {
       const { examId } = req.params;
@@ -954,6 +1105,15 @@ router.patch(
       const exam = await Exam.findOne({ _id: examId, deletedAt: null });
       if (!exam) {
         return res.status(404).json({ error: "Exam not found" });
+      }
+
+      // Only allow exam owner (tutor) or admins to update status
+      // Tutors can only edit their own exams, admins can edit all
+      if (
+        String(exam.createdBy) !== String(req.user.id) &&
+        req.user.role !== "admin"
+      ) {
+        return res.status(403).json({ error: "Forbidden: You can only edit exams created by you" });
       }
 
       // Update only the status field

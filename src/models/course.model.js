@@ -2,6 +2,12 @@ const { Schema, model } = require("mongoose");
 
 const CourseSchema = new Schema(
   {
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
     publishedBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
@@ -64,6 +70,7 @@ const CourseSchema = new Schema(
 // Index for efficient queries
 CourseSchema.index({ title: 1, examType: 1 });
 CourseSchema.index({ status: 1, deletedAt: 1 });
+CourseSchema.index({ createdBy: 1, status: 1 });
 CourseSchema.index({ publishedBy: 1, status: 1 });
 CourseSchema.index({ category: 1, status: 1 });
 CourseSchema.index({ studentsCount: -1 });

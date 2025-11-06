@@ -4,6 +4,11 @@ const Section = require("./section.model");
 const Part = require("./part.model");
 const QuestionGroup = require("./group.model");
 const OpenAI = require("openai");
+const {
+  gradeIELTSSection,
+  gradeIELTSExam,
+  calculateOverallBand,
+} = require("../services/ielts-grading.service");
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -85,10 +90,16 @@ const AttemptSchema = new Schema(
       type: String,
       enum: ["in_progress", "submitted", "graded", "expired", "cancelled"],
       default: "in_progress",
+      index: true,
     },
     startedAt: { type: Date, default: Date.now },
     expiresAt: Date,
     submittedAt: Date,
+    expiredAt: Date,
+    expirationReason: String,
+    expiredBy: { type: Schema.Types.ObjectId, ref: "User" },
+    cancelledAt: Date,
+    cancellationReason: String,
     snapshot: Schema.Types.Mixed,
     sectionsStatus: [
       {
@@ -509,38 +520,37 @@ AttemptSchema.methods.computeScoring = async function () {
   const sectionBandScores = {};
 
   if (examType.includes("ielts")) {
-    // IELTS: Calculate individual section bands (0-9), then average
+    // IELTS: Use official grading system
     const sections = ["Listening", "Reading", "Writing", "Speaking"];
-    const sectionBands = [];
+    const sectionBands = {};
+    const testType = exam.type === "IELTS_GT" ? "general" : "academic";
 
     for (const section of sections) {
       const sectionResponses = responseResults.filter(
         (r) =>
           r.sectionType && r.sectionType.toLowerCase() === section.toLowerCase()
       );
+
       if (sectionResponses.length > 0) {
-        const sectionAccuracy =
-          sectionResponses.reduce((sum, r) => sum + (r.isCorrect ? 1 : 0), 0) /
-          sectionResponses.length;
-        const sectionBand =
-          Math.round(clamp(9 * sectionAccuracy, 0, 9) * 2) / 2;
-        sectionBands.push(sectionBand);
-        sectionBandScores[section] = sectionBand;
+        // Use official IELTS grading
+        const sectionResult = gradeIELTSSection(
+          sectionResponses,
+          section,
+          testType
+        );
+        sectionBands[section] = sectionResult.bandScore;
+        sectionBandScores[section] = sectionResult.bandScore;
       }
     }
 
-    const overallBand =
-      sectionBands.length > 0
-        ? Math.round(
-            (sectionBands.reduce((sum, band) => sum + band, 0) /
-              sectionBands.length) *
-              2
-          ) / 2
-        : 0;
+    // Calculate overall band with proper rounding
+    const overallBand = calculateOverallBand(sectionBands);
+
     scaled = {
       type: "IELTS",
       score: overallBand,
       sectionScores: sectionBandScores,
+      testType: testType,
     };
   } else if (examType.includes("toefl")) {
     // TOEFL: Each section scored 0-30, then summed for total

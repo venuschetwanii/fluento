@@ -32,7 +32,7 @@ router.get("/:partId", async (req, res) => {
 // Append groups to a part (IDs or objects)
 router.post(
   "/:partId/groups",
-  requireRole("teacher", "moderator", "admin"),
+  requireRole("tutor", "admin"),
   async (req, res) => {
     try {
       const { groups } = req.body;
@@ -68,7 +68,7 @@ router.post(
 // Replace groups for a part
 router.put(
   "/:partId/groups",
-  requireRole("teacher", "moderator", "admin"),
+  requireRole("tutor", "admin"),
   async (req, res) => {
     try {
       const { groups } = req.body;
@@ -101,7 +101,7 @@ router.put(
 // Unlink a group from a part
 router.delete(
   "/:partId/groups/:groupId",
-  requireRole("teacher", "moderator", "admin"),
+  requireRole("tutor", "admin"),
   async (req, res) => {
     try {
       const { partId, groupId } = req.params;
