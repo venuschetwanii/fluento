@@ -11,7 +11,23 @@ const router = Router();
 const requireAdmin = (req, res, next) => {
   try {
     if (!req.user || req.user.role !== "admin") {
-      return res.status(403).json({ error: "Forbidden: Admin access required" });
+      return res
+        .status(403)
+        .json({ error: "Forbidden: Admin access required" });
+    }
+    return next();
+  } catch (e) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+};
+
+// Role-based guard for admin and tutor
+const requireAdminOrTutor = (req, res, next) => {
+  try {
+    if (!req.user || !["admin", "tutor"].includes(req.user.role)) {
+      return res
+        .status(403)
+        .json({ error: "Forbidden: Admin or tutor access required" });
     }
     return next();
   } catch (e) {
@@ -142,14 +158,20 @@ router.get("/stats/students", requireAdmin, async (req, res) => {
   try {
     const { status } = req.query;
     const query = { role: "student" };
-    
+
     if (status && ["active", "blocked"].includes(status)) {
       query.status = status;
     }
 
     const total = await UserModel.countDocuments(query);
-    const active = await UserModel.countDocuments({ role: "student", status: "active" });
-    const blocked = await UserModel.countDocuments({ role: "student", status: "blocked" });
+    const active = await UserModel.countDocuments({
+      role: "student",
+      status: "active",
+    });
+    const blocked = await UserModel.countDocuments({
+      role: "student",
+      status: "blocked",
+    });
 
     res.json({
       total,
@@ -165,8 +187,14 @@ router.get("/stats/students", requireAdmin, async (req, res) => {
 router.get("/stats/exams", requireAdmin, async (req, res) => {
   try {
     const total = await ExamModel.countDocuments({ deletedAt: null });
-    const published = await ExamModel.countDocuments({ status: "published", deletedAt: null });
-    const draft = await ExamModel.countDocuments({ status: "draft", deletedAt: null });
+    const published = await ExamModel.countDocuments({
+      status: "published",
+      deletedAt: null,
+    });
+    const draft = await ExamModel.countDocuments({
+      status: "draft",
+      deletedAt: null,
+    });
 
     res.json({
       total,
@@ -182,8 +210,14 @@ router.get("/stats/exams", requireAdmin, async (req, res) => {
 router.get("/stats/courses", requireAdmin, async (req, res) => {
   try {
     const total = await CourseModel.countDocuments({ deletedAt: null });
-    const published = await CourseModel.countDocuments({ status: "published", deletedAt: null });
-    const draft = await CourseModel.countDocuments({ status: "draft", deletedAt: null });
+    const published = await CourseModel.countDocuments({
+      status: "published",
+      deletedAt: null,
+    });
+    const draft = await CourseModel.countDocuments({
+      status: "draft",
+      deletedAt: null,
+    });
 
     res.json({
       total,
@@ -199,11 +233,17 @@ router.get("/stats/courses", requireAdmin, async (req, res) => {
 router.get("/stats/attempts", requireAdmin, async (req, res) => {
   try {
     const total = await AttemptModel.countDocuments({});
-    const inProgress = await AttemptModel.countDocuments({ status: "in_progress" });
-    const submitted = await AttemptModel.countDocuments({ status: "submitted" });
+    const inProgress = await AttemptModel.countDocuments({
+      status: "in_progress",
+    });
+    const submitted = await AttemptModel.countDocuments({
+      status: "submitted",
+    });
     const graded = await AttemptModel.countDocuments({ status: "graded" });
     const expired = await AttemptModel.countDocuments({ status: "expired" });
-    const cancelled = await AttemptModel.countDocuments({ status: "cancelled" });
+    const cancelled = await AttemptModel.countDocuments({
+      status: "cancelled",
+    });
 
     res.json({
       total,
@@ -223,7 +263,7 @@ router.get("/stats/attempts/monthly", requireAdmin, async (req, res) => {
   try {
     const { year } = req.query;
     const matchStage = {};
-    
+
     // Filter by year if provided
     if (year) {
       const yearNum = parseInt(year);
@@ -328,5 +368,80 @@ router.get("/stats/exams/by-type", requireAdmin, async (req, res) => {
   }
 });
 
-module.exports = router;
+// **MONTHLY STUDENT GROWTH** - Get student registrations grouped by month
+router.get("/stats/students/monthly", requireAdminOrTutor, async (req, res) => {
+  try {
+    const { year } = req.query;
+    const matchStage = { role: "student" };
 
+    // Filter by year if provided
+    if (year) {
+      const yearNum = parseInt(year);
+      matchStage.createdAt = {
+        $gte: new Date(yearNum, 0, 1),
+        $lt: new Date(yearNum + 1, 0, 1),
+      };
+    }
+
+    const monthlyStudentGrowth = await UserModel.aggregate([
+      { $match: matchStage },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$createdAt" },
+            month: { $month: "$createdAt" },
+          },
+          count: { $sum: 1 },
+          active: {
+            $sum: { $cond: [{ $eq: ["$status", "active"] }, 1, 0] },
+          },
+          blocked: {
+            $sum: { $cond: [{ $eq: ["$status", "blocked"] }, 1, 0] },
+          },
+        },
+      },
+      {
+        $sort: { "_id.year": -1, "_id.month": -1 },
+      },
+      {
+        $project: {
+          _id: 0,
+          year: "$_id.year",
+          month: "$_id.month",
+          monthName: {
+            $arrayElemAt: [
+              [
+                "",
+                "January",
+                "February",
+                "March",
+                "April",
+                "May",
+                "June",
+                "July",
+                "August",
+                "September",
+                "October",
+                "November",
+                "December",
+              ],
+              "$_id.month",
+            ],
+          },
+          count: 1,
+          active: 1,
+          blocked: 1,
+        },
+      },
+    ]);
+
+    res.json({
+      monthlyStudentGrowth,
+      total: monthlyStudentGrowth.reduce((sum, item) => sum + item.count, 0),
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+module.exports = router;

@@ -64,7 +64,11 @@ const CourseSchema = new Schema(
       index: true,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
 );
 
 // Index for efficient queries

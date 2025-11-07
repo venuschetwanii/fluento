@@ -133,148 +133,142 @@ const requireRole =
   };
 
 // **CREATE** a new Exam (supports creating new Sections/Parts/Groups)
-router.post(
-  "/",
-  requireRole("tutor", "admin"),
-  async (req, res) => {
-    try {
-      const { title, type, duration, totalQuestions, featureImage, sections } =
-        req.body;
+router.post("/", requireRole("tutor", "admin"), async (req, res) => {
+  try {
+    const { title, type, duration, totalQuestions, featureImage, sections } =
+      req.body;
 
-      if (!title || !type) {
-        return res
-          .status(400)
-          .json({ error: "Title and type are required fields." });
-      }
+    if (!title || !type) {
+      return res
+        .status(400)
+        .json({ error: "Title and type are required fields." });
+    }
 
-      // Duplicate guard: same title+type not allowed
-      const existing = await Exam.findOne({ title, type });
-      if (existing) {
-        return res
-          .status(409)
-          .json({ error: "Exam with same title and type already exists" });
-      }
+    // Duplicate guard: same title+type not allowed
+    const existing = await Exam.findOne({ title, type });
+    if (existing) {
+      return res
+        .status(409)
+        .json({ error: "Exam with same title and type already exists" });
+    }
 
-      // Build sections: accept IDs or objects; nested parts/groups can also be IDs or objects
-      let sectionIds = [];
-      if (Array.isArray(sections) && sections.length > 0) {
-        for (const sectionItem of sections) {
-          // If section is existing by id or has _id, just reference it
-          if (
-            typeof sectionItem === "string" ||
-            (sectionItem && typeof sectionItem._id === "string")
-          ) {
-            sectionIds.push(
-              typeof sectionItem === "string" ? sectionItem : sectionItem._id
-            );
-            continue;
-          }
+    // Build sections: accept IDs or objects; nested parts/groups can also be IDs or objects
+    let sectionIds = [];
+    if (Array.isArray(sections) && sections.length > 0) {
+      for (const sectionItem of sections) {
+        // If section is existing by id or has _id, just reference it
+        if (
+          typeof sectionItem === "string" ||
+          (sectionItem && typeof sectionItem._id === "string")
+        ) {
+          sectionIds.push(
+            typeof sectionItem === "string" ? sectionItem : sectionItem._id
+          );
+          continue;
+        }
 
-          const sectionPayload = sectionItem || {};
+        const sectionPayload = sectionItem || {};
 
-          // Build parts for this section
-          let partIds = [];
-          if (
-            Array.isArray(sectionPayload.parts) &&
-            sectionPayload.parts.length > 0
-          ) {
-            for (const partItem of sectionPayload.parts) {
-              if (
-                typeof partItem === "string" ||
-                (partItem && typeof partItem._id === "string")
-              ) {
-                partIds.push(
-                  typeof partItem === "string" ? partItem : partItem._id
-                );
-                continue;
-              }
+        // Build parts for this section
+        let partIds = [];
+        if (
+          Array.isArray(sectionPayload.parts) &&
+          sectionPayload.parts.length > 0
+        ) {
+          for (const partItem of sectionPayload.parts) {
+            if (
+              typeof partItem === "string" ||
+              (partItem && typeof partItem._id === "string")
+            ) {
+              partIds.push(
+                typeof partItem === "string" ? partItem : partItem._id
+              );
+              continue;
+            }
 
-              const partPayload = partItem || {};
-              // Build question groups for this part
-              let groupIds = [];
-              if (
-                Array.isArray(partPayload.questionGroups) &&
-                partPayload.questionGroups.length > 0
-              ) {
-                for (const gItem of partPayload.questionGroups) {
-                  if (
-                    typeof gItem === "string" ||
-                    (gItem && typeof gItem._id === "string")
-                  ) {
-                    groupIds.push(
-                      typeof gItem === "string" ? gItem : gItem._id
-                    );
-                  } else {
-                    const g = gItem || {};
-                    const createdGroup = await QuestionGroup.create({
-                      groupNumber: g.groupNumber,
-                      groupName: g.groupName,
-                      questionType: g.questionType,
-                      directionText: g.directionText,
-                      answerList: g.answerList,
-                      questionBox: g.questionBox,
-                      passageText: g.passageText,
-                      imageUrl: g.imageUrl,
-                      audioUrl: g.audioUrl,
-                      textItems: g.textItems,
-                      image: g.image,
-                      questions: g.questions,
-                    });
-                    groupIds.push(createdGroup._id);
-                  }
+            const partPayload = partItem || {};
+            // Build question groups for this part
+            let groupIds = [];
+            if (
+              Array.isArray(partPayload.questionGroups) &&
+              partPayload.questionGroups.length > 0
+            ) {
+              for (const gItem of partPayload.questionGroups) {
+                if (
+                  typeof gItem === "string" ||
+                  (gItem && typeof gItem._id === "string")
+                ) {
+                  groupIds.push(typeof gItem === "string" ? gItem : gItem._id);
+                } else {
+                  const g = gItem || {};
+                  const createdGroup = await QuestionGroup.create({
+                    groupNumber: g.groupNumber,
+                    groupName: g.groupName,
+                    questionType: g.questionType,
+                    directionText: g.directionText,
+                    answerList: g.answerList,
+                    questionBox: g.questionBox,
+                    passageText: g.passageText,
+                    imageUrl: g.imageUrl,
+                    audioUrl: g.audioUrl,
+                    textItems: g.textItems,
+                    image: g.image,
+                    questions: g.questions,
+                  });
+                  groupIds.push(createdGroup._id);
                 }
               }
-
-              const createdPart = await Part.create({
-                type: partPayload.type,
-                directionText: partPayload.directionText,
-                audioUrl: partPayload.audioUrl,
-                context: partPayload.context,
-                questionGroups: groupIds,
-              });
-              partIds.push(createdPart._id);
             }
+
+            const createdPart = await Part.create({
+              type: partPayload.type,
+              directionText: partPayload.directionText,
+              audioUrl: partPayload.audioUrl,
+              context: partPayload.context,
+              questionGroups: groupIds,
+            });
+            partIds.push(createdPart._id);
           }
-
-          const createdSection = await Section.create({
-            examType: sectionPayload.examType,
-            sectionType: sectionPayload.sectionType,
-            title: sectionPayload.title,
-            duration: sectionPayload.duration,
-            totalQuestions: sectionPayload.totalQuestions,
-            instructions: sectionPayload.instructions,
-            parts: partIds,
-          });
-          sectionIds.push(createdSection._id);
         }
+
+        const createdSection = await Section.create({
+          examType: sectionPayload.examType,
+          sectionType: sectionPayload.sectionType,
+          title: sectionPayload.title,
+          duration: sectionPayload.duration,
+          totalQuestions: sectionPayload.totalQuestions,
+          instructions: sectionPayload.instructions,
+          parts: partIds,
+        });
+        sectionIds.push(createdSection._id);
       }
-
-      const examId = new mongoose.Types.ObjectId().toString();
-      // Support both status and boolean published in payload
-      let status = req.body.status;
-      if (typeof req.body.published === "boolean") {
-        status = req.body.published ? "published" : "draft";
-      }
-      if (status !== "published") status = "draft";
-
-      const savedExam = await Exam.create({
-        _id: examId,
-        title,
-        type,
-        duration,
-        totalQuestions,
-        featureImage,
-        status,
-        createdBy: req.user.id,
-        sections: sectionIds,
-      });
-
-      return res.status(201).json(savedExam);
-    } catch (error) {
-      return res.status(500).json({ error: error.message });
     }
+
+    const examId = new mongoose.Types.ObjectId().toString();
+    // Support both status and boolean published in payload
+    let status = req.body.status;
+    if (typeof req.body.published === "boolean") {
+      status = req.body.published ? "published" : "draft";
+    }
+    if (status !== "published") status = "draft";
+
+    const savedExam = await Exam.create({
+      _id: examId,
+      title,
+      type,
+      duration,
+      totalQuestions,
+      featureImage,
+      status,
+      createdBy: req.user.id,
+      sections: sectionIds,
+    });
+
+    return res.status(201).json(savedExam);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
   }
-);
+});
 // **READ** all Exams (list view)
 router.get("/", async (req, res) => {
   try {
@@ -353,9 +347,7 @@ router.get("/:examId", async (req, res) => {
     // 5. Assemble the complete exam structure
     const examStructure = exam.toObject();
     const userRole = req.user?.role;
-    const isAdminOrTutor = ["admin", "tutor"].includes(
-      userRole
-    );
+    const isAdminOrTutor = ["admin", "tutor"].includes(userRole);
 
     examStructure.sections = sections.map((section) => {
       const sectionObj = section.toObject();
@@ -567,79 +559,75 @@ router.get("/:examId/sections/:sectionId/student", async (req, res) => {
 });
 
 // **UPDATE** an Exam
-router.put(
-  "/:examId",
-  requireRole("tutor", "admin"),
-  async (req, res) => {
-    try {
-      const { examId } = req.params;
-      
-      // Check if exam exists and user has permission
-      const existingExam = await Exam.findOne({
-        _id: examId,
-        deletedAt: null,
-      });
+router.put("/:examId", requireRole("tutor", "admin"), async (req, res) => {
+  try {
+    const { examId } = req.params;
 
-      if (!existingExam) {
-        return res.status(404).json({ error: "Exam not found" });
-      }
+    // Check if exam exists and user has permission
+    const existingExam = await Exam.findOne({
+      _id: examId,
+      deletedAt: null,
+    });
 
-      // Only allow exam owner (tutor) or admins to update
-      // Tutors can only edit their own exams, admins can edit all
-      if (
-        String(existingExam.createdBy) !== String(req.user.id) &&
-        req.user.role !== "admin"
-      ) {
-        return res.status(403).json({ error: "Forbidden: You can only edit exams created by you" });
-      }
-
-      const updatedExam = await Exam.findByIdAndUpdate(examId, req.body, {
-        new: true, // Return the updated document
-        runValidators: true, // Run schema validators
-      });
-
-      res.json(updatedExam);
-    } catch (error) {
-      res.status(400).json({ error: error.message });
+    if (!existingExam) {
+      return res.status(404).json({ error: "Exam not found" });
     }
+
+    // Only allow exam owner (tutor) or admins to update
+    // Tutors can only edit their own exams, admins can edit all
+    if (
+      String(existingExam.createdBy) !== String(req.user.id) &&
+      req.user.role !== "admin"
+    ) {
+      return res
+        .status(403)
+        .json({ error: "Forbidden: You can only edit exams created by you" });
+    }
+
+    const updatedExam = await Exam.findByIdAndUpdate(examId, req.body, {
+      new: true, // Return the updated document
+      runValidators: true, // Run schema validators
+    });
+
+    res.json(updatedExam);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
-);
+});
 
 // **SOFT DELETE** an Exam
-router.delete(
-  "/:examId",
-  requireRole("tutor", "admin"),
-  async (req, res) => {
-    try {
-      const { examId } = req.params;
+router.delete("/:examId", requireRole("tutor", "admin"), async (req, res) => {
+  try {
+    const { examId } = req.params;
 
-      const exam = await Exam.findOne({ _id: examId, deletedAt: null });
-      if (!exam) {
-        return res.status(404).json({ error: "Exam not found" });
-      }
-
-      // Only allow exam owner (tutor) or admins to delete
-      // Tutors can only delete their own exams, admins can delete all
-      if (
-        String(exam.createdBy) !== String(req.user.id) &&
-        req.user.role !== "admin"
-      ) {
-        return res.status(403).json({ error: "Forbidden: You can only delete exams created by you" });
-      }
-
-      // Soft delete: set deletedAt timestamp
-      exam.deletedAt = new Date();
-      await exam.save();
-
-      res.status(200).json({
-        message: "Exam soft deleted successfully.",
-        deletedAt: exam.deletedAt,
-      });
-    } catch (error) {
-      res.status(500).json({ error: error.message });
+    const exam = await Exam.findOne({ _id: examId, deletedAt: null });
+    if (!exam) {
+      return res.status(404).json({ error: "Exam not found" });
     }
+
+    // Only allow exam owner (tutor) or admins to delete
+    // Tutors can only delete their own exams, admins can delete all
+    if (
+      String(exam.createdBy) !== String(req.user.id) &&
+      req.user.role !== "admin"
+    ) {
+      return res
+        .status(403)
+        .json({ error: "Forbidden: You can only delete exams created by you" });
+    }
+
+    // Soft delete: set deletedAt timestamp
+    exam.deletedAt = new Date();
+    await exam.save();
+
+    res.status(200).json({
+      message: "Exam soft deleted successfully.",
+      deletedAt: exam.deletedAt,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
-);
+});
 
 // **RESTORE** a soft-deleted Exam
 router.post(
@@ -663,7 +651,11 @@ router.post(
         String(exam.createdBy) !== String(req.user.id) &&
         req.user.role !== "admin"
       ) {
-        return res.status(403).json({ error: "Forbidden: You can only restore exams created by you" });
+        return res
+          .status(403)
+          .json({
+            error: "Forbidden: You can only restore exams created by you",
+          });
       }
 
       exam.deletedAt = null;
@@ -678,6 +670,55 @@ router.post(
     }
   }
 );
+
+// **LIST SOFT DELETED EXAMS** - Get all soft-deleted exams
+router.get("/deleted/list", requireRole("tutor", "admin"), async (req, res) => {
+  try {
+    const { page = 1, limit = 20, q, type, status, createdBy } = req.query;
+
+    const query = { deletedAt: { $ne: null } }; // Only soft-deleted exams
+
+    if (q) query.title = { $regex: String(q), $options: "i" };
+    if (type) query.type = { $regex: String(type), $options: "i" };
+    if (status) query.status = status;
+
+    if (createdBy) {
+      if (createdBy === "me" && req.user?.id) {
+        query.createdBy = req.user.id;
+      } else {
+        query.createdBy = createdBy;
+      }
+    }
+
+    // Tutors can only see their own deleted exams, admins can see all
+    if (req.user?.role === "tutor") {
+      query.createdBy = req.user.id;
+    }
+
+    const skip = (Number(page) - 1) * Number(limit);
+    const [items, total] = await Promise.all([
+      Exam.find(query)
+        .select(
+          "title type duration totalQuestions featureImage status deletedAt createdBy createdAt"
+        )
+        .populate("createdBy", "name email")
+        .sort({ deletedAt: -1 })
+        .skip(skip)
+        .limit(Number(limit)),
+      Exam.countDocuments(query),
+    ]);
+
+    res.json({
+      items,
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      totalPages: Math.ceil(total / Number(limit)),
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // **HARD DELETE** an Exam (permanent removal)
 router.delete("/:examId/hard", requireRole("admin"), async (req, res) => {
@@ -791,7 +832,9 @@ router.post(
         String(exam.createdBy) !== String(req.user.id) &&
         req.user.role !== "admin"
       ) {
-        return res.status(403).json({ error: "Forbidden: You can only edit exams created by you" });
+        return res
+          .status(403)
+          .json({ error: "Forbidden: You can only edit exams created by you" });
       }
 
       const newIds = [];
@@ -932,7 +975,9 @@ router.put(
         String(exam.createdBy) !== String(req.user.id) &&
         req.user.role !== "admin"
       ) {
-        return res.status(403).json({ error: "Forbidden: You can only edit exams created by you" });
+        return res
+          .status(403)
+          .json({ error: "Forbidden: You can only edit exams created by you" });
       }
 
       const builtIds = [];
@@ -991,7 +1036,9 @@ router.delete(
         String(exam.createdBy) !== String(req.user.id) &&
         req.user.role !== "admin"
       ) {
-        return res.status(403).json({ error: "Forbidden: You can only edit exams created by you" });
+        return res
+          .status(403)
+          .json({ error: "Forbidden: You can only edit exams created by you" });
       }
 
       exam.sections = exam.sections.filter(
@@ -1113,7 +1160,9 @@ router.patch(
         String(exam.createdBy) !== String(req.user.id) &&
         req.user.role !== "admin"
       ) {
-        return res.status(403).json({ error: "Forbidden: You can only edit exams created by you" });
+        return res
+          .status(403)
+          .json({ error: "Forbidden: You can only edit exams created by you" });
       }
 
       // Update only the status field

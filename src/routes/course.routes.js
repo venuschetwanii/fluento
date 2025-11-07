@@ -28,7 +28,7 @@ router.get("/open", async (req, res) => {
     if (category) query.category = { $regex: String(category), $options: "i" };
 
     const skip = (Number(page) - 1) * Number(limit);
-    const [items, total] = await Promise.all([
+    const [courses, total] = await Promise.all([
       Course.find(query)
         .select(
           "title examType description thumbnail category studentsCount status publishedAt createdAt"
@@ -46,6 +46,25 @@ router.get("/open", async (req, res) => {
         .limit(Number(limit)),
       Course.countDocuments(query),
     ]);
+
+    // Ensure lessons are populated for each course (fallback if virtual populate doesn't work)
+    const items = await Promise.all(
+      courses.map(async (course) => {
+        if (course.lessons === undefined) {
+          const lessons = await Lesson.find({
+            course: course._id,
+            deletedAt: null,
+          })
+            .select(
+              "title description type duration url thumbnail publishedAt order"
+            )
+            .sort({ order: 1 });
+          course.lessons = lessons;
+        }
+        return course;
+      })
+    );
+
     res.json({ items, total, page: Number(page), limit: Number(limit) });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -73,6 +92,19 @@ router.get("/open/:courseId", async (req, res) => {
       });
 
     if (!course) return res.status(404).json({ error: "Course not found" });
+
+    // Ensure lessons are populated (fallback if virtual populate doesn't work)
+    if (course.lessons === undefined) {
+      const lessons = await Lesson.find({
+        course: courseId,
+        deletedAt: null,
+      })
+        .select(
+          "title description type duration url thumbnail publishedAt order"
+        )
+        .sort({ order: 1 });
+      course.lessons = lessons;
+    }
 
     return res.json(course);
   } catch (error) {
@@ -208,7 +240,7 @@ router.get("/", async (req, res) => {
     }
 
     const skip = (Number(page) - 1) * Number(limit);
-    const [items, total] = await Promise.all([
+    const [courses, total] = await Promise.all([
       Course.find(query)
         .select(
           "title examType description thumbnail category studentsCount status publishedAt deletedAt createdAt createdBy"
@@ -227,6 +259,24 @@ router.get("/", async (req, res) => {
         .limit(Number(limit)),
       Course.countDocuments(query),
     ]);
+
+    // Ensure lessons are populated for each course (fallback if virtual populate doesn't work)
+    const items = await Promise.all(
+      courses.map(async (course) => {
+        if (course.lessons === undefined) {
+          const lessons = await Lesson.find({
+            course: course._id,
+            deletedAt: null,
+          })
+            .select(
+              "title description type duration url thumbnail publishedAt order"
+            )
+            .sort({ order: 1 });
+          course.lessons = lessons;
+        }
+        return course;
+      })
+    );
 
     res.json({ items, total, page: Number(page), limit: Number(limit) });
   } catch (error) {
@@ -260,6 +310,19 @@ router.get("/:courseId", async (req, res) => {
     // Students can only see published courses
     if (req.user?.role === "student" && course.status !== "published") {
       return res.status(403).json({ error: "Access denied" });
+    }
+
+    // Ensure lessons are populated (fallback if virtual populate doesn't work)
+    if (course.lessons === undefined) {
+      const lessons = await Lesson.find({
+        course: courseId,
+        deletedAt: null,
+      })
+        .select(
+          "title description type duration url thumbnail publishedAt order"
+        )
+        .sort({ order: 1 });
+      course.lessons = lessons;
     }
 
     res.json(course);

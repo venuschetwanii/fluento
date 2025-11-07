@@ -20,6 +20,48 @@
 			"name": "User Management",
 			"item": [
 				{
+					"name": "Get My Profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users/me",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", "me"]
+						},
+						"description": "Get current authenticated user's profile. Accessible by any authenticated user (student, tutor, admin)."
+					},
+					"response": []
+				},
+				{
+					"name": "Update My Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Name\",\n  \"email\": \"updated@example.com\",\n  \"phone\": \"9876543210\",\n  \"password\": \"newpassword123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/me",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", "me"]
+						},
+						"description": "Update current authenticated user's profile. Users can update their name, email, phone, and password. Cannot change role or status (admin only). Accessible by any authenticated user."
+					},
+					"response": []
+				},
+				{
 					"name": "List All Students",
 					"request": {
 						"method": "GET",
@@ -235,6 +277,62 @@
 			"description": "User management APIs for admin operations"
 		},
 		{
+			"name": "Exam Management",
+			"item": [
+				{
+					"name": "List Soft Deleted Exams",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/exams/deleted/list?page=1&limit=20&q=&type=&status=&createdBy=",
+							"host": ["{{baseUrl}}"],
+							"path": ["exams", "deleted", "list"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Page number (default: 1)"
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Items per page (default: 20)"
+								},
+								{
+									"key": "q",
+									"value": "",
+									"description": "Search query for exam title (optional)",
+									"disabled": true
+								},
+								{
+									"key": "type",
+									"value": "",
+									"description": "Filter by exam type (e.g., IELTS_AC, GRE) (optional)",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "",
+									"description": "Filter by status: draft or published (optional)",
+									"disabled": true
+								},
+								{
+									"key": "createdBy",
+									"value": "",
+									"description": "Filter by creator ID or use 'me' for current user (optional)",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get list of all soft-deleted exams. Only shows exams with deletedAt != null.\n\n**Access Control:**\n- Tutors can only see their own deleted exams\n- Admins can see all deleted exams\n\n**Response includes:**\n- `items`: Array of deleted exams with full details including deletedAt timestamp\n- `total`: Total count of deleted exams\n- `page`: Current page number\n- `limit`: Items per page\n- `totalPages`: Total number of pages"
+					},
+					"response": []
+				}
+			],
+			"description": "Exam management APIs for tutors and admins"
+		},
+		{
 			"name": "Transfer Ownership",
 			"item": [
 				{
@@ -412,6 +510,28 @@
 					"response": []
 				},
 				{
+					"name": "Monthly Student Growth",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/dashboard/stats/students/monthly?year=",
+							"host": ["{{baseUrl}}"],
+							"path": ["dashboard", "stats", "students", "monthly"],
+							"query": [
+								{
+									"key": "year",
+									"value": "",
+									"description": "Filter by specific year (optional). If not provided, returns all months.",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get student registrations grouped by month with active/blocked breakdown. Returns monthly student growth statistics. Accessible by Admin and Tutor.\n\n**Response includes:**\n- `monthlyStudentGrowth`: Array of monthly data with year, month, monthName, count, active, blocked\n- `total`: Total students across all months"
+					},
+					"response": []
+				},
+				{
 					"name": "Exams Per Exam Type",
 					"request": {
 						"method": "GET",
@@ -426,7 +546,7 @@
 					"response": []
 				}
 			],
-			"description": "Dashboard statistics APIs for admin"
+			"description": "Dashboard statistics APIs for admin and tutor"
 		},
 		{
 			"name": "Authentication",

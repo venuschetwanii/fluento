@@ -9,7 +9,9 @@ const router = Router();
 const requireAdmin = (req, res, next) => {
   try {
     if (!req.user || req.user.role !== "admin") {
-      return res.status(403).json({ error: "Forbidden: Admin access required" });
+      return res
+        .status(403)
+        .json({ error: "Forbidden: Admin access required" });
     }
     return next();
   } catch (e) {
@@ -21,7 +23,9 @@ const requireAdmin = (req, res, next) => {
 const requireAdminOrTutor = (req, res, next) => {
   try {
     if (!req.user || !["admin", "tutor"].includes(req.user.role)) {
-      return res.status(403).json({ error: "Forbidden: Admin or tutor access required" });
+      return res
+        .status(403)
+        .json({ error: "Forbidden: Admin or tutor access required" });
     }
     return next();
   } catch (e) {
@@ -32,18 +36,105 @@ const requireAdminOrTutor = (req, res, next) => {
 // Protect all user management routes with JWT auth
 router.use(auth);
 
+// **GET** current user profile (self-service)
+router.get("/me", async (req, res) => {
+  try {
+    const user = await UserModel.findById(req.user.id).select(
+      "-passwordHash -otp"
+    );
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json(user);
+  } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(400).json({ error: "Invalid User ID" });
+    }
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// **UPDATE** current user profile (self-service)
+router.put("/me", async (req, res) => {
+  try {
+    const { name, email, phone, password } = req.body;
+
+    // Find current user
+    const user = await UserModel.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Check if email is being changed and if it's already taken
+    if (email && email !== user.email) {
+      const existingUser = await UserModel.findOne({ email });
+      if (existingUser) {
+        return res.status(409).json({
+          error: "Email already in use by another user",
+        });
+      }
+      user.email = email;
+    }
+
+    // Check if phone is being changed and if it's already taken
+    if (phone && phone !== user.phone) {
+      const existingUser = await UserModel.findOne({ phone });
+      if (existingUser) {
+        return res.status(409).json({
+          error: "Phone number already in use by another user",
+        });
+      }
+      user.phone = phone;
+    }
+
+    // Update allowed fields (users cannot change role or status themselves)
+    if (name !== undefined) user.name = name;
+
+    // Update password if provided
+    if (password) {
+      user.passwordHash = await bcrypt.hash(password, 10);
+    }
+
+    await user.save();
+
+    // Return user without sensitive data
+    const userResponse = user.toObject();
+    delete userResponse.passwordHash;
+    delete userResponse.otp;
+
+    res.json({
+      message: "Profile updated successfully",
+      user: userResponse,
+    });
+  } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(400).json({ error: "Invalid User ID" });
+    }
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // **LIST** all students (admin and tutor access)
 router.get("/students", requireAdminOrTutor, async (req, res) => {
   try {
-    const { page = 1, limit = 20, status, q, sortBy = "createdAt", sortOrder = "desc" } = req.query;
+    const {
+      page = 1,
+      limit = 20,
+      status,
+      q,
+      sortBy = "createdAt",
+      sortOrder = "desc",
+    } = req.query;
 
     const query = { role: "student" };
-    
+
     // Filter by status if provided
     if (status && ["active", "blocked"].includes(status)) {
       query.status = status;
     }
-    
+
     // Search by name, email, or phone
     if (q) {
       query.$or = [
@@ -86,7 +177,7 @@ router.get("/", requireAdmin, async (req, res) => {
     const { page = 1, limit = 20, role, status, q } = req.query;
 
     const query = {};
-    
+
     // Exclude students by default - only show admin and tutor
     // If role is explicitly provided, use it (including students if requested)
     if (role && ["student", "admin", "tutor"].includes(role)) {
@@ -95,12 +186,12 @@ router.get("/", requireAdmin, async (req, res) => {
       // Default: exclude students, show only admin and tutor
       query.role = { $in: ["admin", "tutor"] };
     }
-    
+
     // Filter by status if provided
     if (status && ["active", "blocked"].includes(status)) {
       query.status = status;
     }
-    
+
     // Search by name or email
     if (q) {
       query.$or = [
@@ -166,7 +257,8 @@ router.post("/", requireAdmin, async (req, res) => {
     // Students sign up themselves, so they shouldn't be created here
     if (!role || !["admin", "tutor"].includes(role)) {
       return res.status(400).json({
-        error: "Role must be either 'admin' or 'tutor'. Students sign up themselves.",
+        error:
+          "Role must be either 'admin' or 'tutor'. Students sign up themselves.",
       });
     }
 
@@ -343,4 +435,3 @@ router.post("/:userId/unblock", requireAdmin, async (req, res) => {
 });
 
 module.exports = router;
-

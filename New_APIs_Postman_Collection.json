@@ -1,0 +1,165 @@
+{
+	"info": {
+		"_postman_id": "new-fluento-apis",
+		"name": "New Fluento Backend APIs",
+		"description": "New API endpoints: Monthly Student Growth, Soft Deleted Exams List, and User Profile Management",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{accessToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "User Management",
+			"item": [
+				{
+					"name": "Get My Profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users/me",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", "me"]
+						},
+						"description": "Get current authenticated user's profile based on JWT token. Accessible by any authenticated user (student, tutor, admin).\n\n**Response includes:**\n- User profile information (name, email, phone, role, status)\n- Excludes sensitive data (passwordHash, otp)\n\n**Example Response:**\n```json\n{\n  \"_id\": \"user_id\",\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"phone\": \"9876543210\",\n  \"role\": \"student\",\n  \"status\": \"active\",\n  \"isPhoneVerified\": true,\n  \"createdAt\": \"2025-01-10T08:00:00.000Z\",\n  \"updatedAt\": \"2025-01-15T10:30:00.000Z\"\n}\n```"
+					},
+					"response": []
+				},
+				{
+					"name": "Update My Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Name\",\n  \"email\": \"updated@example.com\",\n  \"phone\": \"9876543210\",\n  \"password\": \"newpassword123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/me",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", "me"]
+						},
+						"description": "Update current authenticated user's profile. Users can update their name, email, phone, and password. Cannot change role or status (admin only). Accessible by any authenticated user.\n\n**Updatable Fields:**\n- `name`: User's name\n- `email`: User's email (validates uniqueness)\n- `phone`: User's phone number (validates uniqueness)\n- `password`: User's password (automatically hashed)\n\n**Restrictions:**\n- Users cannot change their own `role` or `status`\n- Email and phone must be unique if changed\n- Validates that email/phone aren't already taken\n\n**Example Request Body:**\n```json\n{\n  \"name\": \"John Doe Updated\",\n  \"email\": \"newemail@example.com\",\n  \"phone\": \"9876543210\",\n  \"password\": \"newpassword123\"\n}\n```\n\n**Example Response:**\n```json\n{\n  \"message\": \"Profile updated successfully\",\n  \"user\": {\n    \"_id\": \"user_id\",\n    \"name\": \"John Doe Updated\",\n    \"email\": \"newemail@example.com\",\n    \"phone\": \"9876543210\",\n    \"role\": \"student\",\n    \"status\": \"active\"\n  }\n}\n```"
+					},
+					"response": []
+				}
+			],
+			"description": "User profile management APIs for self-service"
+		},
+		{
+			"name": "Dashboard",
+			"item": [
+				{
+					"name": "Monthly Student Growth",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/dashboard/stats/students/monthly?year=",
+							"host": ["{{baseUrl}}"],
+							"path": ["dashboard", "stats", "students", "monthly"],
+							"query": [
+								{
+									"key": "year",
+									"value": "",
+									"description": "Filter by specific year (optional). If not provided, returns all months.",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get student registrations grouped by month with active/blocked breakdown. Returns monthly student growth statistics. Accessible by Admin and Tutor.\n\n**Response includes:**\n- `monthlyStudentGrowth`: Array of monthly data with year, month, monthName, count, active, blocked\n- `total`: Total students across all months\n\n**Example Response:**\n```json\n{\n  \"monthlyStudentGrowth\": [\n    {\n      \"year\": 2025,\n      \"month\": 1,\n      \"monthName\": \"January\",\n      \"count\": 50,\n      \"active\": 45,\n      \"blocked\": 5\n    }\n  ],\n  \"total\": 50\n}\n```"
+					},
+					"response": []
+				}
+			],
+			"description": "Dashboard statistics APIs for admin and tutor"
+		},
+		{
+			"name": "Exam Management",
+			"item": [
+				{
+					"name": "List Soft Deleted Exams",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/exams/deleted/list?page=1&limit=20&q=&type=&status=&createdBy=",
+							"host": ["{{baseUrl}}"],
+							"path": ["exams", "deleted", "list"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Page number (default: 1)"
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Items per page (default: 20)"
+								},
+								{
+									"key": "q",
+									"value": "",
+									"description": "Search query for exam title (optional)",
+									"disabled": true
+								},
+								{
+									"key": "type",
+									"value": "",
+									"description": "Filter by exam type (e.g., IELTS_AC, GRE) (optional)",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "",
+									"description": "Filter by status: draft or published (optional)",
+									"disabled": true
+								},
+								{
+									"key": "createdBy",
+									"value": "",
+									"description": "Filter by creator ID or use 'me' for current user (optional)",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get list of all soft-deleted exams. Only shows exams with deletedAt != null.\n\n**Access Control:**\n- Tutors can only see their own deleted exams\n- Admins can see all deleted exams\n\n**Response includes:**\n- `items`: Array of deleted exams with full details including deletedAt timestamp\n- `total`: Total count of deleted exams\n- `page`: Current page number\n- `limit`: Items per page\n- `totalPages`: Total number of pages\n\n**Example Response:**\n```json\n{\n  \"items\": [\n    {\n      \"_id\": \"exam_id\",\n      \"title\": \"Deleted Exam Title\",\n      \"type\": \"IELTS_AC\",\n      \"status\": \"published\",\n      \"deletedAt\": \"2025-01-15T10:30:00.000Z\",\n      \"createdBy\": {\n        \"_id\": \"user_id\",\n        \"name\": \"Tutor Name\",\n        \"email\": \"tutor@example.com\"\n      },\n      \"createdAt\": \"2025-01-10T08:00:00.000Z\"\n    }\n  ],\n  \"total\": 5,\n  \"page\": 1,\n  \"limit\": 20,\n  \"totalPages\": 1\n}\n```"
+					},
+					"response": []
+				}
+			],
+			"description": "Exam management APIs for tutors and admins"
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "accessToken",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
+
