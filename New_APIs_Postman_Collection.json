@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "new-fluento-apis",
 		"name": "New Fluento Backend APIs",
-		"description": "New API endpoints: Monthly Student Growth, Soft Deleted Exams List, and User Profile Management",
+		"description": "New API endpoints: Monthly Student Growth, Soft Deleted Courses/Exams List, and User Profile Management",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"auth": {
@@ -91,6 +91,68 @@
 				}
 			],
 			"description": "Dashboard statistics APIs for admin and tutor"
+		},
+		{
+			"name": "Course Management",
+			"item": [
+				{
+					"name": "List Soft Deleted Courses",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/courses/deleted/list?page=1&limit=20&q=&examType=&category=&status=&createdBy=",
+							"host": ["{{baseUrl}}"],
+							"path": ["courses", "deleted", "list"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Page number (default: 1)"
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Items per page (default: 20)"
+								},
+								{
+									"key": "q",
+									"value": "",
+									"description": "Search query for course title (optional)",
+									"disabled": true
+								},
+								{
+									"key": "examType",
+									"value": "",
+									"description": "Filter by exam type (e.g., IELTS_AC, GRE) (optional)",
+									"disabled": true
+								},
+								{
+									"key": "category",
+									"value": "",
+									"description": "Filter by category (optional)",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "",
+									"description": "Filter by status: draft or published (optional)",
+									"disabled": true
+								},
+								{
+									"key": "createdBy",
+									"value": "",
+									"description": "Filter by creator ID or use 'me' for current user (optional)",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get list of all soft-deleted courses. Only shows courses with deletedAt != null.\n\n**Access Control:**\n- Tutors can only see their own deleted courses\n- Admins can see all deleted courses\n\n**Response includes:**\n- `items`: Array of deleted courses with full details including deletedAt timestamp\n- `total`: Total count of deleted courses\n- `page`: Current page number\n- `limit`: Items per page\n- `totalPages`: Total number of pages\n\n**Example Response:**\n```json\n{\n  \"items\": [\n    {\n      \"_id\": \"course_id\",\n      \"title\": \"Deleted Course Title\",\n      \"examType\": \"IELTS_AC\",\n      \"category\": \"Academic\",\n      \"status\": \"published\",\n      \"deletedAt\": \"2025-01-15T10:30:00.000Z\",\n      \"createdBy\": {\n        \"_id\": \"user_id\",\n        \"name\": \"Tutor Name\",\n        \"email\": \"tutor@example.com\"\n      },\n      \"createdAt\": \"2025-01-10T08:00:00.000Z\"\n    }\n  ],\n  \"total\": 5,\n  \"page\": 1,\n  \"limit\": 20,\n  \"totalPages\": 1\n}\n```"
+					},
+					"response": []
+				}
+			],
+			"description": "Course management APIs for tutors and admins"
 		},
 		{
 			"name": "Exam Management",

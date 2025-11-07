@@ -568,6 +568,57 @@ router.post(
   }
 );
 
+// **LIST SOFT DELETED COURSES** - Get all soft-deleted courses
+router.get("/deleted/list", requireRole("tutor", "admin"), async (req, res) => {
+  try {
+    const { page = 1, limit = 20, q, examType, category, status, createdBy } = req.query;
+
+    const query = { deletedAt: { $ne: null } }; // Only soft-deleted courses
+
+    if (q) query.title = { $regex: String(q), $options: "i" };
+    if (examType) query.examType = { $regex: String(examType), $options: "i" };
+    if (category) query.category = { $regex: String(category), $options: "i" };
+    if (status) query.status = status;
+
+    if (createdBy) {
+      if (createdBy === "me" && req.user?.id) {
+        query.createdBy = req.user.id;
+      } else {
+        query.createdBy = createdBy;
+      }
+    }
+
+    // Tutors can only see their own deleted courses, admins can see all
+    if (req.user?.role === "tutor") {
+      query.createdBy = req.user.id;
+    }
+
+    const skip = (Number(page) - 1) * Number(limit);
+    const [items, total] = await Promise.all([
+      Course.find(query)
+        .select(
+          "title examType description thumbnail category studentsCount status deletedAt createdBy createdAt"
+        )
+        .populate("createdBy", "name email")
+        .populate("publishedBy", "name email")
+        .sort({ deletedAt: -1 })
+        .skip(skip)
+        .limit(Number(limit)),
+      Course.countDocuments(query),
+    ]);
+
+    res.json({
+      items,
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      totalPages: Math.ceil(total / Number(limit)),
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // **TRANSFER COURSE OWNERSHIP** - Admin only (for when tutor leaves)
 router.patch(
   "/:courseId/transfer-ownership",
