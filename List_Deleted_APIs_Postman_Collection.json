@@ -1,0 +1,145 @@
+{
+	"info": {
+		"_postman_id": "list-deleted-apis",
+		"name": "List Deleted APIs - Users & Lessons",
+		"description": "New API endpoints for listing soft-deleted/blocked users and deleted lessons",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{accessToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "User Management",
+			"item": [
+				{
+					"name": "List Blocked Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users/blocked/list?page=1&limit=20&q=&role=&email=&phone=",
+							"host": ["{{baseUrl}}"],
+							"path": ["users", "blocked", "list"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Page number (default: 1)"
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Items per page (default: 20)"
+								},
+								{
+									"key": "q",
+									"value": "",
+									"description": "Search by name",
+									"disabled": true
+								},
+								{
+									"key": "role",
+									"value": "",
+									"description": "Filter by role (student, admin, tutor)",
+									"disabled": true
+								},
+								{
+									"key": "email",
+									"value": "",
+									"description": "Filter by email",
+									"disabled": true
+								},
+								{
+									"key": "phone",
+									"value": "",
+									"description": "Filter by phone number",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get all blocked (soft-deleted) users. **Admin only access.**\n\n**Query Parameters:**\n- `page` - Page number (default: 1)\n- `limit` - Items per page (default: 20)\n- `q` - Search by name (case-insensitive)\n- `role` - Filter by role: `student`, `admin`, or `tutor`\n- `email` - Filter by email (partial match)\n- `phone` - Filter by phone number (partial match)\n\n**Example Response:**\n```json\n{\n  \"items\": [\n    {\n      \"_id\": \"user_id\",\n      \"name\": \"John Doe\",\n      \"email\": \"john@example.com\",\n      \"phone\": \"9876543210\",\n      \"role\": \"student\",\n      \"status\": \"blocked\",\n      \"createdAt\": \"2025-01-10T08:00:00.000Z\",\n      \"updatedAt\": \"2025-01-15T10:30:00.000Z\"\n    }\n  ],\n  \"total\": 5,\n  \"page\": 1,\n  \"limit\": 20,\n  \"totalPages\": 1\n}\n```\n\n**Error Responses:**\n- `403 Forbidden` - Non-admin users cannot access this endpoint\n- `500 Internal Server Error` - Server error"
+					},
+					"response": []
+				}
+			],
+			"description": "User management APIs"
+		},
+		{
+			"name": "Lesson Management",
+			"item": [
+				{
+					"name": "List Deleted Lessons",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/lessons/deleted/list?page=1&limit=20&q=&course=&type=&status=",
+							"host": ["{{baseUrl}}"],
+							"path": ["lessons", "deleted", "list"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Page number (default: 1)"
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Items per page (default: 20)"
+								},
+								{
+									"key": "q",
+									"value": "",
+									"description": "Search by lesson title",
+									"disabled": true
+								},
+								{
+									"key": "course",
+									"value": "",
+									"description": "Filter by course ID",
+									"disabled": true
+								},
+								{
+									"key": "type",
+									"value": "",
+									"description": "Filter by lesson type",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "",
+									"description": "Filter by lesson status",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get all soft-deleted lessons. **Tutor and Admin access.**\n\n**Query Parameters:**\n- `page` - Page number (default: 1)\n- `limit` - Items per page (default: 20)\n- `q` - Search by lesson title (case-insensitive)\n- `course` - Filter by course ID\n- `type` - Filter by lesson type\n- `status` - Filter by lesson status\n\n**Access Control:**\n- **Tutors**: Can only see deleted lessons from their own courses\n- **Admins**: Can see all deleted lessons\n\n**Example Response:**\n```json\n{\n  \"items\": [\n    {\n      \"_id\": \"lesson_id\",\n      \"title\": \"Introduction to Grammar\",\n      \"description\": \"Basic grammar concepts\",\n      \"type\": \"video\",\n      \"duration\": 1800,\n      \"url\": \"https://example.com/video.mp4\",\n      \"thumbnail\": \"https://example.com/thumb.jpg\",\n      \"publishedAt\": \"2025-01-10T08:00:00.000Z\",\n      \"order\": 1,\n      \"deletedAt\": \"2025-01-15T10:30:00.000Z\",\n      \"course\": {\n        \"_id\": \"course_id\",\n        \"title\": \"English Grammar Course\",\n        \"examType\": \"IELTS_AC\"\n      },\n      \"createdAt\": \"2025-01-10T08:00:00.000Z\"\n    }\n  ],\n  \"total\": 10,\n  \"page\": 1,\n  \"limit\": 20,\n  \"totalPages\": 1\n}\n```\n\n**Error Responses:**\n- `403 Forbidden` - Non-tutor/admin users cannot access this endpoint\n- `500 Internal Server Error` - Server error"
+					},
+					"response": []
+				}
+			],
+			"description": "Lesson management APIs"
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "accessToken",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
+

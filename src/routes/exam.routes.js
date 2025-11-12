@@ -3,8 +3,10 @@ const Exam = require("../models/exam.model");
 const Section = require("../models/section.model");
 const Part = require("../models/part.model");
 const QuestionGroup = require("../models/group.model");
+const UserModel = require("../models/user.model");
 const mongoose = require("mongoose");
 const auth = require("../middlewares/auth.middleware");
+const { notifyExamChange } = require("../services/notification.service");
 
 const router = Router();
 
@@ -19,8 +21,9 @@ router.get("/open", async (req, res) => {
     const [exams, total] = await Promise.all([
       Exam.find(query)
         .select(
-          "title type duration totalQuestions featureImage status sections createdAt"
+          "title type duration totalQuestions featureImage status sections createdAt createdBy"
         )
+        .populate("createdBy", "name email role")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(Number(limit)),
@@ -57,9 +60,9 @@ router.get("/open/:examId", async (req, res) => {
       _id: examId,
       status: "published",
       deletedAt: null,
-    }).select(
-      "title type duration totalQuestions featureImage status sections"
-    );
+    })
+      .select("title type duration totalQuestions featureImage status sections createdBy")
+      .populate("createdBy", "name email role");
     if (!exam) return res.status(404).json({ error: "Exam not found" });
 
     // Load only section documents (no parts/groups)
@@ -74,6 +77,7 @@ router.get("/open/:examId", async (req, res) => {
       duration: exam.duration,
       totalQuestions: exam.totalQuestions,
       featureImage: exam.featureImage,
+      createdBy: exam.createdBy,
       sections,
     });
   } catch (error) {
@@ -264,6 +268,25 @@ router.post("/", requireRole("tutor", "admin"), async (req, res) => {
       sections: sectionIds,
     });
 
+    // Populate createdBy before returning
+    await savedExam.populate("createdBy", "name email role");
+
+    // Create notification for exam creation
+    try {
+      const user = await UserModel.findById(req.user.id).select("name email");
+      if (user) {
+        await notifyExamChange(
+          "create",
+          savedExam,
+          req.user.id,
+          user.name || user.email || "Unknown User"
+        );
+      }
+    } catch (notifError) {
+      console.error("Error creating notification:", notifError);
+      // Don't fail the request if notification fails
+    }
+
     return res.status(201).json(savedExam);
   } catch (error) {
     return res.status(500).json({ error: error.message });
@@ -306,6 +329,7 @@ router.get("/", async (req, res) => {
         .select(
           "title type duration totalQuestions featureImage status deletedAt createdBy"
         )
+        .populate("createdBy", "name email role")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(Number(limit)),
@@ -323,7 +347,8 @@ router.get("/:examId", async (req, res) => {
     const { examId } = req.params;
 
     // 1. Find the Exam document (exclude soft-deleted)
-    const exam = await Exam.findOne({ _id: examId, deletedAt: null });
+    const exam = await Exam.findOne({ _id: examId, deletedAt: null })
+      .populate("createdBy", "name email role");
     if (!exam) {
       return res.status(404).json({ error: "Exam not found" });
     }
@@ -589,6 +614,24 @@ router.put("/:examId", requireRole("tutor", "admin"), async (req, res) => {
       runValidators: true, // Run schema validators
     });
 
+    // Populate createdBy before returning
+    await updatedExam.populate("createdBy", "name email role");
+
+    // Create notification for exam update
+    try {
+      const user = await UserModel.findById(req.user.id).select("name email");
+      if (user) {
+        await notifyExamChange(
+          "update",
+          updatedExam,
+          req.user.id,
+          user.name || user.email || "Unknown User"
+        );
+      }
+    } catch (notifError) {
+      console.error("Error creating notification:", notifError);
+    }
+
     res.json(updatedExam);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -619,6 +662,21 @@ router.delete("/:examId", requireRole("tutor", "admin"), async (req, res) => {
     // Soft delete: set deletedAt timestamp
     exam.deletedAt = new Date();
     await exam.save();
+
+    // Create notification for exam deletion
+    try {
+      const user = await UserModel.findById(req.user.id).select("name email");
+      if (user) {
+        await notifyExamChange(
+          "delete",
+          exam,
+          req.user.id,
+          user.name || user.email || "Unknown User"
+        );
+      }
+    } catch (notifError) {
+      console.error("Error creating notification:", notifError);
+    }
 
     res.status(200).json({
       message: "Exam soft deleted successfully.",
@@ -661,6 +719,21 @@ router.post(
       exam.deletedAt = null;
       await exam.save();
 
+      // Create notification for exam restore
+      try {
+        const user = await UserModel.findById(req.user.id).select("name email");
+        if (user) {
+          await notifyExamChange(
+            "restore",
+            exam,
+            req.user.id,
+            user.name || user.email || "Unknown User"
+          );
+        }
+      } catch (notifError) {
+        console.error("Error creating notification:", notifError);
+      }
+
       res.status(200).json({
         message: "Exam restored successfully.",
         exam: { _id: exam._id, title: exam.title, status: exam.status },
@@ -701,7 +774,7 @@ router.get("/deleted/list", requireRole("tutor", "admin"), async (req, res) => {
         .select(
           "title type duration totalQuestions featureImage status deletedAt createdBy createdAt"
         )
-        .populate("createdBy", "name email")
+        .populate("createdBy", "name email role")
         .sort({ deletedAt: -1 })
         .skip(skip)
         .limit(Number(limit)),

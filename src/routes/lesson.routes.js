@@ -382,4 +382,62 @@ router.delete("/:lessonId/hard", requireRole("admin"), async (req, res) => {
   }
 });
 
+// **LIST SOFT DELETED LESSONS** - Get all soft-deleted lessons
+router.get("/deleted/list", requireRole("tutor", "admin"), async (req, res) => {
+  try {
+    const { page = 1, limit = 20, q, course, type, status } = req.query;
+
+    const query = { deletedAt: { $ne: null } }; // Only soft-deleted lessons
+
+    // Search by title
+    if (q) {
+      query.title = { $regex: String(q), $options: "i" };
+    }
+
+    // Filter by course
+    if (course) {
+      query.course = course;
+    }
+
+    // Filter by type
+    if (type) {
+      query.type = type;
+    }
+
+    // Filter by status
+    if (status) {
+      query.status = status;
+    }
+
+    // Tutors can only see their own deleted lessons, admins can see all
+    if (req.user?.role === "tutor") {
+      // Get courses created by this tutor
+      const tutorCourses = await Course.find({ createdBy: req.user.id }).select("_id");
+      const courseIds = tutorCourses.map((c) => c._id);
+      query.course = { $in: courseIds };
+    }
+
+    const skip = (Number(page) - 1) * Number(limit);
+    const [items, total] = await Promise.all([
+      Lesson.find(query)
+        .select("title description type duration url thumbnail publishedAt order deletedAt course createdAt")
+        .populate("course", "title examType")
+        .sort({ deletedAt: -1 }) // Sort by deletion date (most recent first)
+        .skip(skip)
+        .limit(Number(limit)),
+      Lesson.countDocuments(query),
+    ]);
+
+    res.json({
+      items,
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      totalPages: Math.ceil(total / Number(limit)),
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

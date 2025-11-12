@@ -26,6 +26,14 @@ AWS_S3_BUCKET=your_s3_bucket_name
 
 # OpenAI API Key (if using for grading services)
 OPENAI_API_KEY=your_openai_api_key
+
+# Email Configuration (for sending admin account creation emails)
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASSWORD=your_app_password
+EMAIL_FROM=your_email@gmail.com
+APP_URL=https://your-app-url.com
 ```
 
 ## Important Notes
@@ -84,3 +92,32 @@ Common alternative endpoints:
 - `https://www.authkey.io/api/send`
 
 Update the endpoint in `src/services/sms.service.js` if needed.
+
+## Email Service Configuration
+
+The application uses **nodemailer** for sending emails. When an admin account is created, a welcome email is automatically sent to the new admin.
+
+### Gmail Setup
+
+If using Gmail, you need to:
+1. Enable 2-Step Verification on your Google account
+2. Generate an App Password:
+   - Go to Google Account → Security → 2-Step Verification → App passwords
+   - Generate a new app password for "Mail"
+   - Use this app password as `EMAIL_PASSWORD` (not your regular Gmail password)
+
+### Email Environment Variables
+
+- `EMAIL_HOST`: SMTP server hostname (default: `smtp.gmail.com`)
+- `EMAIL_PORT`: SMTP port (default: `587` for TLS, use `465` for SSL)
+- `EMAIL_USER`: Your email address
+- `EMAIL_PASSWORD`: Your email password or app password
+- `EMAIL_FROM`: Sender email address (defaults to `EMAIL_USER`)
+- `APP_URL`: Your application URL for login links in emails
+
+### Other Email Providers
+
+For other email providers (Outlook, Yahoo, etc.), update `EMAIL_HOST` and `EMAIL_PORT` accordingly:
+- **Outlook/Hotmail**: `smtp-mail.outlook.com`, port `587`
+- **Yahoo**: `smtp.mail.yahoo.com`, port `587` or `465`
+- **Custom SMTP**: Use your provider's SMTP settings

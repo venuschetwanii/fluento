@@ -1,7 +1,9 @@
 const Router = require("express").Router;
 const Course = require("../models/course.model");
 const Lesson = require("../models/lesson.model");
+const UserModel = require("../models/user.model");
 const auth = require("../middlewares/auth.middleware");
+const { notifyCourseChange } = require("../services/notification.service");
 
 const router = Router();
 
@@ -31,8 +33,9 @@ router.get("/open", async (req, res) => {
     const [courses, total] = await Promise.all([
       Course.find(query)
         .select(
-          "title examType description thumbnail category studentsCount status publishedAt createdAt"
+          "title examType description thumbnail category studentsCount status publishedAt createdAt createdBy"
         )
+        .populate("createdBy", "name email role")
         .populate("publishedBy", "name email")
         .populate({
           path: "lessons",
@@ -80,8 +83,9 @@ router.get("/open/:courseId", async (req, res) => {
       deletedAt: null,
     })
       .select(
-        "title examType description thumbnail category studentsCount status publishedAt createdAt"
+        "title examType description thumbnail category studentsCount status publishedAt createdAt createdBy"
       )
+      .populate("createdBy", "name email role")
       .populate("publishedBy", "name email")
       .populate({
         path: "lessons",
@@ -185,7 +189,7 @@ router.post("/", requireRole("tutor", "admin"), async (req, res) => {
     }
 
     // Populate the course with lessons and owners
-    await course.populate("createdBy", "name email");
+    await course.populate("createdBy", "name email role");
     await course.populate("publishedBy", "name email");
     await course.populate({
       path: "lessons",
@@ -193,6 +197,21 @@ router.post("/", requireRole("tutor", "admin"), async (req, res) => {
       match: { deletedAt: null },
       options: { sort: { order: 1 } },
     });
+
+    // Create notification for course creation
+    try {
+      const user = await UserModel.findById(req.user.id).select("name email");
+      if (user) {
+        await notifyCourseChange(
+          "create",
+          course,
+          req.user.id,
+          user.name || user.email || "Unknown User"
+        );
+      }
+    } catch (notifError) {
+      console.error("Error creating notification:", notifError);
+    }
 
     return res.status(201).json(course);
   } catch (error) {
@@ -245,7 +264,7 @@ router.get("/", async (req, res) => {
         .select(
           "title examType description thumbnail category studentsCount status publishedAt deletedAt createdAt createdBy"
         )
-        .populate("createdBy", "name email")
+        .populate("createdBy", "name email role")
         .populate("publishedBy", "name email")
         .populate({
           path: "lessons",
@@ -294,6 +313,7 @@ router.get("/:courseId", async (req, res) => {
       _id: courseId,
       deletedAt: null,
     })
+      .populate("createdBy", "name email role")
       .populate("publishedBy", "name email")
       .populate({
         path: "lessons",
@@ -405,6 +425,7 @@ router.put("/:courseId", requireRole("tutor", "admin"), async (req, res) => {
     }
 
     // Populate the updated course
+    await updatedCourse.populate("createdBy", "name email role");
     await updatedCourse.populate("publishedBy", "name email");
     await updatedCourse.populate({
       path: "lessons",
@@ -412,6 +433,21 @@ router.put("/:courseId", requireRole("tutor", "admin"), async (req, res) => {
       match: { deletedAt: null },
       options: { sort: { order: 1 } },
     });
+
+    // Create notification for course update
+    try {
+      const user = await UserModel.findById(req.user.id).select("name email");
+      if (user) {
+        await notifyCourseChange(
+          "update",
+          updatedCourse,
+          req.user.id,
+          user.name || user.email || "Unknown User"
+        );
+      }
+    } catch (notifError) {
+      console.error("Error creating notification:", notifError);
+    }
 
     res.json(updatedCourse);
   } catch (error) {
@@ -509,6 +545,21 @@ router.delete("/:courseId", requireRole("tutor", "admin"), async (req, res) => {
       { deletedAt: new Date() }
     );
 
+    // Create notification for course deletion
+    try {
+      const user = await UserModel.findById(req.user.id).select("name email");
+      if (user) {
+        await notifyCourseChange(
+          "delete",
+          course,
+          req.user.id,
+          user.name || user.email || "Unknown User"
+        );
+      }
+    } catch (notifError) {
+      console.error("Error creating notification:", notifError);
+    }
+
     res.status(200).json({
       message: "Course and associated lessons soft deleted successfully.",
       deletedAt: course.deletedAt,
@@ -554,6 +605,21 @@ router.post(
         { deletedAt: null }
       );
 
+      // Create notification for course restore
+      try {
+        const user = await UserModel.findById(req.user.id).select("name email");
+        if (user) {
+          await notifyCourseChange(
+            "restore",
+            course,
+            req.user.id,
+            user.name || user.email || "Unknown User"
+          );
+        }
+      } catch (notifError) {
+        console.error("Error creating notification:", notifError);
+      }
+
       res.status(200).json({
         message: "Course and associated lessons restored successfully.",
         course: {
@@ -571,7 +637,15 @@ router.post(
 // **LIST SOFT DELETED COURSES** - Get all soft-deleted courses
 router.get("/deleted/list", requireRole("tutor", "admin"), async (req, res) => {
   try {
-    const { page = 1, limit = 20, q, examType, category, status, createdBy } = req.query;
+    const {
+      page = 1,
+      limit = 20,
+      q,
+      examType,
+      category,
+      status,
+      createdBy,
+    } = req.query;
 
     const query = { deletedAt: { $ne: null } }; // Only soft-deleted courses
 
@@ -599,7 +673,7 @@ router.get("/deleted/list", requireRole("tutor", "admin"), async (req, res) => {
         .select(
           "title examType description thumbnail category studentsCount status deletedAt createdBy createdAt"
         )
-        .populate("createdBy", "name email")
+        .populate("createdBy", "name email role")
         .populate("publishedBy", "name email")
         .sort({ deletedAt: -1 })
         .skip(skip)

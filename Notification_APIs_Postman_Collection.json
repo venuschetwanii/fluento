@@ -1,0 +1,402 @@
+{
+	"info": {
+		"_postman_id": "notification-apis",
+		"name": "Notification APIs",
+		"description": "Complete API collection for Notification System - Track CRUD operations for Exams, Courses, and Admin users",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{accessToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "List All Notifications",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/notifications?page=1&limit=20&type=&action=&isRead=&performedBy=&sortBy=createdAt&sortOrder=desc",
+					"host": ["{{baseUrl}}"],
+					"path": ["notifications"],
+					"query": [
+						{
+							"key": "page",
+							"value": "1",
+							"description": "Page number (default: 1)"
+						},
+						{
+							"key": "limit",
+							"value": "20",
+							"description": "Items per page (default: 20)"
+						},
+						{
+							"key": "type",
+							"value": "",
+							"description": "Filter by type: exam, course, admin, user",
+							"disabled": true
+						},
+						{
+							"key": "action",
+							"value": "",
+							"description": "Filter by action: create, update, delete, restore",
+							"disabled": true
+						},
+						{
+							"key": "isRead",
+							"value": "",
+							"description": "Filter by read status: true or false",
+							"disabled": true
+						},
+						{
+							"key": "performedBy",
+							"value": "",
+							"description": "Filter by user ID who performed the action",
+							"disabled": true
+						},
+						{
+							"key": "sortBy",
+							"value": "createdAt",
+							"description": "Sort field: createdAt, updatedAt, type, action, isRead"
+						},
+						{
+							"key": "sortOrder",
+							"value": "desc",
+							"description": "Sort direction: asc or desc"
+						}
+					]
+				},
+				"description": "Get all notifications with filtering and sorting. **Admin and Tutor access only.**\n\n**Query Parameters:**\n- `page` - Page number (default: 1)\n- `limit` - Items per page (default: 20)\n- `type` - Filter by type: `exam`, `course`, `admin`, `user`\n- `action` - Filter by action: `create`, `update`, `delete`, `restore`\n- `isRead` - Filter by read status: `true` or `false`\n- `performedBy` - Filter by user ID who performed the action\n- `sortBy` - Sort field: `createdAt`, `updatedAt`, `type`, `action`, `isRead`\n- `sortOrder` - Sort direction: `asc` or `desc`\n\n**Example Response:**\n```json\n{\n  \"items\": [\n    {\n      \"_id\": \"notification_id\",\n      \"type\": \"exam\",\n      \"action\": \"create\",\n      \"entityId\": \"exam_id\",\n      \"entityName\": \"IELTS Academic Test\",\n      \"performedBy\": {\n        \"_id\": \"user_id\",\n        \"name\": \"John Doe\",\n        \"email\": \"john@example.com\",\n        \"role\": \"admin\"\n      },\n      \"performedByName\": \"John Doe\",\n      \"message\": \"John Doe created a new exam: \\\"IELTS Academic Test\\\"\",\n      \"metadata\": {\n        \"examType\": \"IELTS_AC\",\n        \"examId\": \"exam_id\"\n      },\n      \"isRead\": false,\n      \"readAt\": null,\n      \"readBy\": null,\n      \"createdAt\": \"2025-01-15T10:30:00.000Z\",\n      \"updatedAt\": \"2025-01-15T10:30:00.000Z\"\n    }\n  ],\n  \"total\": 50,\n  \"page\": 1,\n  \"limit\": 20,\n  \"totalPages\": 3\n}\n```"
+			},
+			"response": []
+		},
+		{
+			"name": "Get Unread Notifications Count",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/notifications/unread/count?type=",
+					"host": ["{{baseUrl}}"],
+					"path": ["notifications", "unread", "count"],
+					"query": [
+						{
+							"key": "type",
+							"value": "",
+							"description": "Filter by type: exam, course, admin, user (optional)",
+							"disabled": true
+						}
+					]
+				},
+				"description": "Get count of unread notifications. **Admin and Tutor access only.**\n\n**Query Parameters:**\n- `type` - Optional: Filter by type (exam, course, admin, user)\n\n**Example Response:**\n```json\n{\n  \"unreadCount\": 15,\n  \"type\": \"all\"\n}\n```"
+			},
+			"response": []
+		},
+		{
+			"name": "Get Unread Notifications",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/notifications/unread?page=1&limit=20&type=&sortBy=createdAt&sortOrder=desc",
+					"host": ["{{baseUrl}}"],
+					"path": ["notifications", "unread"],
+					"query": [
+						{
+							"key": "page",
+							"value": "1",
+							"description": "Page number (default: 1)"
+						},
+						{
+							"key": "limit",
+							"value": "20",
+							"description": "Items per page (default: 20)"
+						},
+						{
+							"key": "type",
+							"value": "",
+							"description": "Filter by type: exam, course, admin, user",
+							"disabled": true
+						},
+						{
+							"key": "sortBy",
+							"value": "createdAt",
+							"description": "Sort field: createdAt, updatedAt, type, action"
+						},
+						{
+							"key": "sortOrder",
+							"value": "desc",
+							"description": "Sort direction: asc or desc"
+						}
+					]
+				},
+				"description": "Get all unread notifications. **Admin and Tutor access only.**\n\n**Query Parameters:**\n- `page` - Page number (default: 1)\n- `limit` - Items per page (default: 20)\n- `type` - Filter by type: `exam`, `course`, `admin`, `user`\n- `sortBy` - Sort field: `createdAt`, `updatedAt`, `type`, `action`\n- `sortOrder` - Sort direction: `asc` or `desc`\n\n**Example Response:**\n```json\n{\n  \"items\": [\n    {\n      \"_id\": \"notification_id\",\n      \"type\": \"course\",\n      \"action\": \"update\",\n      \"entityId\": \"course_id\",\n      \"entityName\": \"English Grammar Course\",\n      \"performedBy\": {\n        \"_id\": \"user_id\",\n        \"name\": \"Jane Smith\",\n        \"email\": \"jane@example.com\",\n        \"role\": \"tutor\"\n      },\n      \"performedByName\": \"Jane Smith\",\n      \"message\": \"Jane Smith updated the course: \\\"English Grammar Course\\\"\",\n      \"isRead\": false,\n      \"createdAt\": \"2025-01-15T11:00:00.000Z\"\n    }\n  ],\n  \"total\": 15,\n  \"page\": 1,\n  \"limit\": 20,\n  \"totalPages\": 1\n}\n```"
+			},
+			"response": []
+		},
+		{
+			"name": "Mark Notification as Read",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/notifications/:notificationId/read",
+					"host": ["{{baseUrl}}"],
+					"path": ["notifications", ":notificationId", "read"],
+					"variable": [
+						{
+							"key": "notificationId",
+							"value": "notification_id_here",
+							"description": "Notification ID to mark as read"
+						}
+					]
+				},
+				"description": "Mark a single notification as read. **Admin and Tutor access only.**\n\n**Path Parameters:**\n- `notificationId` - The ID of the notification to mark as read\n\n**Example Response:**\n```json\n{\n  \"message\": \"Notification marked as read\",\n  \"notification\": {\n    \"_id\": \"notification_id\",\n    \"isRead\": true,\n    \"readAt\": \"2025-01-15T12:00:00.000Z\",\n    \"readBy\": \"current_user_id\"\n  }\n}\n```"
+			},
+			"response": []
+		},
+		{
+			"name": "Mark All Notifications as Read",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/notifications/read-all?type=",
+					"host": ["{{baseUrl}}"],
+					"path": ["notifications", "read-all"],
+					"query": [
+						{
+							"key": "type",
+							"value": "",
+							"description": "Optional: Filter by type (exam, course, admin, user) to mark only specific type as read",
+							"disabled": true
+						}
+					]
+				},
+				"description": "Mark all notifications (or all of a specific type) as read. **Admin and Tutor access only.**\n\n**Query Parameters:**\n- `type` - Optional: Filter by type (exam, course, admin, user) to mark only that type as read\n\n**Example Response:**\n```json\n{\n  \"message\": \"All notifications marked as read\",\n  \"updatedCount\": 15\n}\n```"
+			},
+			"response": []
+		},
+		{
+			"name": "Get Notification Analytics",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/notifications/analytics?startDate=&endDate=",
+					"host": ["{{baseUrl}}"],
+					"path": ["notifications", "analytics"],
+					"query": [
+						{
+							"key": "startDate",
+							"value": "",
+							"description": "Optional: Start date for analytics (ISO format: 2025-01-01T00:00:00.000Z)",
+							"disabled": true
+						},
+						{
+							"key": "endDate",
+							"value": "",
+							"description": "Optional: End date for analytics (ISO format: 2025-01-31T23:59:59.999Z)",
+							"disabled": true
+						}
+					]
+				},
+				"description": "Get notification statistics and analytics. **Admin and Tutor access only.**\n\n**Query Parameters:**\n- `startDate` - Optional: Start date for analytics (ISO format)\n- `endDate` - Optional: End date for analytics (ISO format)\n\n**Example Response:**\n```json\n{\n  \"statistics\": [\n    {\n      \"_id\": \"exam\",\n      \"actions\": [\n        { \"action\": \"create\", \"count\": 10 },\n        { \"action\": \"update\", \"count\": 5 },\n        { \"action\": \"delete\", \"count\": 2 }\n      ],\n      \"total\": 17\n    },\n    {\n      \"_id\": \"course\",\n      \"actions\": [\n        { \"action\": \"create\", \"count\": 8 },\n        { \"action\": \"update\", \"count\": 3 }\n      ],\n      \"total\": 11\n    },\n    {\n      \"_id\": \"admin\",\n      \"actions\": [\n        { \"action\": \"create\", \"count\": 2 },\n        { \"action\": \"delete\", \"count\": 1 }\n      ],\n      \"total\": 3\n    }\n  ],\n  \"topPerformers\": [\n    {\n      \"_id\": \"user_id_1\",\n      \"count\": 25,\n      \"name\": \"John Doe\"\n    },\n    {\n      \"_id\": \"user_id_2\",\n      \"count\": 15,\n      \"name\": \"Jane Smith\"\n    }\n  ],\n  \"recentActivity\": [\n    {\n      \"_id\": \"notification_id\",\n      \"type\": \"exam\",\n      \"action\": \"create\",\n      \"entityName\": \"IELTS Academic Test\",\n      \"performedBy\": {\n        \"_id\": \"user_id\",\n        \"name\": \"John Doe\",\n        \"email\": \"john@example.com\",\n        \"role\": \"admin\"\n      },\n      \"message\": \"John Doe created a new exam: \\\"IELTS Academic Test\\\"\",\n      \"createdAt\": \"2025-01-15T10:30:00.000Z\"\n    }\n  ]\n}\n```"
+			},
+			"response": []
+		},
+		{
+			"name": "Filter Examples",
+			"item": [
+				{
+					"name": "Get Exam Notifications Only",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/notifications?type=exam&page=1&limit=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["notifications"],
+							"query": [
+								{
+									"key": "type",
+									"value": "exam"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get only exam-related notifications"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Course Notifications Only",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/notifications?type=course&page=1&limit=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["notifications"],
+							"query": [
+								{
+									"key": "type",
+									"value": "course"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get only course-related notifications"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Admin Notifications Only",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/notifications?type=admin&page=1&limit=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["notifications"],
+							"query": [
+								{
+									"key": "type",
+									"value": "admin"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get only admin-related notifications"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Create Actions Only",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/notifications?action=create&page=1&limit=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["notifications"],
+							"query": [
+								{
+									"key": "action",
+									"value": "create"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get only create action notifications"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Delete Actions Only",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/notifications?action=delete&page=1&limit=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["notifications"],
+							"query": [
+								{
+									"key": "action",
+									"value": "delete"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get only delete action notifications"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Unread Exam Notifications",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/notifications/unread?type=exam&page=1&limit=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["notifications", "unread"],
+							"query": [
+								{
+									"key": "type",
+									"value": "exam"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Get unread exam notifications only"
+					},
+					"response": []
+				}
+			],
+			"description": "Example filter queries for notifications"
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "accessToken",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
+

@@ -22,6 +22,36 @@ function validatePhoneNumber(phoneNumber) {
 }
 
 /**
+ * Normalize phone number to a consistent format (10-digit without country code)
+ * This ensures "91xxxxxxxxxx" and "xxxxxxxxxx" are treated as the same number
+ * @param {string} phoneNumber - Phone number to normalize
+ * @returns {string} Normalized phone number (10 digits)
+ */
+function normalizePhoneNumber(phoneNumber) {
+  if (!phoneNumber) return phoneNumber;
+
+  const cleaned = phoneNumber.replace(/\D/g, "");
+
+  // If starts with 91 and is 12 digits, remove country code
+  if (cleaned.startsWith("91") && cleaned.length === 12) {
+    return cleaned.substring(2); // Return 10-digit number
+  }
+
+  // If it's a 10-digit number, return as is
+  if (cleaned.length === 10) {
+    return cleaned;
+  }
+
+  // If it's 11 digits and starts with +91 or 91, try to extract
+  if (cleaned.length === 11 && cleaned.startsWith("91")) {
+    return cleaned.substring(2);
+  }
+
+  // For other cases, return cleaned (but should ideally be 10 digits)
+  return cleaned;
+}
+
+/**
  * Format phone number for authkey.io API
  * @param {string} phoneNumber - Phone number to format
  * @returns {Object} Object with mobile (without country code) and country_code
@@ -569,4 +599,5 @@ module.exports = {
   generateOTP,
   validatePhoneNumber,
   formatPhoneNumber,
+  normalizePhoneNumber,
 };

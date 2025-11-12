@@ -13,6 +13,7 @@ const courseRoutes = require("./routes/course.routes");
 const lessonRoutes = require("./routes/lesson.routes");
 const userRoutes = require("./routes/user.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
+const notificationRoutes = require("./routes/notification.routes");
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
@@ -32,6 +33,7 @@ app.use("/courses", courseRoutes);
 app.use("/lessons", lessonRoutes);
 app.use("/users", userRoutes);
 app.use("/dashboard", dashboardRoutes);
+app.use("/notifications", notificationRoutes);
 
 // Background jobs
 require("./jobs/attempts.cron");
