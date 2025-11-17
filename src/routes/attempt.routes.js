@@ -755,7 +755,7 @@ router.get("/:id/status", async (req, res) => {
 router.get("/exam/:examId", async (req, res) => {
   try {
     const { examId } = req.params;
-    const { status, limit = 10, page = 1 } = req.query;
+    const { status } = req.query;
 
     // Build query
     const query = { userId: req.user.id, examId };
@@ -763,15 +763,10 @@ router.get("/exam/:examId", async (req, res) => {
       query.status = status;
     }
 
-    // Get attempts with pagination
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    // Get attempts
     const attempts = await AttemptModel.find(query)
       .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit))
       .select("-responses -snapshot"); // Exclude large fields for list view
-
-    const total = await AttemptModel.countDocuments(query);
 
     // Get exam info
     const exam = await Exam.findById(examId).select("title type duration");
@@ -779,12 +774,7 @@ router.get("/exam/:examId", async (req, res) => {
     res.json({
       attempts,
       exam,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total,
-        pages: Math.ceil(total / parseInt(limit)),
-      },
+      total: attempts.length,
     });
   } catch (e) {
     res.status(400).json({ error: e.message });
@@ -916,20 +906,13 @@ router.get("/:id/timeline", async (req, res) => {
 // Get attempts for current user (optionally filter by examId or status)
 router.get("/", async (req, res) => {
   try {
-    const { examId, status, attemptType, page = 1, limit = 20 } = req.query;
+    const { examId, status, attemptType } = req.query;
     const query = { userId: req.user.id };
     if (examId) query.examId = examId;
     if (status) query.status = status;
     if (attemptType) query.attemptType = attemptType;
-    const skip = (Number(page) - 1) * Number(limit);
-    const [items, total] = await Promise.all([
-      AttemptModel.find(query)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(Number(limit)),
-      AttemptModel.countDocuments(query),
-    ]);
-    res.json({ items, total, page: Number(page), limit: Number(limit) });
+    const items = await AttemptModel.find(query).sort({ createdAt: -1 });
+    res.json({ items, total: items.length });
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
@@ -939,7 +922,7 @@ router.get("/", async (req, res) => {
 router.get("/by-type/:attemptType", async (req, res) => {
   try {
     const { attemptType } = req.params;
-    const { examId, status, page = 1, limit = 20 } = req.query;
+    const { examId, status } = req.query;
 
     if (!["full_exam", "section_only"].includes(attemptType)) {
       return res.status(400).json({
@@ -954,20 +937,11 @@ router.get("/by-type/:attemptType", async (req, res) => {
     if (examId) query.examId = examId;
     if (status) query.status = status;
 
-    const skip = (Number(page) - 1) * Number(limit);
-    const [items, total] = await Promise.all([
-      AttemptModel.find(query)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(Number(limit)),
-      AttemptModel.countDocuments(query),
-    ]);
+    const items = await AttemptModel.find(query).sort({ createdAt: -1 });
 
     res.json({
       items,
-      total,
-      page: Number(page),
-      limit: Number(limit),
+      total: items.length,
       attemptType: attemptType,
     });
   } catch (e) {
@@ -979,7 +953,7 @@ router.get("/by-type/:attemptType", async (req, res) => {
 router.get("/sections/:sectionId", async (req, res) => {
   try {
     const { sectionId } = req.params;
-    const { status, page = 1, limit = 20 } = req.query;
+    const { status } = req.query;
 
     const query = {
       userId: req.user.id,
@@ -988,20 +962,11 @@ router.get("/sections/:sectionId", async (req, res) => {
     };
     if (status) query.status = status;
 
-    const skip = (Number(page) - 1) * Number(limit);
-    const [items, total] = await Promise.all([
-      AttemptModel.find(query)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(Number(limit)),
-      AttemptModel.countDocuments(query),
-    ]);
+    const items = await AttemptModel.find(query).sort({ createdAt: -1 });
 
     res.json({
       items,
-      total,
-      page: Number(page),
-      limit: Number(limit),
+      total: items.length,
       sectionId: sectionId,
     });
   } catch (e) {

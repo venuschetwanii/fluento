@@ -25,8 +25,6 @@ const requireAdminOrTutor = (req, res, next) => {
 router.get("/", requireAdminOrTutor, async (req, res) => {
   try {
     const {
-      page = 1,
-      limit = 20,
       type,
       action,
       isRead,
@@ -68,23 +66,14 @@ router.get("/", requireAdminOrTutor, async (req, res) => {
     const sortField = validSortFields.includes(sortBy) ? sortBy : "createdAt";
     const sortDirection = sortOrder === "asc" ? 1 : -1;
 
-    const skip = (Number(page) - 1) * Number(limit);
-    const [items, total] = await Promise.all([
-      NotificationModel.find(query)
-        .populate("performedBy", "name email role")
-        .populate("readBy", "name email")
-        .sort({ [sortField]: sortDirection })
-        .skip(skip)
-        .limit(Number(limit)),
-      NotificationModel.countDocuments(query),
-    ]);
+    const items = await NotificationModel.find(query)
+      .populate("performedBy", "name email role")
+      .populate("readBy", "name email")
+      .sort({ [sortField]: sortDirection });
 
     res.json({
       items,
-      total,
-      page: Number(page),
-      limit: Number(limit),
-      totalPages: Math.ceil(total / Number(limit)),
+      total: items.length,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -116,8 +105,6 @@ router.get("/unread/count", requireAdminOrTutor, async (req, res) => {
 router.get("/unread", requireAdminOrTutor, async (req, res) => {
   try {
     const {
-      page = 1,
-      limit = 20,
       type,
       sortBy = "createdAt",
       sortOrder = "desc",
@@ -133,22 +120,13 @@ router.get("/unread", requireAdminOrTutor, async (req, res) => {
     const sortField = validSortFields.includes(sortBy) ? sortBy : "createdAt";
     const sortDirection = sortOrder === "asc" ? 1 : -1;
 
-    const skip = (Number(page) - 1) * Number(limit);
-    const [items, total] = await Promise.all([
-      NotificationModel.find(query)
-        .populate("performedBy", "name email role")
-        .sort({ [sortField]: sortDirection })
-        .skip(skip)
-        .limit(Number(limit)),
-      NotificationModel.countDocuments(query),
-    ]);
+    const items = await NotificationModel.find(query)
+      .populate("performedBy", "name email role")
+      .sort({ [sortField]: sortDirection });
 
     res.json({
       items,
-      total,
-      page: Number(page),
-      limit: Number(limit),
-      totalPages: Math.ceil(total / Number(limit)),
+      total: items.length,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

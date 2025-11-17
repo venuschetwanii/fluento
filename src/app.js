@@ -20,7 +20,16 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB connected"))
+  .then(async () => {
+    console.log("MongoDB connected");
+    // Migrate email index to partial index (allows multiple null emails)
+    try {
+      const UserModel = require("./models/user.model");
+      await UserModel.migrateEmailIndex();
+    } catch (error) {
+      console.error("Error migrating email index (may already be correct):", error.message);
+    }
+  })
   .catch((err) => console.error("Mongo error", err));
 app.use("/auth", authRoutes);
 app.use("/exams", examRoutes);

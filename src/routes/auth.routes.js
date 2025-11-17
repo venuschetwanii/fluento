@@ -170,71 +170,58 @@ router.post("/send-otp", async (req, res) => {
       return res.status(400).json({ error: "Invalid phone number format" });
     }
 
-    // Normalize phone number to prevent duplicate accounts
-    // "91999999999" and "9999999999" will both become "9999999999"
+    // Normalize phone number - handle 91 extension
+    // "91999999999" and "9999999999" are the same number
     const normalizedPhone = normalizePhoneNumber(phone);
 
-    // CRITICAL: First check for admin/tutor accounts with this phone number
-    // This must be done BEFORE any student creation logic
-    // Check with normalized phone first
-    let existingAdminTutor = await UserModel.findOne({
-      phone: normalizedPhone,
-      role: { $in: ["admin", "tutor"] },
+    // Prepare all possible phone formats to search (with/without 91 extension)
+    const originalPhoneCleaned = phone.replace(/\D/g, "");
+    const phoneWithPrefix =
+      normalizedPhone.length === 10 ? `91${normalizedPhone}` : null;
+    const phoneWithoutPrefix =
+      originalPhoneCleaned.startsWith("91") &&
+      originalPhoneCleaned.length === 12
+        ? originalPhoneCleaned.substring(2)
+        : null;
+
+    const allPhoneFormats = [normalizedPhone, originalPhoneCleaned, phone];
+    if (phoneWithPrefix) allPhoneFormats.push(phoneWithPrefix);
+    if (phoneWithoutPrefix) allPhoneFormats.push(phoneWithoutPrefix);
+    const uniquePhones = [...new Set(allPhoneFormats)];
+
+    // Find user by phone (irrespective of role)
+    let user = await UserModel.findOne({
+      phone: { $in: uniquePhones },
     });
-
-    // If not found, also check with alternative phone formats
-    // This handles cases where tutor was created before normalization or with different format
-    if (!existingAdminTutor) {
-      const originalPhoneCleaned = phone.replace(/\D/g, "");
-      // Try with "91" prefix if it's a 10-digit number
-      const phoneWithPrefix =
-        normalizedPhone.length === 10 ? `91${normalizedPhone}` : null;
-      // Try without "91" prefix if it starts with 91
-      const phoneWithoutPrefix =
-        originalPhoneCleaned.startsWith("91") &&
-        originalPhoneCleaned.length === 12
-          ? originalPhoneCleaned.substring(2)
-          : null;
-
-      const alternativePhones = [originalPhoneCleaned, phone];
-      if (phoneWithPrefix) alternativePhones.push(phoneWithPrefix);
-      if (phoneWithoutPrefix) alternativePhones.push(phoneWithoutPrefix);
-
-      // Remove duplicates
-      const uniquePhones = [...new Set(alternativePhones)];
-
-      existingAdminTutor = await UserModel.findOne({
-        phone: { $in: uniquePhones },
-        role: { $in: ["admin", "tutor"] },
-      });
-    }
-
-    // If admin/tutor account exists, prevent student registration
-    if (existingAdminTutor) {
-      return res.status(409).json({
-        error: `Phone number already exists for a ${existingAdminTutor.role} account. Phone numbers must be unique across all roles. Please contact administrator for ${existingAdminTutor.role} account access.`,
-      });
-    }
-
-    // Check if user already exists (by normalized phone number)
-    let user = await UserModel.findOne({ phone: normalizedPhone });
-
-    // If user exists and is admin/tutor, prevent student registration (double check)
-    if (user && ["admin", "tutor"].includes(user.role)) {
-      return res.status(409).json({
-        error: `Phone number already exists for a ${user.role} account. Phone numbers must be unique across all roles. Please contact administrator for ${user.role} account access.`,
-      });
-    }
 
     // Generate OTP
     const otpCode = generateOTP();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes from now
 
-    // If user does not exist, create new student user
-    // Note: We've already checked for admin/tutor accounts above, so it's safe to create student
-    if (!user) {
+    // If user exists, check role
+    if (user) {
+      // If role is admin or tutor, throw error
+      if (user.role === "admin" || user.role === "tutor") {
+        return res.status(409).json({
+          error: `Phone number already exists for a ${user.role} account.`,
+        });
+      }
+
+      // If role is student, update OTP
+      if (user.role === "student") {
+        user.otp = {
+          code: otpCode,
+          expiresAt: expiresAt,
+          attempts: 0,
+        };
+        await user.save();
+      }
+    } else {
+      // User does not exist, create new student user
       try {
-        user = new UserModel({
+        // Create user object without email field (undefined, not null)
+        // This prevents sparse index conflicts with null emails
+        const userData = {
           phone: normalizedPhone, // Store normalized phone number
           isPhoneVerified: false,
           otp: {
@@ -242,70 +229,86 @@ router.post("/send-otp", async (req, res) => {
             expiresAt: expiresAt,
             attempts: 0,
           },
-        });
+        };
+        // Explicitly don't set email - leave it undefined
+        user = new UserModel(userData);
         await user.save();
       } catch (createError) {
-        // If user was created between our check and save (race condition)
+        // Handle duplicate key errors (race conditions)
         if (createError.code === 11000) {
-          // Duplicate key error - check which field caused it
-          const isEmailError = createError.keyPattern?.email;
           const isPhoneError = createError.keyPattern?.phone;
+          const isEmailError = createError.keyPattern?.email;
 
-          if (isPhoneError) {
-            // Duplicate phone - user was created by another request
-            // First check if it's an admin/tutor account (most critical check)
-            await new Promise((resolve) => setTimeout(resolve, 100));
+          // Wait a bit and try to find the user
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          user = await UserModel.findOne({
+            phone: { $in: uniquePhones },
+          });
 
-            // Check for admin/tutor with normalized phone
-            let foundAdminTutor = await UserModel.findOne({
-              phone: normalizedPhone,
-              role: { $in: ["admin", "tutor"] },
+          if (user) {
+            // Check role
+            if (user.role === "admin" || user.role === "tutor") {
+              return res.status(409).json({
+                error: `Phone number already exists for a ${user.role} account.`,
+              });
+            }
+            // Update OTP for student
+            user.otp = {
+              code: otpCode,
+              expiresAt: expiresAt,
+              attempts: 0,
+            };
+            await user.save();
+          } else if (isEmailError) {
+            // Email conflict - there's likely a user with null email
+            // Try to find user with null email and matching phone
+            user = await UserModel.findOne({
+              phone: { $in: uniquePhones },
+              email: null,
             });
 
-            // If not found, check with alternative phone formats
-            if (!foundAdminTutor) {
-              const originalPhoneCleaned = phone.replace(/\D/g, "");
-              // Try with "91" prefix if it's a 10-digit number
-              const phoneWithPrefix =
-                normalizedPhone.length === 10 ? `91${normalizedPhone}` : null;
-              // Try without "91" prefix if it starts with 91
-              const phoneWithoutPrefix =
-                originalPhoneCleaned.startsWith("91") &&
-                originalPhoneCleaned.length === 12
-                  ? originalPhoneCleaned.substring(2)
-                  : null;
-
-              const alternativePhones = [originalPhoneCleaned, phone];
-              if (phoneWithPrefix) alternativePhones.push(phoneWithPrefix);
-              if (phoneWithoutPrefix)
-                alternativePhones.push(phoneWithoutPrefix);
-
-              // Remove duplicates
-              const uniquePhones = [...new Set(alternativePhones)];
-
-              foundAdminTutor = await UserModel.findOne({
-                phone: { $in: uniquePhones },
-                role: { $in: ["admin", "tutor"] },
+            // If not found by direct query, search all students with null email or no email
+            // and manually match phone numbers (handles different phone formats)
+            if (!user) {
+              // Try both null and $exists: false to catch all cases
+              const studentsWithNullEmail = await UserModel.find({
+                $or: [{ email: null }, { email: { $exists: false } }],
+                role: "student",
               });
-            }
 
-            if (foundAdminTutor) {
-              return res.status(409).json({
-                error: `Phone number already exists for a ${foundAdminTutor.role} account. Phone numbers must be unique across all roles. Please contact administrator for ${foundAdminTutor.role} account access.`,
-              });
-            }
+              // Check if any of these students have a matching phone number
+              // Compare against all possible phone formats
+              for (const student of studentsWithNullEmail) {
+                if (student.phone) {
+                  // Normalize the student's phone for comparison
+                  const studentPhoneNormalized = normalizePhoneNumber(
+                    student.phone
+                  );
+                  const studentPhoneCleaned = student.phone.replace(/\D/g, "");
 
-            // If not admin/tutor, find the user (should be student)
-            user = await UserModel.findOne({ phone: normalizedPhone });
+                  // Check if student's phone matches any of our search formats
+                  if (
+                    uniquePhones.includes(student.phone) ||
+                    uniquePhones.includes(studentPhoneNormalized) ||
+                    uniquePhones.includes(studentPhoneCleaned) ||
+                    normalizedPhone === studentPhoneNormalized ||
+                    normalizedPhone === studentPhoneCleaned ||
+                    normalizedPhone === student.phone
+                  ) {
+                    user = student;
+                    break;
+                  }
+                }
+              }
+            }
 
             if (user) {
-              // Double check it's not admin/tutor (shouldn't happen but safety check)
-              if (["admin", "tutor"].includes(user.role)) {
+              // Found user with null email
+              if (user.role === "admin" || user.role === "tutor") {
                 return res.status(409).json({
-                  error: `Phone number already exists for a ${user.role} account. Phone numbers must be unique across all roles. Please contact administrator for ${user.role} account access.`,
+                  error: `Phone number already exists for a ${user.role} account.`,
                 });
               }
-              // User now exists (student), update OTP instead
               user.otp = {
                 code: otpCode,
                 expiresAt: expiresAt,
@@ -313,85 +316,106 @@ router.post("/send-otp", async (req, res) => {
               };
               await user.save();
             } else {
-              // If still not found after retry, check one more time for admin/tutor
-              // This handles the case where an admin/tutor account exists
-              user = await UserModel.findOne({ phone: normalizedPhone });
-              if (user) {
-                // Check if the user is admin/tutor
-                if (["admin", "tutor"].includes(user.role)) {
-                  return res.status(409).json({
-                    error: `Phone number already exists for a ${user.role} account. Phone numbers must be unique across all roles.`,
-                  });
-                }
-                // User is student, update OTP
-                user.otp = {
-                  code: otpCode,
-                  expiresAt: expiresAt,
-                  attempts: 0,
-                };
-                await user.save();
-              } else {
-                // If user still doesn't exist, it means there was a race condition
-                // Try one final check before giving up
-                await new Promise((resolve) => setTimeout(resolve, 200));
-                user = await UserModel.findOne({ phone: normalizedPhone });
-                if (user) {
-                  if (["admin", "tutor"].includes(user.role)) {
-                    return res.status(409).json({
-                      error: `Phone number already exists for a ${user.role} account. Phone numbers must be unique across all roles.`,
-                    });
-                  }
-                  user.otp = {
+              // Still can't find - try creating without email field
+              // This handles sparse index issues with null emails
+              try {
+                user = new UserModel({
+                  phone: normalizedPhone,
+                  // Don't set email at all - leave it undefined (not null)
+                  isPhoneVerified: false,
+                  otp: {
                     code: otpCode,
                     expiresAt: expiresAt,
                     attempts: 0,
-                  };
-                  await user.save();
+                  },
+                });
+                await user.save();
+              } catch (retryError) {
+                // If still fails, wait and try one more time to find user
+                if (retryError.code === 11000) {
+                  await new Promise((resolve) => setTimeout(resolve, 300));
+
+                  // Try finding user again with all phone formats
+                  user = await UserModel.findOne({
+                    phone: { $in: uniquePhones },
+                  });
+
+                  // Also try finding by null email with direct query
+                  if (!user) {
+                    user = await UserModel.findOne({
+                      phone: { $in: uniquePhones },
+                      email: null,
+                    });
+                  }
+
+                  // If still not found, search all students with null email or no email and match manually
+                  if (!user) {
+                    const studentsWithNullEmail = await UserModel.find({
+                      $or: [{ email: null }, { email: { $exists: false } }],
+                      role: "student",
+                    });
+
+                    for (const student of studentsWithNullEmail) {
+                      if (student.phone) {
+                        const studentPhoneNormalized = normalizePhoneNumber(
+                          student.phone
+                        );
+                        const studentPhoneCleaned = student.phone.replace(
+                          /\D/g,
+                          ""
+                        );
+
+                        if (
+                          uniquePhones.includes(student.phone) ||
+                          uniquePhones.includes(studentPhoneNormalized) ||
+                          uniquePhones.includes(studentPhoneCleaned) ||
+                          normalizedPhone === studentPhoneNormalized ||
+                          normalizedPhone === studentPhoneCleaned ||
+                          normalizedPhone === student.phone
+                        ) {
+                          user = student;
+                          break;
+                        }
+                      }
+                    }
+                  }
+
+                  if (user) {
+                    if (user.role === "admin" || user.role === "tutor") {
+                      return res.status(409).json({
+                        error: `Phone number already exists for a ${user.role} account.`,
+                      });
+                    }
+                    user.otp = {
+                      code: otpCode,
+                      expiresAt: expiresAt,
+                      attempts: 0,
+                    };
+                    await user.save();
+                  } else {
+                    // Last resort - log error details for debugging
+                    console.error("Email conflict - user not found:", {
+                      phone: normalizedPhone,
+                      originalPhone: phone,
+                      uniquePhones: uniquePhones,
+                      error: retryError.message,
+                    });
+                    throw new Error("Failed to create user. Please try again.");
+                  }
                 } else {
-                  throw new Error(
-                    "Failed to create or find user. Please try again."
-                  );
+                  throw retryError;
                 }
               }
             }
-          } else if (isEmailError) {
-            // Duplicate email (null) - find user by phone instead
-            user = await UserModel.findOne({ phone: normalizedPhone });
-            if (user) {
-              // Check if the user is admin/tutor
-              if (["admin", "tutor"].includes(user.role)) {
-                return res.status(409).json({
-                  error: `Phone number already exists for a ${user.role} account. Phone numbers must be unique across all roles.`,
-                });
-              }
-              user.otp = {
-                code: otpCode,
-                expiresAt: expiresAt,
-                attempts: 0,
-              };
-              await user.save();
-            } else {
-              // If user not found by phone, try to find by email (though unlikely)
-              throw new Error(
-                "Failed to create user due to email conflict. Please try again."
-              );
-            }
           } else {
-            // Unknown duplicate key error
-            throw createError;
+            // Phone error but user not found - throw error
+            throw new Error("Failed to create user. Please try again.");
           }
         } else {
+          // Other errors, throw as is
           throw createError;
         }
       }
-    } else {
-      // If user exists, update the OTP
-      user.otp = {
-        code: otpCode,
-        expiresAt: expiresAt,
-        attempts: 0, // Reset attempts for new OTP
-      };
-      await user.save();
     }
 
     // Send OTP via SMS (use original phone for SMS, normalized for storage)
@@ -618,19 +642,19 @@ router.post("/verify-otp", async (req, res) => {
 
     // Check if email is provided and if it already exists for another user
     if (email) {
-      const existingUserWithEmail = await UserModel.findOne({
+      const existingUserWithEmail = await UserModel.find({
         email: email,
         _id: { $ne: user._id }, // Exclude current user
       });
 
-      if (existingUserWithEmail) {
+      if (existingUserWithEmail.length > 0) {
         return res.status(409).json({
           error:
             "Email already exists. Please use a different email or login with the existing account.",
         });
       }
 
-      user.email = email;
+      // user.email = email;
     }
 
     // Only students can register via OTP

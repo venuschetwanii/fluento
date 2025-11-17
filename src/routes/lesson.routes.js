@@ -110,7 +110,6 @@ router.post(
 router.get("/course/:courseId", async (req, res) => {
   try {
     const { courseId } = req.params;
-    const { page = 1, limit = 20 } = req.query;
 
     // Check if course exists
     const course = await Course.findOne({
@@ -127,20 +126,14 @@ router.get("/course/:courseId", async (req, res) => {
       return res.status(403).json({ error: "Access denied" });
     }
 
-    const skip = (Number(page) - 1) * Number(limit);
-    const [items, total] = await Promise.all([
-      Lesson.find({ course: courseId, deletedAt: null })
-        .select(
-          "title description type duration url thumbnail publishedAt order"
-        )
-        .populate("course", "title examType")
-        .sort({ order: 1 })
-        .skip(skip)
-        .limit(Number(limit)),
-      Lesson.countDocuments({ course: courseId, deletedAt: null }),
-    ]);
+    const items = await Lesson.find({ course: courseId, deletedAt: null })
+      .select(
+        "title description type duration url thumbnail publishedAt order"
+      )
+      .populate("course", "title examType")
+      .sort({ order: 1 });
 
-    res.json({ items, total, page: Number(page), limit: Number(limit) });
+    res.json({ items, total: items.length });
   } catch (error) {
     if (error.name === "CastError") {
       return res.status(400).json({ error: "Invalid Course ID" });
@@ -153,8 +146,6 @@ router.get("/course/:courseId", async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     const {
-      page = 1,
-      limit = 20,
       q,
       type,
       course,
@@ -179,20 +170,14 @@ router.get("/", async (req, res) => {
       query.course = { $in: publishedCourses.map((c) => c._id) };
     }
 
-    const skip = (Number(page) - 1) * Number(limit);
-    const [items, total] = await Promise.all([
-      Lesson.find(query)
-        .select(
-          "title description type duration url thumbnail publishedAt order deletedAt createdAt"
-        )
-        .populate("course", "title examType status")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(Number(limit)),
-      Lesson.countDocuments(query),
-    ]);
+    const items = await Lesson.find(query)
+      .select(
+        "title description type duration url thumbnail publishedAt order deletedAt createdAt"
+      )
+      .populate("course", "title examType status")
+      .sort({ createdAt: -1 });
 
-    res.json({ items, total, page: Number(page), limit: Number(limit) });
+    res.json({ items, total: items.length });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -385,7 +370,7 @@ router.delete("/:lessonId/hard", requireRole("admin"), async (req, res) => {
 // **LIST SOFT DELETED LESSONS** - Get all soft-deleted lessons
 router.get("/deleted/list", requireRole("tutor", "admin"), async (req, res) => {
   try {
-    const { page = 1, limit = 20, q, course, type, status } = req.query;
+    const { q, course, type, status } = req.query;
 
     const query = { deletedAt: { $ne: null } }; // Only soft-deleted lessons
 
@@ -417,23 +402,14 @@ router.get("/deleted/list", requireRole("tutor", "admin"), async (req, res) => {
       query.course = { $in: courseIds };
     }
 
-    const skip = (Number(page) - 1) * Number(limit);
-    const [items, total] = await Promise.all([
-      Lesson.find(query)
-        .select("title description type duration url thumbnail publishedAt order deletedAt course createdAt")
-        .populate("course", "title examType")
-        .sort({ deletedAt: -1 }) // Sort by deletion date (most recent first)
-        .skip(skip)
-        .limit(Number(limit)),
-      Lesson.countDocuments(query),
-    ]);
+    const items = await Lesson.find(query)
+      .select("title description type duration url thumbnail publishedAt order deletedAt course createdAt")
+      .populate("course", "title examType")
+      .sort({ deletedAt: -1 }); // Sort by deletion date (most recent first)
 
     res.json({
       items,
-      total,
-      page: Number(page),
-      limit: Number(limit),
-      totalPages: Math.ceil(total / Number(limit)),
+      total: items.length,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

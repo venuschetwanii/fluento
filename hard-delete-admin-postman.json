@@ -1,0 +1,168 @@
+{
+  "info": {
+    "name": "Hard Delete Admin API",
+    "description": "API endpoint to permanently delete an admin user",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Hard Delete Admin User",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{auth_token}}",
+            "type": "text",
+            "description": "JWT token for admin authentication"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/users/:userId?hard=true",
+          "host": ["{{base_url}}"],
+          "path": ["api", "users", ":userId"],
+          "query": [
+            {
+              "key": "hard",
+              "value": "true",
+              "description": "Set to 'true' for permanent deletion"
+            }
+          ]
+        },
+        "description": "Permanently deletes an admin or tutor user from the system. Cannot delete the last active admin. Cannot delete yourself."
+      },
+      "response": [
+        {
+          "name": "Success Response",
+          "originalRequest": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/users/507f1f77bcf86cd799439011?hard=true",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "507f1f77bcf86cd799439011"],
+              "query": [
+                {
+                  "key": "hard",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"message\": \"User permanently deleted successfully\",\n  \"deletedUser\": {\n    \"_id\": \"507f1f77bcf86cd799439011\",\n    \"name\": \"John Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"role\": \"admin\"\n  }\n}"
+        },
+        {
+          "name": "Error - Last Admin",
+          "originalRequest": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/users/507f1f77bcf86cd799439011?hard=true",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "507f1f77bcf86cd799439011"],
+              "query": [
+                {
+                  "key": "hard",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "status": "Forbidden",
+          "code": 403,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"error\": \"Cannot delete the last admin in the system. At least one active admin must remain.\"\n}"
+        },
+        {
+          "name": "Error - Self Deletion",
+          "originalRequest": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/users/507f1f77bcf86cd799439011?hard=true",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "507f1f77bcf86cd799439011"],
+              "query": [
+                {
+                  "key": "hard",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "status": "Forbidden",
+          "code": 403,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"error\": \"You cannot delete your own account\"\n}"
+        },
+        {
+          "name": "Error - Student User",
+          "originalRequest": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/users/507f1f77bcf86cd799439011?hard=true",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "507f1f77bcf86cd799439011"],
+              "query": [
+                {
+                  "key": "hard",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "status": "Forbidden",
+          "code": 403,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"error\": \"Hard delete is not allowed for student users. Use soft delete (block) for students.\"\n}"
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "your_jwt_token_here",
+      "type": "string"
+    }
+  ]
+}
+

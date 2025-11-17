@@ -13,22 +13,16 @@ const router = Router();
 // Open endpoints (no auth): published and non-deleted exams
 router.get("/open", async (req, res) => {
   try {
-    const { type, page = 1, limit = 20 } = req.query;
+    const { type } = req.query;
     const query = { status: "published", deletedAt: null };
     if (type) query.type = { $regex: String(type), $options: "i" };
 
-    const skip = (Number(page) - 1) * Number(limit);
-    const [exams, total] = await Promise.all([
-      Exam.find(query)
-        .select(
-          "title type duration totalQuestions featureImage status sections createdAt createdBy"
-        )
-        .populate("createdBy", "name email role")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(Number(limit)),
-      Exam.countDocuments(query),
-    ]);
+    const exams = await Exam.find(query)
+      .select(
+        "title type duration totalQuestions featureImage status sections createdAt createdBy"
+      )
+      .populate("createdBy", "name email role")
+      .sort({ createdAt: -1 });
 
     // Load section details for each exam
     const items = await Promise.all(
@@ -47,7 +41,7 @@ router.get("/open", async (req, res) => {
       })
     );
 
-    res.json({ items, total, page: Number(page), limit: Number(limit) });
+    res.json({ items, total: items.length });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -296,8 +290,6 @@ router.post("/", requireRole("tutor", "admin"), async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     const {
-      page = 1,
-      limit = 20,
       q,
       type,
       status,
@@ -323,19 +315,13 @@ router.get("/", async (req, res) => {
     } else if (status) {
       query.status = status;
     }
-    const skip = (Number(page) - 1) * Number(limit);
-    const [items, total] = await Promise.all([
-      Exam.find(query)
-        .select(
-          "title type duration totalQuestions featureImage status deletedAt createdBy"
-        )
-        .populate("createdBy", "name email role")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(Number(limit)),
-      Exam.countDocuments(query),
-    ]);
-    res.json({ items, total, page: Number(page), limit: Number(limit) });
+    const items = await Exam.find(query)
+      .select(
+        "title type duration totalQuestions featureImage status deletedAt createdBy"
+      )
+      .populate("createdBy", "name email role")
+      .sort({ createdAt: -1 });
+    res.json({ items, total: items.length });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -747,7 +733,7 @@ router.post(
 // **LIST SOFT DELETED EXAMS** - Get all soft-deleted exams
 router.get("/deleted/list", requireRole("tutor", "admin"), async (req, res) => {
   try {
-    const { page = 1, limit = 20, q, type, status, createdBy } = req.query;
+    const { q, type, status, createdBy } = req.query;
 
     const query = { deletedAt: { $ne: null } }; // Only soft-deleted exams
 
@@ -768,25 +754,16 @@ router.get("/deleted/list", requireRole("tutor", "admin"), async (req, res) => {
       query.createdBy = req.user.id;
     }
 
-    const skip = (Number(page) - 1) * Number(limit);
-    const [items, total] = await Promise.all([
-      Exam.find(query)
-        .select(
-          "title type duration totalQuestions featureImage status deletedAt createdBy createdAt"
-        )
-        .populate("createdBy", "name email role")
-        .sort({ deletedAt: -1 })
-        .skip(skip)
-        .limit(Number(limit)),
-      Exam.countDocuments(query),
-    ]);
+    const items = await Exam.find(query)
+      .select(
+        "title type duration totalQuestions featureImage status deletedAt createdBy createdAt"
+      )
+      .populate("createdBy", "name email role")
+      .sort({ deletedAt: -1 });
 
     res.json({
       items,
-      total,
-      page: Number(page),
-      limit: Number(limit),
-      totalPages: Math.ceil(total / Number(limit)),
+      total: items.length,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

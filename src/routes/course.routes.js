@@ -24,31 +24,25 @@ const requireRole =
 // Open endpoints (no auth): published and non-deleted courses
 router.get("/open", async (req, res) => {
   try {
-    const { examType, category, page = 1, limit = 20 } = req.query;
+    const { examType, category } = req.query;
     const query = { status: "published", deletedAt: null };
     if (examType) query.examType = { $regex: String(examType), $options: "i" };
     if (category) query.category = { $regex: String(category), $options: "i" };
 
-    const skip = (Number(page) - 1) * Number(limit);
-    const [courses, total] = await Promise.all([
-      Course.find(query)
-        .select(
-          "title examType description thumbnail category studentsCount status publishedAt createdAt createdBy"
-        )
-        .populate("createdBy", "name email role")
-        .populate("publishedBy", "name email")
-        .populate({
-          path: "lessons",
-          select:
-            "title description type duration url thumbnail publishedAt order",
-          match: { deletedAt: null },
-          options: { sort: { order: 1 } },
-        })
-        .sort({ publishedAt: -1, createdAt: -1 })
-        .skip(skip)
-        .limit(Number(limit)),
-      Course.countDocuments(query),
-    ]);
+    const courses = await Course.find(query)
+      .select(
+        "title examType description thumbnail category studentsCount status publishedAt createdAt createdBy"
+      )
+      .populate("createdBy", "name email role")
+      .populate("publishedBy", "name email")
+      .populate({
+        path: "lessons",
+        select:
+          "title description type duration url thumbnail publishedAt order",
+        match: { deletedAt: null },
+        options: { sort: { order: 1 } },
+      })
+      .sort({ publishedAt: -1, createdAt: -1 });
 
     // Ensure lessons are populated for each course (fallback if virtual populate doesn't work)
     const items = await Promise.all(
@@ -68,7 +62,7 @@ router.get("/open", async (req, res) => {
       })
     );
 
-    res.json({ items, total, page: Number(page), limit: Number(limit) });
+    res.json({ items, total: items.length });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -223,8 +217,6 @@ router.post("/", requireRole("tutor", "admin"), async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     const {
-      page = 1,
-      limit = 20,
       q,
       examType,
       category,
@@ -258,26 +250,20 @@ router.get("/", async (req, res) => {
       query.status = status;
     }
 
-    const skip = (Number(page) - 1) * Number(limit);
-    const [courses, total] = await Promise.all([
-      Course.find(query)
-        .select(
-          "title examType description thumbnail category studentsCount status publishedAt deletedAt createdAt createdBy"
-        )
-        .populate("createdBy", "name email role")
-        .populate("publishedBy", "name email")
-        .populate({
-          path: "lessons",
-          select:
-            "title description type duration url thumbnail publishedAt order",
-          match: { deletedAt: null },
-          options: { sort: { order: 1 } },
-        })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(Number(limit)),
-      Course.countDocuments(query),
-    ]);
+    const courses = await Course.find(query)
+      .select(
+        "title examType description thumbnail category studentsCount status publishedAt deletedAt createdAt createdBy"
+      )
+      .populate("createdBy", "name email role")
+      .populate("publishedBy", "name email")
+      .populate({
+        path: "lessons",
+        select:
+          "title description type duration url thumbnail publishedAt order",
+        match: { deletedAt: null },
+        options: { sort: { order: 1 } },
+      })
+      .sort({ createdAt: -1 });
 
     // Ensure lessons are populated for each course (fallback if virtual populate doesn't work)
     const items = await Promise.all(
@@ -297,7 +283,7 @@ router.get("/", async (req, res) => {
       })
     );
 
-    res.json({ items, total, page: Number(page), limit: Number(limit) });
+    res.json({ items, total: items.length });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -637,15 +623,7 @@ router.post(
 // **LIST SOFT DELETED COURSES** - Get all soft-deleted courses
 router.get("/deleted/list", requireRole("tutor", "admin"), async (req, res) => {
   try {
-    const {
-      page = 1,
-      limit = 20,
-      q,
-      examType,
-      category,
-      status,
-      createdBy,
-    } = req.query;
+    const { q, examType, category, status, createdBy } = req.query;
 
     const query = { deletedAt: { $ne: null } }; // Only soft-deleted courses
 
@@ -667,26 +645,17 @@ router.get("/deleted/list", requireRole("tutor", "admin"), async (req, res) => {
       query.createdBy = req.user.id;
     }
 
-    const skip = (Number(page) - 1) * Number(limit);
-    const [items, total] = await Promise.all([
-      Course.find(query)
-        .select(
-          "title examType description thumbnail category studentsCount status deletedAt createdBy createdAt"
-        )
-        .populate("createdBy", "name email role")
-        .populate("publishedBy", "name email")
-        .sort({ deletedAt: -1 })
-        .skip(skip)
-        .limit(Number(limit)),
-      Course.countDocuments(query),
-    ]);
+    const items = await Course.find(query)
+      .select(
+        "title examType description thumbnail category studentsCount status deletedAt createdBy createdAt"
+      )
+      .populate("createdBy", "name email role")
+      .populate("publishedBy", "name email")
+      .sort({ deletedAt: -1 });
 
     res.json({
       items,
-      total,
-      page: Number(page),
-      limit: Number(limit),
-      totalPages: Math.ceil(total / Number(limit)),
+      total: items.length,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

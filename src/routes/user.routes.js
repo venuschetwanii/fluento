@@ -381,7 +381,7 @@ router.get("/students", requireAdminOrTutor, async (req, res) => {
 // **LIST** all users (admin only) - excludes students by default
 router.get("/", requireAdmin, async (req, res) => {
   try {
-    const { page = 1, limit = 20, role, status, q } = req.query;
+    const { role, status, q } = req.query;
 
     const query = {};
 
@@ -408,21 +408,13 @@ router.get("/", requireAdmin, async (req, res) => {
       ];
     }
 
-    const skip = (Number(page) - 1) * Number(limit);
-    const [items, total] = await Promise.all([
-      UserModel.find(query)
-        .select("-passwordHash -otp")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(Number(limit)),
-      UserModel.countDocuments(query),
-    ]);
+    const items = await UserModel.find(query)
+      .select("-passwordHash -otp")
+      .sort({ createdAt: -1 });
 
     res.json({
       items,
-      total,
-      page: Number(page),
-      limit: Number(limit),
+      total: items.length,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -978,7 +970,7 @@ router.post("/:userId/unblock", requireAdmin, async (req, res) => {
 // **LIST BLOCKED USERS** - Get all blocked (soft-deleted) users (admin only)
 router.get("/blocked/list", requireAdmin, async (req, res) => {
   try {
-    const { page = 1, limit = 20, q, role, email, phone } = req.query;
+    const { q, role, email, phone } = req.query;
 
     const query = { status: "blocked" }; // Only blocked users
 
@@ -1002,22 +994,13 @@ router.get("/blocked/list", requireAdmin, async (req, res) => {
       query.phone = { $regex: String(phone), $options: "i" };
     }
 
-    const skip = (Number(page) - 1) * Number(limit);
-    const [items, total] = await Promise.all([
-      UserModel.find(query)
-        .select("name email phone role status createdAt updatedAt")
-        .sort({ updatedAt: -1 }) // Sort by when they were blocked (most recent first)
-        .skip(skip)
-        .limit(Number(limit)),
-      UserModel.countDocuments(query),
-    ]);
+    const items = await UserModel.find(query)
+      .select("name email phone role status createdAt updatedAt")
+      .sort({ updatedAt: -1 }); // Sort by when they were blocked (most recent first)
 
     res.json({
       items,
-      total,
-      page: Number(page),
-      limit: Number(limit),
-      totalPages: Math.ceil(total / Number(limit)),
+      total: items.length,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
