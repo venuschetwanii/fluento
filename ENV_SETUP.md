@@ -11,8 +11,8 @@ MONGO_URI=your_mongodb_connection_string
 # JWT Secret for authentication tokens
 JWT_SECRET=your_jwt_secret_key
 
-# Authkey.io API Key for OTP Service
-AUTHKEY_API_KEY=d03e71997580d5fe
+# Authkey.io API Key for OTP Service (REQUIRED)
+AUTHKEY_API_KEY=your_authkey_api_key
 
 # Optional: Override API endpoint if the default doesn't work
 # AUTHKEY_API_ENDPOINT=/api/send
@@ -38,7 +38,7 @@ APP_URL=https://your-app-url.com
 
 ## Important Notes
 
-1. **AUTHKEY_API_KEY**: The authkey is set to `d03e71997580d5fe` by default. You can override it in your `.env` file.
+1. **AUTHKEY_API_KEY**: **REQUIRED** - You must set this in your `.env` file. Get your API key from your authkey.io dashboard.
 2. Make sure `.env` is in your `.gitignore` file (it already is) to keep your secrets safe.
 3. Never commit your `.env` file to version control.
 
@@ -52,9 +52,16 @@ The API endpoint used is: `https://api.authkey.io/request`
 
 **Note:** This is the correct endpoint according to authkey.io API documentation.
 
+### Required Environment Variables
+
+```env
+# Authkey.io API Key (REQUIRED)
+AUTHKEY_API_KEY=your_authkey_api_key
+```
+
 ### Parameters
 
-- `authkey`: Your authkey API key
+- `authkey`: Your authkey API key (from AUTHKEY_API_KEY env variable)
 - `mobile`: Phone number (with country code, e.g., 91XXXXXXXXXX)
 - `sms`: SMS message content (note: authkey.io uses `sms` parameter, not `message`)
 - `sender`: Sender ID (optional, can be set via AUTHKEY_SENDER_ID env variable)

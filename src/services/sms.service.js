@@ -4,7 +4,12 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 // Configuration constants for authkey.io
-const AUTH_KEY = process.env.AUTHKEY_API_KEY || "d03e71997580d5fe";
+const AUTH_KEY = process.env.AUTHKEY_API_KEY;
+if (!AUTH_KEY) {
+  throw new Error(
+    "AUTHKEY_API_KEY is required. Please set it in your .env file."
+  );
+}
 const SENDER_ID =
   process.env.AUTHKEY_SENDER_ID || process.env.AUTHKEY_SID || "28771";
 const COMPANY = process.env.AUTHKEY_COMPANY || "Catalysts";
