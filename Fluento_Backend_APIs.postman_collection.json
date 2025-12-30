@@ -280,6 +280,80 @@
 			"name": "Course Management",
 			"item": [
 				{
+					"name": "List All Courses (Open - No Auth)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/courses/open?page=1&limit=20&examType=&category=&q=&sortBy=publishedAt&sortOrder=desc",
+							"host": ["{{baseUrl}}"],
+							"path": ["courses", "open"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Page number (default: 1)"
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Items per page (default: 20)"
+								},
+								{
+									"key": "examType",
+									"value": "",
+									"description": "Filter by exam type (e.g., IELTS Academic, TOEFL) (optional)",
+									"disabled": true
+								},
+								{
+									"key": "category",
+									"value": "",
+									"description": "Filter by category (optional)",
+									"disabled": true
+								},
+								{
+									"key": "q",
+									"value": "",
+									"description": "Search query for course title (optional)",
+									"disabled": true
+								},
+								{
+									"key": "sortBy",
+									"value": "publishedAt",
+									"description": "Sort field (default: publishedAt)"
+								},
+								{
+									"key": "sortOrder",
+									"value": "desc",
+									"description": "Sort direction: asc or desc (default: desc)"
+								}
+							]
+						},
+						"description": "Get list of all published courses. **Public endpoint - no authentication required.** Accessible to all users.\n\n**Response Format:**\n```json\n{\n  \"items\": [...],\n  \"total\": 45,\n  \"page\": 1,\n  \"limit\": 20,\n  \"totalPages\": 3\n}\n```\n\n**Response includes:**\n- `items`: Array of published courses with lessons\n- `total`: Total count of published courses\n- `page`: Current page number\n- `limit`: Items per page\n- `totalPages`: Total number of pages"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Course by ID (Open - No Auth)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/courses/open/:courseId",
+							"host": ["{{baseUrl}}"],
+							"path": ["courses", "open", ":courseId"],
+							"variable": [
+								{
+									"key": "courseId",
+									"value": ""
+								}
+							]
+						},
+						"description": "Get a single published course by ID. **Public endpoint - no authentication required.** Accessible to all users.\n\nReturns full course details including lessons."
+					},
+					"response": []
+				},
+				{
 					"name": "List Soft Deleted Courses",
 					"request": {
 						"method": "GET",

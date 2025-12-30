@@ -22,32 +22,70 @@ const requireRole =
   };
 
 // Open endpoints (no auth): published and non-deleted courses
+// Accessible to all - no authentication required
 router.get("/open", async (req, res) => {
   try {
-    const { examType, category } = req.query;
-    const query = { status: "published", deletedAt: null };
-    if (examType) query.examType = { $regex: String(examType), $options: "i" };
-    if (category) query.category = { $regex: String(category), $options: "i" };
+    const {
+      examType,
+      category,
+      page = 1,
+      limit = 20,
+      q,
+      sortBy = "publishedAt",
+      sortOrder = "desc",
+    } = req.query;
 
-    const courses = await Course.find(query)
-      .select(
-        "title examType description thumbnail category studentsCount status publishedAt createdAt createdBy"
-      )
-      .populate("createdBy", "name email role")
-      .populate("publishedBy", "name email")
-      .populate({
-        path: "lessons",
-        select:
-          "title description type duration url thumbnail publishedAt order",
-        match: { deletedAt: null },
-        options: { sort: { order: 1 } },
-      })
-      .sort({ publishedAt: -1, createdAt: -1 });
+    const query = { status: "published", deletedAt: null };
+
+    // Filter by examType
+    if (examType) {
+      query.examType = { $regex: String(examType), $options: "i" };
+    }
+
+    // Filter by category
+    if (category) {
+      query.category = { $regex: String(category), $options: "i" };
+    }
+
+    // Search by title
+    if (q) {
+      query.title = { $regex: String(q), $options: "i" };
+    }
+
+    // Build sort object
+    const sortField = sortBy || "publishedAt";
+    const sortDirection = sortOrder === "asc" ? 1 : -1;
+    const sort = { [sortField]: sortDirection };
+
+    // Calculate pagination
+    const skip = (Number(page) - 1) * Number(limit);
+
+    // Fetch courses with pagination
+    const [courses, total] = await Promise.all([
+      Course.find(query)
+        .select(
+          "title examType description thumbnail category studentsCount status publishedAt createdAt createdBy"
+        )
+        .populate("createdBy", "name email role")
+        .populate("publishedBy", "name email")
+        .populate({
+          path: "lessons",
+          select:
+            "title description type duration url thumbnail publishedAt order",
+          match: { deletedAt: null },
+          options: { sort: { order: 1 } },
+        })
+        .sort(sort)
+        .skip(skip)
+        .limit(Number(limit))
+        .lean(),
+      Course.countDocuments(query),
+    ]);
 
     // Ensure lessons are populated for each course (fallback if virtual populate doesn't work)
     const items = await Promise.all(
       courses.map(async (course) => {
-        if (course.lessons === undefined) {
+        if (!course.lessons || course.lessons.length === 0) {
           const lessons = await Lesson.find({
             course: course._id,
             deletedAt: null,
@@ -55,14 +93,21 @@ router.get("/open", async (req, res) => {
             .select(
               "title description type duration url thumbnail publishedAt order"
             )
-            .sort({ order: 1 });
+            .sort({ order: 1 })
+            .lean();
           course.lessons = lessons;
         }
         return course;
       })
     );
 
-    res.json({ items, total: items.length });
+    res.json({
+      items,
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      totalPages: Math.ceil(total / Number(limit)),
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
