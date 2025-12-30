@@ -646,8 +646,12 @@ router.delete("/:examId", requireRole("tutor", "admin"), async (req, res) => {
     }
 
     // Soft delete: set deletedAt timestamp
-    exam.deletedAt = new Date();
-    await exam.save();
+    // Use updateOne to avoid validation issues with required fields
+    await Exam.updateOne(
+      { _id: examId },
+      { $set: { deletedAt: new Date() } }
+    );
+    exam.deletedAt = new Date(); // Update local object for response
 
     // Create notification for exam deletion
     try {

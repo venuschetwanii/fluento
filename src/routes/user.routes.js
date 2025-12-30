@@ -421,7 +421,7 @@ router.get("/", requireAdmin, async (req, res) => {
   }
 });
 
-// **GET** a single user by ID (admin only)
+// **GET** a single user by ID (admin only) with analytics
 router.get("/:userId", requireAdmin, async (req, res) => {
   try {
     const { userId } = req.params;
@@ -431,7 +431,91 @@ router.get("/:userId", requireAdmin, async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    res.json(user);
+    // Fetch all attempts for this user
+    const attempts = await AttemptModel.find({ userId: userId })
+      .select("examId status startedAt submittedAt scoring createdAt")
+      .populate("examId", "title type")
+      .lean()
+      .sort({ startedAt: -1, createdAt: -1 });
+
+    // Calculate statistics
+    const totalAttempts = attempts.length;
+    const gradedAttempts = attempts.filter((a) => a.status === "graded");
+    const submittedAttempts = attempts.filter((a) => a.status === "submitted");
+    const inProgressAttempts = attempts.filter((a) => a.status === "in_progress");
+    const expiredAttempts = attempts.filter((a) => a.status === "expired");
+
+    // Calculate average score from graded attempts
+    const gradedCount = gradedAttempts.length;
+    const averageScore =
+      gradedCount > 0
+        ? gradedAttempts.reduce(
+            (sum, a) => sum + (a.scoring?.score || 0),
+            0
+          ) / gradedCount
+        : 0;
+    const averageAccuracy =
+      gradedCount > 0
+        ? gradedAttempts.reduce(
+            (sum, a) => sum + (a.scoring?.accuracy || 0),
+            0
+          ) / gradedCount
+        : 0;
+
+    // Calculate courses completed (based on exams with graded attempts)
+    const uniqueExamIds = new Set();
+    gradedAttempts.forEach((attempt) => {
+      if (attempt.examId && attempt.examId._id) {
+        uniqueExamIds.add(String(attempt.examId._id));
+      }
+    });
+    const coursesCompleted = uniqueExamIds.size;
+
+    // Format attempts for response
+    const formattedAttempts = attempts.slice(0, 50).map((attempt) => {
+      return {
+        _id: attempt._id,
+        exam: attempt.examId
+          ? {
+              _id: attempt.examId._id || attempt.examId,
+              title: attempt.examId.title,
+              type: attempt.examId.type,
+            }
+          : null,
+        status: attempt.status,
+        startedAt: attempt.startedAt,
+        submittedAt: attempt.submittedAt,
+        score: attempt.scoring?.score || 0,
+        maxScore: attempt.scoring?.maxScore || 0,
+        accuracy: attempt.scoring?.accuracy || 0,
+        scaledScore: attempt.scoring?.scaled?.score || null,
+        scaledType: attempt.scoring?.scaled?.type || null,
+        createdAt: attempt.createdAt,
+      };
+    });
+
+    // Build response with user data and analytics
+    const userResponse = user.toObject();
+    res.json({
+      ...userResponse,
+      attempts: formattedAttempts,
+      analytics: {
+        totalAttempts,
+        gradedAttempts: gradedCount,
+        submittedAttempts: submittedAttempts.length,
+        inProgressAttempts: inProgressAttempts.length,
+        expiredAttempts: expiredAttempts.length,
+        coursesCompleted,
+        averageScore: Math.round(averageScore * 100) / 100,
+        averageAccuracy: Math.round(averageAccuracy * 100) / 100,
+        attemptsSummary: {
+          total: totalAttempts,
+          graded: gradedCount,
+          averageScore: Math.round(averageScore * 100) / 100,
+          averageAccuracy: Math.round(averageAccuracy * 100) / 100,
+        },
+      },
+    });
   } catch (error) {
     if (error.name === "CastError") {
       return res.status(400).json({ error: "Invalid User ID" });

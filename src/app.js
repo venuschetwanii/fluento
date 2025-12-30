@@ -14,6 +14,7 @@ const lessonRoutes = require("./routes/lesson.routes");
 const userRoutes = require("./routes/user.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
 const notificationRoutes = require("./routes/notification.routes");
+const inquiryRoutes = require("./routes/inquiry.routes");
 const app = express();
 
 app.use(cors());
@@ -44,6 +45,7 @@ app.use("/lessons", lessonRoutes);
 app.use("/users", userRoutes);
 app.use("/dashboard", dashboardRoutes);
 app.use("/notifications", notificationRoutes);
+app.use("/inquiries", inquiryRoutes);
 
 // Background jobs
 require("./jobs/attempts.cron");

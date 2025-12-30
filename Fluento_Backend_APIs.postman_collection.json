@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "fluento-backend-apis",
 		"name": "Fluento Backend APIs",
-		"description": "Complete API collection for Fluento Backend including User Management, Dashboard, and Transfer Ownership APIs",
+		"description": "Complete API collection for Fluento Backend including User Management, Dashboard, Inquiry Management, and Transfer Ownership APIs",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"auth": {
@@ -167,7 +167,7 @@
 								}
 							]
 						},
-						"description": "Get a single user by ID. Admin only."
+						"description": "Get a single user by ID with comprehensive analytics. Admin only.\n\n**Response includes:**\n- User profile information (name, email, phone, role, status)\n- **attempts**: Array of last 50 attempts with exam details, scores, and status\n- **analytics**: Comprehensive statistics including:\n  - `totalAttempts`: Total number of attempts\n  - `gradedAttempts`: Number of graded attempts\n  - `submittedAttempts`: Number of submitted attempts\n  - `inProgressAttempts`: Number of in-progress attempts\n  - `expiredAttempts`: Number of expired attempts\n  - `coursesCompleted`: Number of unique exams with graded attempts\n  - `averageScore`: Average score from all graded attempts\n  - `averageAccuracy`: Average accuracy from all graded attempts\n  - `attemptsSummary`: Summary object with total, graded, averageScore, and averageAccuracy"
 					},
 					"response": []
 				},
@@ -699,6 +699,168 @@
 				}
 			],
 			"description": "Authentication APIs"
+		},
+		{
+			"name": "Inquiry Management",
+			"item": [
+				{
+					"name": "Create Inquiry",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Need help with IELTS preparation\",\n  \"type\": \"support\",\n  \"name\": \"John Doe\",\n  \"phone\": \"+1234567890\",\n  \"email\": \"john.doe@example.com\",\n  \"message\": \"I need assistance with IELTS preparation course.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/inquiries",
+							"host": ["{{baseUrl}}"],
+							"path": ["inquiries"]
+						},
+						"description": "Create a new inquiry. **Public endpoint - no authentication required.**\n\n**Request Body:**\n- `title` (required): Inquiry title\n- `type` (optional): Type of inquiry - support, feedback, complaint, or general (default: general)\n- `name` (required): Name of the person making the inquiry\n- `phone` (optional): Phone number\n- `email` (required): Email address\n- `message` (required): Inquiry message (max 5000 characters)\n\n**Response:**\nReturns created inquiry with status 'pending'"
+					},
+					"response": []
+				},
+				{
+					"name": "List All Inquiries",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/inquiries?page=1&limit=20&status=&type=&q=&sortBy=createdAt&sortOrder=desc",
+							"host": ["{{baseUrl}}"],
+							"path": ["inquiries"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Page number (default: 1)"
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Items per page (default: 20)"
+								},
+								{
+									"key": "status",
+									"value": "",
+									"description": "Filter by status: pending, in_progress, resolved, closed",
+									"disabled": true
+								},
+								{
+									"key": "type",
+									"value": "",
+									"description": "Filter by type: support, feedback, complaint, general",
+									"disabled": true
+								},
+								{
+									"key": "q",
+									"value": "",
+									"description": "Search query (searches in title, name, email, message)",
+									"disabled": true
+								},
+								{
+									"key": "sortBy",
+									"value": "createdAt",
+									"description": "Sort field (default: createdAt)"
+								},
+								{
+									"key": "sortOrder",
+									"value": "desc",
+									"description": "Sort direction: asc or desc (default: desc)"
+								}
+							]
+						},
+						"description": "Get list of all inquiries with pagination, search, and filtering. **Admin only.**\n\n**Response Format:**\n```json\n{\n  \"items\": [\n    {\n      \"_id\": \"507f1f77bcf86cd799439011\",\n      \"title\": \"Need help with IELTS preparation\",\n      \"type\": \"support\",\n      \"name\": \"John Doe\",\n      \"phone\": \"+1234567890\",\n      \"email\": \"john.doe@example.com\",\n      \"message\": \"I need assistance...\",\n      \"status\": \"pending\",\n      \"createdAt\": \"2024-01-15T10:30:00.000Z\",\n      \"updatedAt\": \"2024-01-15T10:30:00.000Z\"\n    }\n  ],\n  \"total\": 45,\n  \"page\": 1,\n  \"limit\": 20,\n  \"totalPages\": 3\n}\n```"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Inquiry by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/inquiries/:inquiryId",
+							"host": ["{{baseUrl}}"],
+							"path": ["inquiries", ":inquiryId"],
+							"variable": [
+								{
+									"key": "inquiryId",
+									"value": ""
+								}
+							]
+						},
+						"description": "Get a single inquiry by ID. **Admin only.**"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Inquiry",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Updated Title\",\n  \"type\": \"support\",\n  \"name\": \"John Doe\",\n  \"phone\": \"+1234567890\",\n  \"email\": \"john.doe@example.com\",\n  \"message\": \"Updated message\",\n  \"status\": \"in_progress\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/inquiries/:inquiryId",
+							"host": ["{{baseUrl}}"],
+							"path": ["inquiries", ":inquiryId"],
+							"variable": [
+								{
+									"key": "inquiryId",
+									"value": ""
+								}
+							]
+						},
+						"description": "Update an inquiry. **Admin only.**\n\n**Request Body (all fields optional):**\n- `title`: Inquiry title\n- `type`: Type of inquiry - support, feedback, complaint, or general\n- `name`: Name of the person\n- `phone`: Phone number\n- `email`: Email address\n- `message`: Inquiry message\n- `status`: Status - pending, in_progress, resolved, or closed"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Inquiry",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/inquiries/:inquiryId",
+							"host": ["{{baseUrl}}"],
+							"path": ["inquiries", ":inquiryId"],
+							"variable": [
+								{
+									"key": "inquiryId",
+									"value": ""
+								}
+							]
+						},
+						"description": "Delete an inquiry permanently. **Admin only.**"
+					},
+					"response": []
+				}
+			],
+			"description": "Inquiry management APIs for handling customer inquiries, support requests, feedback, and complaints. Create endpoint is public (no auth), all other operations require admin access."
 		}
 	],
 	"variable": [
