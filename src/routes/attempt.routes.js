@@ -1310,18 +1310,25 @@ router.post("/:id/grade/manual", async (req, res) => {
     const GRE = Math.round(clamp(6 * acc, 0, 6) * 2) / 2;
     const TOEFL = Math.round(clamp(30 * acc, 0, 30));
     const PTE = Math.round(clamp(10 + 80 * acc, 10, 90));
+    
+    // Ensure all scores are valid numbers (not NaN)
+    const validIELTS = isNaN(IELTS) ? undefined : IELTS;
+    const validGRE = isNaN(GRE) ? undefined : GRE;
+    const validTOEFL = isNaN(TOEFL) ? undefined : TOEFL;
+    const validPTE = isNaN(PTE) ? undefined : PTE;
+    
     let primary;
-    if (examType.includes("ielts")) primary = { type: "IELTS", score: IELTS };
-    else if (examType.includes("gre")) primary = { type: "GRE", score: GRE };
-    else if (examType.includes("toefl"))
-      primary = { type: "TOEFL", score: TOEFL };
-    else if (examType.includes("pte")) primary = { type: "PTE", score: PTE };
+    if (examType.includes("ielts") && validIELTS !== undefined) primary = { type: "IELTS", score: validIELTS };
+    else if (examType.includes("gre") && validGRE !== undefined) primary = { type: "GRE", score: validGRE };
+    else if (examType.includes("toefl") && validTOEFL !== undefined)
+      primary = { type: "TOEFL", score: validTOEFL };
+    else if (examType.includes("pte") && validPTE !== undefined) primary = { type: "PTE", score: validPTE };
     let scaled;
-    if (examType.includes("ielts")) scaled = { type: "IELTS", score: IELTS };
-    else if (examType.includes("gre")) scaled = { type: "GRE", score: GRE };
-    else if (examType.includes("toefl"))
-      scaled = { type: "TOEFL", score: TOEFL };
-    else if (examType.includes("pte")) scaled = { type: "PTE", score: PTE };
+    if (examType.includes("ielts") && validIELTS !== undefined) scaled = { type: "IELTS", score: validIELTS };
+    else if (examType.includes("gre") && validGRE !== undefined) scaled = { type: "GRE", score: validGRE };
+    else if (examType.includes("toefl") && validTOEFL !== undefined)
+      scaled = { type: "TOEFL", score: validTOEFL };
+    else if (examType.includes("pte") && validPTE !== undefined) scaled = { type: "PTE", score: validPTE };
     attempt.scoring.scaled = scaled;
 
     // Update per-section aggregates in sectionsStatus based on perQuestion entries
@@ -1464,18 +1471,25 @@ router.post("/:id/grade/external", async (req, res) => {
     const GRE = Math.round(clamp(6 * acc, 0, 6) * 2) / 2;
     const TOEFL = Math.round(clamp(30 * acc, 0, 30));
     const PTE = Math.round(clamp(10 + 80 * acc, 10, 90));
+    
+    // Ensure all scores are valid numbers (not NaN)
+    const validIELTS = isNaN(IELTS) ? undefined : IELTS;
+    const validGRE = isNaN(GRE) ? undefined : GRE;
+    const validTOEFL = isNaN(TOEFL) ? undefined : TOEFL;
+    const validPTE = isNaN(PTE) ? undefined : PTE;
+    
     let primary;
-    if (examType.includes("ielts")) primary = { type: "IELTS", score: IELTS };
-    else if (examType.includes("gre")) primary = { type: "GRE", score: GRE };
-    else if (examType.includes("toefl"))
-      primary = { type: "TOEFL", score: TOEFL };
-    else if (examType.includes("pte")) primary = { type: "PTE", score: PTE };
+    if (examType.includes("ielts") && validIELTS !== undefined) primary = { type: "IELTS", score: validIELTS };
+    else if (examType.includes("gre") && validGRE !== undefined) primary = { type: "GRE", score: validGRE };
+    else if (examType.includes("toefl") && validTOEFL !== undefined)
+      primary = { type: "TOEFL", score: validTOEFL };
+    else if (examType.includes("pte") && validPTE !== undefined) primary = { type: "PTE", score: validPTE };
     let scaled;
-    if (examType.includes("ielts")) scaled = { type: "IELTS", score: IELTS };
-    else if (examType.includes("gre")) scaled = { type: "GRE", score: GRE };
-    else if (examType.includes("toefl"))
-      scaled = { type: "TOEFL", score: TOEFL };
-    else if (examType.includes("pte")) scaled = { type: "PTE", score: PTE };
+    if (examType.includes("ielts") && validIELTS !== undefined) scaled = { type: "IELTS", score: validIELTS };
+    else if (examType.includes("gre") && validGRE !== undefined) scaled = { type: "GRE", score: validGRE };
+    else if (examType.includes("toefl") && validTOEFL !== undefined)
+      scaled = { type: "TOEFL", score: validTOEFL };
+    else if (examType.includes("pte") && validPTE !== undefined) scaled = { type: "PTE", score: validPTE };
     attempt.scoring.scaled = scaled;
     await attempt.save();
     res.json({

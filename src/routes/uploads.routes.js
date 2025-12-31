@@ -79,10 +79,21 @@ router.post("/direct", upload.single("file"), async (req, res) => {
     if (!file) return res.status(400).json({ error: "file is required" });
 
     const bucket = process.env.AWS_S3_BUCKET;
-    if (!bucket || !process.env.AWS_S3_REGION)
+    const region = process.env.AWS_S3_REGION;
+    const accessKeyId = process.env.AWS_S3_ACCESS_KEY_ID;
+    const secretAccessKey = process.env.AWS_S3_SECRET_ACCESS_KEY;
+    
+    if (!bucket || !region) {
       return res
         .status(500)
-        .json({ error: "S3 not configured (AWS_S3_BUCKET, AWS_S3_REGION)" });
+        .json({ error: "S3 not configured: AWS_S3_BUCKET and AWS_S3_REGION are required" });
+    }
+    
+    if (!accessKeyId || !secretAccessKey) {
+      return res
+        .status(500)
+        .json({ error: "S3 credentials not configured: AWS_S3_ACCESS_KEY_ID and AWS_S3_SECRET_ACCESS_KEY are required" });
+    }
 
     // Basic validation for media types
     const allowedPrefixes = [

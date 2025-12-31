@@ -545,10 +545,13 @@ AttemptSchema.methods.computeScoring = async function () {
 
     // Calculate overall band with proper rounding
     const overallBand = calculateOverallBand(sectionBands);
+    
+    // Ensure overallBand is a valid number, not NaN
+    const validBand = isNaN(overallBand) || overallBand === undefined ? undefined : overallBand;
 
     scaled = {
       type: "IELTS",
-      score: overallBand,
+      score: validBand,
       sectionScores: sectionBandScores,
       testType: testType,
     };
@@ -573,12 +576,14 @@ AttemptSchema.methods.computeScoring = async function () {
     }
 
     const totalScore = sectionScaledScores.reduce(
-      (sum, score) => sum + score,
+      (sum, score) => sum + (isNaN(score) ? 0 : score),
       0
     );
+    // Ensure totalScore is a valid number
+    const validScore = isNaN(totalScore) ? undefined : totalScore;
     scaled = {
       type: "TOEFL",
-      score: totalScore,
+      score: validScore,
       sectionScores: sectionBandScores,
     };
   } else if (examType.includes("gre")) {
@@ -591,10 +596,11 @@ AttemptSchema.methods.computeScoring = async function () {
         writingResponses.reduce((sum, r) => sum + (r.isCorrect ? 1 : 0), 0) /
         writingResponses.length;
       const writingScore = Math.round(clamp(6 * writingAccuracy, 0, 6) * 2) / 2;
-      sectionBandScores["Analytical Writing"] = writingScore;
+      const validWritingScore = isNaN(writingScore) ? 0 : writingScore;
+      sectionBandScores["Analytical Writing"] = validWritingScore;
       scaled = {
         type: "GRE",
-        score: writingScore,
+        score: validWritingScore,
         sectionScores: sectionBandScores,
       };
     } else {
@@ -625,16 +631,33 @@ AttemptSchema.methods.computeScoring = async function () {
     const overallScore =
       communicativeScores.length > 0
         ? Math.round(
-            communicativeScores.reduce((sum, score) => sum + score, 0) /
+            communicativeScores.reduce((sum, score) => sum + (isNaN(score) ? 0 : score), 0) /
               communicativeScores.length
           )
         : 10;
+    // Ensure overallScore is a valid number
+    const validOverallScore = isNaN(overallScore) ? undefined : overallScore;
     scaled = {
       type: "PTE",
-      score: overallScore,
+      score: validOverallScore,
       sectionScores: sectionBandScores,
     };
   }
+  
+  // Final validation: ensure scaled.score is never NaN, null, undefined, or invalid
+  if (scaled) {
+    const score = scaled.score;
+    if (
+      score === undefined ||
+      score === null ||
+      isNaN(score) ||
+      Number.isNaN(score) ||
+      typeof score !== "number"
+    ) {
+      scaled = undefined;
+    }
+  }
+  
   const sectionScores = Array.from(sectionTotals.entries()).map(([sid, t]) => ({
     sectionId: sid,
     score: t.score,

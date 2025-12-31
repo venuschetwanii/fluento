@@ -47,41 +47,6 @@ router.get("/open", async (req, res) => {
   }
 });
 
-router.get("/open/:examId", async (req, res) => {
-  try {
-    const { examId } = req.params;
-    const exam = await Exam.findOne({
-      _id: examId,
-      status: "published",
-      deletedAt: null,
-    })
-      .select("title type duration totalQuestions featureImage status sections createdBy")
-      .populate("createdBy", "name email role");
-    if (!exam) return res.status(404).json({ error: "Exam not found" });
-
-    // Load only section documents (no parts/groups)
-    const sections = await Section.find({ _id: { $in: exam.sections } }).select(
-      "sectionType title duration totalQuestions"
-    );
-
-    return res.json({
-      _id: exam._id,
-      title: exam.title,
-      type: exam.type,
-      duration: exam.duration,
-      totalQuestions: exam.totalQuestions,
-      featureImage: exam.featureImage,
-      createdBy: exam.createdBy,
-      sections,
-    });
-  } catch (error) {
-    if (error.name === "CastError") {
-      return res.status(400).json({ error: "Invalid Exam ID" });
-    }
-    res.status(500).json({ error: error.message });
-  }
-});
-
 // Public: get a specific section of a published exam (basic fields only)
 router.get("/open/:examId/sections/:sectionId", async (req, res) => {
   try {
